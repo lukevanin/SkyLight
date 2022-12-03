@@ -1,0 +1,15 @@
+{
+  "images" : [
+    {
+      "filename" : "IMG_4712 (1).jpeg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "compression-type" : "lossless"
+  }
+}

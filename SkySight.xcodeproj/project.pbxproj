@@ -12,7 +12,6 @@
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
 		FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EE293B6380008E8D79 /* LaunchScreen.storyboard */; };
 		FCE9367A2944E86E00E2D486 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = FCE936792944E86E00E2D486 /* Shaders.metal */; };
-		FCEE19FA294DB77C00FEC893 /* test-04-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEE19F7294DB77B00FEC893 /* test-04-480p.mov */; };
 		FCEE19FB294DB77C00FEC893 /* test-05-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */; };
 		FCEE19FD294DB8AE00FEC893 /* LucasKanade.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */; };
 		FCEE19FF294DB8E600FEC893 /* Quad.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEE19FE294DB8E600FEC893 /* Quad.swift */; };
@@ -28,7 +27,6 @@
 		FC9DF9EF293B6380008E8D79 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FC9DF9F1293B6380008E8D79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FCE936792944E86E00E2D486 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
-		FCEE19F7294DB77B00FEC893 /* test-04-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-04-480p.mov"; sourceTree = "<group>"; };
 		FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-05-480p.mov"; sourceTree = "<group>"; };
 		FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanade.swift; sourceTree = "<group>"; };
 		FCEE19FE294DB8E600FEC893 /* Quad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quad.swift; sourceTree = "<group>"; };
@@ -53,7 +51,6 @@
 				FC9DF9EC293B6380008E8D79 /* Assets.xcassets */,
 				FC9DF9F1293B6380008E8D79 /* Info.plist */,
 				FC9DF9EE293B6380008E8D79 /* LaunchScreen.storyboard */,
-				FCEE19F7294DB77B00FEC893 /* test-04-480p.mov */,
 				FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */,
 			);
 			name = Resources;
@@ -150,7 +147,6 @@
 			files = (
 				FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */,
 				FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */,
-				FCEE19FA294DB77C00FEC893 /* test-04-480p.mov in Resources */,
 				FCEE19FB294DB77C00FEC893 /* test-05-480p.mov in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

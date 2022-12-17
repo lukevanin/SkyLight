@@ -41,10 +41,6 @@ float gaussian(float x, float y, float sigma) {
     return (1 / base) * exp(-exponent);
 }
 
-//float2 gaussian2(float2 c, float sigma) {
-//    return float2(gaussian1(c.x, sigma), gaussian1(c.y, sigma));
-//}
-
 
 // https://en.wikipedia.org/wiki/Lucas–Kanade_method
 kernel void lucasKanade(
@@ -54,14 +50,6 @@ kernel void lucasKanade(
     texture2d<float, access::read> itTexture [[texture(3)]],
     ushort2 gid [[thread_position_in_grid]]
 ) {
-//    float2 d = float2(w, h);
-//    float2 p = float2(gid.x, gid.y);
-//    float4 c = float4(p.x / d.x, p.y / d.y, 0, 1);
-//    float4 c = float4(p.x / d.x, 0, 0, 1);
-//    float4 c = float4(0, p.y / d.y, 0, 1);
-//    outputTexture.write(c, gid);
-//    return;
-
     const int k = 3;
 
     const int minX = k;
@@ -94,9 +82,7 @@ kernel void lucasKanade(
             
             ushort2 g = ushort2(o + int2(i, j));
             
-            float dx = float(i) / float(k);
-            float dy = float(j) / float(k);
-            float w = gaussian(dx, dy, k);
+            float w = gaussian(i, j, k);
 
             float ix = ixTexture.read(g).r * w;
             float iy = iyTexture.read(g).r * w;
@@ -122,8 +108,8 @@ kernel void lucasKanade(
         p1 = float2(0, 0);
     }
 
-//    float2 q = float2(normalize(p), length(p));
-
+    // Blend the new frame with the old frame.
+    // t is the ratio of the new frame to use.
     float t = 0.1;
     p0 = outputTexture.read(gid).rg;
     p2 = ((1.0 - t) * p0) + (t * p1);

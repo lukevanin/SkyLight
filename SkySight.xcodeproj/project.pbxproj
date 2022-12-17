@@ -8,10 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
-		FC9DF9E8293B637F008E8D79 /* PreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* PreviewViewController.swift */; };
+		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
 		FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EE293B6380008E8D79 /* LaunchScreen.storyboard */; };
 		FCE9367A2944E86E00E2D486 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = FCE936792944E86E00E2D486 /* Shaders.metal */; };
+		FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDAE294E7C32002BB8EF /* VideoFileReader.swift */; };
+		FCEBCDB1294E7CC4002BB8EF /* CoreVideoMetalCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB0294E7CC4002BB8EF /* CoreVideoMetalCache.swift */; };
+		FCEBCDB3294E7D96002BB8EF /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB2294E7D96002BB8EF /* Math.swift */; };
+		FCEBCDB5294E7E39002BB8EF /* ImageConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB4294E7E39002BB8EF /* ImageConversion.swift */; };
+		FCEBCDB7294E831D002BB8EF /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB6294E831D002BB8EF /* Shared.swift */; };
 		FCEE19FB294DB77C00FEC893 /* test-05-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */; };
 		FCEE19FD294DB8AE00FEC893 /* LucasKanade.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */; };
 		FCEE19FF294DB8E600FEC893 /* Quad.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEE19FE294DB8E600FEC893 /* Quad.swift */; };
@@ -22,11 +27,16 @@
 /* Begin PBXFileReference section */
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		FC9DF9E7293B637F008E8D79 /* PreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewViewController.swift; sourceTree = "<group>"; };
+		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
 		FC9DF9EC293B6380008E8D79 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FC9DF9EF293B6380008E8D79 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FC9DF9F1293B6380008E8D79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FCE936792944E86E00E2D486 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		FCEBCDAE294E7C32002BB8EF /* VideoFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFileReader.swift; sourceTree = "<group>"; };
+		FCEBCDB0294E7CC4002BB8EF /* CoreVideoMetalCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreVideoMetalCache.swift; sourceTree = "<group>"; };
+		FCEBCDB2294E7D96002BB8EF /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Math.swift; sourceTree = "<group>"; };
+		FCEBCDB4294E7E39002BB8EF /* ImageConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageConversion.swift; sourceTree = "<group>"; };
+		FCEBCDB6294E831D002BB8EF /* Shared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared.swift; sourceTree = "<group>"; };
 		FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-05-480p.mov"; sourceTree = "<group>"; };
 		FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanade.swift; sourceTree = "<group>"; };
 		FCEE19FE294DB8E600FEC893 /* Quad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quad.swift; sourceTree = "<group>"; };
@@ -76,11 +86,16 @@
 			isa = PBXGroup;
 			children = (
 				FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */,
-				FC9DF9E7293B637F008E8D79 /* PreviewViewController.swift */,
+				FCEBCDB6294E831D002BB8EF /* Shared.swift */,
+				FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */,
 				FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */,
+				FCEBCDAE294E7C32002BB8EF /* VideoFileReader.swift */,
 				FCEE1A00294DB8F700FEC893 /* CoreGraphicsExtensions.swift */,
 				FCEE1A02294DB90B00FEC893 /* CoreImageExtensions.swift */,
+				FCEBCDB0294E7CC4002BB8EF /* CoreVideoMetalCache.swift */,
+				FCEBCDB4294E7E39002BB8EF /* ImageConversion.swift */,
 				FCEE19FE294DB8E600FEC893 /* Quad.swift */,
+				FCEBCDB2294E7D96002BB8EF /* Math.swift */,
 				FCE936792944E86E00E2D486 /* Shaders.metal */,
 				FC5EC4D1294283B200D0F057 /* Resources */,
 			);
@@ -160,11 +175,16 @@
 			files = (
 				FCEE19FD294DB8AE00FEC893 /* LucasKanade.swift in Sources */,
 				FCEE1A01294DB8F700FEC893 /* CoreGraphicsExtensions.swift in Sources */,
+				FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */,
 				FCEE1A03294DB90B00FEC893 /* CoreImageExtensions.swift in Sources */,
 				FCE9367A2944E86E00E2D486 /* Shaders.metal in Sources */,
 				FCEE19FF294DB8E600FEC893 /* Quad.swift in Sources */,
-				FC9DF9E8293B637F008E8D79 /* PreviewViewController.swift in Sources */,
+				FCEBCDB7294E831D002BB8EF /* Shared.swift in Sources */,
+				FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */,
 				FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */,
+				FCEBCDB1294E7CC4002BB8EF /* CoreVideoMetalCache.swift in Sources */,
+				FCEBCDB3294E7D96002BB8EF /* Math.swift in Sources */,
+				FCEBCDB5294E7E39002BB8EF /* ImageConversion.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

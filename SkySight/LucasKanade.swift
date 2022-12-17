@@ -10,19 +10,8 @@ import Metal
 import MetalPerformanceShaders
 
 
-struct Snapshot {
-    let oldImage: CGImage
-    let newImage: CGImage
-    let ixImage: CGImage
-    let iyImage: CGImage
-    let itImage: CGImage
-    let vImage: CGImage
-    let visualizationImage: UIImage
-}
-
-
 final class LucasKanade {
-    
+
     struct Image {
         let inputTexture0: MTLTexture
         let inputTexture1: MTLTexture
@@ -35,18 +24,13 @@ final class LucasKanade {
     private let device: MTLDevice
     private let commandQueue: MTLCommandQueue
     
-    private let textureCache: CVMetalTextureCache
-    
     private let aImage: Image
     private let bImage: Image
 
-    private let outputTexture: MTLTexture
-    private let ixTexture: MTLTexture
-    private let iyTexture: MTLTexture
-    private let itTexture: MTLTexture
-
-    private let rgbCIContext: CIContext
-    private let grayCIContext: CIContext
+    let outputTexture: MTLTexture
+    let ixTexture: MTLTexture
+    let iyTexture: MTLTexture
+    let itTexture: MTLTexture
 
     private let imageConversionKernel: MPSImageConversion
     private let blurKernel: MPSImageGaussianBlur
@@ -57,19 +41,12 @@ final class LucasKanade {
     
     private let lucasKanadePipeline: MTLComputePipelineState
 
-    init(sourceSize: MTLSize, outputSize: MTLSize) {
-        
-        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        let grayColorSpace = CGColorSpaceCreateDeviceGray()
+    init(device: MTLDevice, sourceSize: MTLSize, outputSize: MTLSize) {
         
         self.sourceSize = sourceSize
         self.outputSize = outputSize
-        self.device = MTLCreateSystemDefaultDevice()!
+        self.device = device
         self.commandQueue = device.makeCommandQueue()!
-        
-        var textureCache: CVMetalTextureCache?
-        CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &textureCache)
-        self.textureCache = textureCache!
         
         let inputTextureDescriptor = MTLTextureDescriptor.texture2DDescriptor(
             pixelFormat: .r16Float,
@@ -140,8 +117,8 @@ final class LucasKanade {
 
 
         let conversionInfo = CGColorConversionInfo(
-            src: rgbColorSpace,
-            dst: grayColorSpace
+            src: CGColorSpaceCreateDeviceRGB(),
+            dst: CGColorSpaceCreateDeviceGray()
         )
         self.imageConversionKernel = MPSImageConversion(
             device: device,
@@ -188,39 +165,21 @@ final class LucasKanade {
         let library = device.makeDefaultLibrary()!
         let lucasKanadeFunction = library.makeFunction(name: "lucasKanade")!
         self.lucasKanadePipeline = try! device.makeComputePipelineState(function: lucasKanadeFunction)
-
-        self.rgbCIContext = CIContext(
-            mtlDevice: device,
-            options: [
-                .useSoftwareRenderer: false,
-                .outputColorSpace: rgbColorSpace,
-                .workingColorSpace: rgbColorSpace,
-            ]
-        )
-
-        self.grayCIContext = CIContext(
-            mtlDevice: device,
-            options: [
-                .useSoftwareRenderer: false,
-                .outputColorSpace: grayColorSpace,
-                .workingColorSpace: grayColorSpace,
-            ]
-        )
     }
     
-    func perform(_ aImageBuffer: CVImageBuffer, _ bImageBuffer: CVImageBuffer) -> Snapshot {
+    func perform(_ aTexture: MTLTexture, _ bTexture: MTLTexture) {
         let commandBuffer = commandQueue.makeCommandBuffer()!
         
         // Convert to grayscale, resize, and blur
         preprocessTexture(
             commandBuffer: commandBuffer,
-            input: makeTexture(aImageBuffer),
+            input: aTexture,
             image: aImage
         )
         
         preprocessTexture(
             commandBuffer: commandBuffer,
-            input: makeTexture(bImageBuffer),
+            input: bTexture,
             image: bImage
         )
 
@@ -275,231 +234,6 @@ final class LucasKanade {
         // Commit
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-        
-        // Make output
-        return Snapshot(
-            oldImage: makeCGImage(aImageBuffer, context: rgbCIContext),
-            newImage: makeCGImage(bImageBuffer, context: rgbCIContext),
-            ixImage: makeCGImage(ixTexture, context: grayCIContext),
-            iyImage: makeCGImage(iyTexture, context: grayCIContext),
-            itImage: makeCGImage(itTexture, context: grayCIContext),
-            vImage: makeCGImage(outputTexture, context: rgbCIContext),
-            visualizationImage: makeVisualization(
-                reference: makeCGImage(bImageBuffer, context: rgbCIContext),
-                vectors: outputTexture
-            )
-        )
-    }
-    
-    private func makeVisualization(reference: CGImage, vectors: MTLTexture) -> UIImage {
-        
-        let inputWidth = vectors.width
-        let inputHeight = vectors.height
-        
-        let outputWidth = sourceSize.width / 2
-        let outputHeight = sourceSize.height / 2
-        let grid = 5
-        let scale = Float32(20)
-        
-        let backgroundColor = UIColor.systemGreen.withAlphaComponent(0.5)
-        let zoneColor = UIColor.white.withAlphaComponent(0.5)
-        let lineColor = UIColor.systemPink
-
-        
-        let region = MTLRegion(
-            origin: MTLOrigin(x: 0, y: 0, z: 0),
-            size: MTLSize(width: inputWidth, height: inputHeight, depth: 1)
-        )
-        let bytesPerComponent = MemoryLayout<simd_packed_float2>.stride
-        let bytesPerRow = bytesPerComponent * inputWidth
-        // let totalBytes = bytesPerRow * texture.height
-
-        var textureData = Array<simd_packed_float2>(
-            repeating: simd_packed_float2.zero,
-            count: inputWidth * inputHeight
-        )
-        vectors.getBytes(
-            &textureData,
-            bytesPerRow: bytesPerRow,
-            from: region,
-            mipmapLevel: 0
-        )
-        
-
-        let size = CGSize(width: outputWidth, height: outputHeight)
-        let bounds = CGRect(origin: .zero, size: size)
-        
-        let format = UIGraphicsImageRendererFormat()
-        format.opaque = false
-        let imageRenderer = UIGraphicsImageRenderer(
-            bounds: bounds,
-            format: format
-        )
-        let image = imageRenderer.image { context in
-            
-            let cgContext = context.cgContext
-            cgContext.setShouldAntialias(false)
-            cgContext.setAllowsAntialiasing(false)
-            
-            cgContext.saveGState()
-            cgContext.scaleBy(x: 1, y: -1)
-            cgContext.translateBy(x: 0, y: -size.height)
-            cgContext.draw(reference, in: bounds)
-            cgContext.restoreGState()
-            
-            cgContext.saveGState()
-            cgContext.setFillColor(backgroundColor.cgColor)
-            cgContext.fill([bounds])
-            cgContext.restoreGState()
-            
-//            let sx = inputWidth / grid
-//            let sy = inputHeight / grid
-            
-            let k = 5
-            let minX: Int = k
-            let minY: Int = k
-            let maxX: Int = inputWidth - 1 - k
-            let maxY: Int = inputHeight - 1 - k
-            let deltaX = maxX - minX
-            let deltaY = maxY - minY
-            
-            let scaleX = Float(outputWidth) / Float(inputWidth)
-            let scaleY = Float(outputHeight) / Float(inputHeight)
-            
-            var aDirection = simd_float2(0, 0)
-            var aCount = 0
-
-            for j in 0 ..< grid {
-                
-                for i in 0 ..< grid {
-                    
-                    let ox = Float(minX) + ((Float(i) / Float(grid)) * Float(deltaX))
-                    let oy = Float(minY) + ((Float(j) / Float(grid)) * Float(deltaY))
-                    
-                    var direction = simd_float2(0, 0)
-                    var count = Float(0)
-                    
-                    for v in -k ... +k {
-                        
-                        for u in -k ... +k {
-                            
-                            let dx = Int((ox + Float(u)).rounded())
-                            let dy = Int((oy + Float(v)).rounded())
-                            
-                            let offset = (dy * inputWidth) + dx
-                            direction += textureData[offset]
-                            count += 1
-                        }
-                    }
-                    
-                    direction = direction / count
-                    let length = simd_length(direction)
-                    
-                    guard length > 0.0001 else {
-                        continue
-                    }
-
-                    aDirection += direction
-                    aCount += 1
-
-//                    print("flow", "dx", dx, "dy", dy, "=", length)
-//                    let vector = (simd_normalize(direction) * 2) +
-                    let vector = direction * scale
-
-                    let origin = simd_packed_float2(
-                        x: (ox * scaleX).rounded(),
-                        y: (oy * scaleY).rounded()
-                    )
-                    let start = CGPoint(origin)
-                    let end = CGPoint(origin + vector)
-                    
-
-                    cgContext.saveGState()
-                    cgContext.setFillColor(zoneColor.cgColor)
-                    cgContext.fillEllipse(
-                        in: CGRect(
-                            x: CGFloat(origin.x) - (CGFloat(scale) * 0.5),
-                            y: CGFloat(origin.y) - (CGFloat(scale) * 0.5),
-                            width: CGFloat(scale),
-                            height: CGFloat(scale)
-                        )
-                    )
-                    cgContext.restoreGState()
-
-                    cgContext.saveGState()
-                    cgContext.move(to: start)
-                    cgContext.addLine(to: end)
-                    cgContext.setLineWidth(5)
-                    cgContext.setStrokeColor(lineColor.cgColor)
-                    cgContext.strokePath()
-                    cgContext.restoreGState()
-
-                    // let percent = Double((y * sx) + x) / Double(sx * sy)
-                    // print(String(format: "%0.3f%% %0.3f %0.3f %0.3f", percent * 100, direction.x, direction.y, length))
-                }
-            }
-            
-            let radius = Float(100)
-            let center = CGPoint(
-                x: CGFloat(outputWidth) * 0.5,
-                y: CGFloat(outputHeight) * 0.5
-            )
-            let heading = CGPoint((aDirection / Float(aCount)) * radius)
-            let end = CGPoint(
-                x: center.x + heading.x,
-                y: center.y + heading.y
-            )
-            
-            cgContext.saveGState()
-            cgContext.setFillColor(zoneColor.cgColor)
-            cgContext.fillEllipse(
-                in: CGRect(
-                    x: center.x - CGFloat(radius),
-                    y: center.y - CGFloat(radius),
-                    width: CGFloat(radius) * 2,
-                    height: CGFloat(radius) * 2
-                )
-            )
-            cgContext.restoreGState()
-
-            cgContext.saveGState()
-            cgContext.move(to: center)
-            cgContext.addLine(to: end)
-            cgContext.setLineWidth(5)
-            cgContext.setStrokeColor(lineColor.cgColor)
-            cgContext.strokePath()
-            cgContext.restoreGState()
-
-        }
-        
-        return image
-    }
-    
-    private func makeCGImage(_ input: CVImageBuffer, context: CIContext) -> CGImage {
-        let ciImage = CIImage(
-            cvPixelBuffer: input,
-            options: [.applyOrientationProperty: true]
-        )
-        return makeCGImage(ciImage, context: context)
-    }
-    
-    private func makeCGImage(_ input: MTLTexture, context: CIContext) -> CGImage {
-        let ciImage = CIImage(mtlTexture: input)!
-        return makeCGImage(ciImage, context: context)
-    }
-    
-    private func makeCGImage(_ input: CIImage, context: CIContext) -> CGImage {
-        return context.createCGImage(input, from: input.extent)!
-    }
-    
-    private func makeTexture(_ input: CVImageBuffer) -> MTLTexture {
-        var cvMetalTexture: CVMetalTexture?
-        let result = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, input, nil, .bgra8Unorm, sourceSize.width, sourceSize.height, 0, &cvMetalTexture)
-        guard result == kCVReturnSuccess else {
-            fatalError("Cannot create texture")
-        }
-        let texture = CVMetalTextureGetTexture(cvMetalTexture!)!
-        return texture
     }
     
     private func preprocessTexture(commandBuffer: MTLCommandBuffer, input: MTLTexture, image: Image) {

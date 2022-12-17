@@ -7,6 +7,7 @@
 
 import CoreImage
 import simd
+import CoreImage.CIFilterBuiltins
 
 
 extension CIImage {

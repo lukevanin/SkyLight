@@ -3,73 +3,8 @@ import simd
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import Vision
-
-
-struct Quad {
-    var topLeft: simd_float2
-    var topRight: simd_float2
-    var bottomRight: simd_float2
-    var bottomLeft: simd_float2
-
-    var points: [simd_float2] {
-        [topLeft, topRight, bottomRight, bottomLeft]
-    }
-    
-    func transformed(by matrix: simd_float3x3) -> Quad {
-        Quad(
-            points: points
-                .map { point in
-                    simd_float3(point.x, point.y, 1)
-                }
-                .map { point in
-                    matrix * point
-                }
-                .map { point in
-                    simd_float2(point.x / point.z, point.y / point.z)
-                }
-        )
-    }
-}
-
-extension Quad {
-    init(rect: CGRect) {
-        self.init(
-            topLeft: simd_float2(Float(rect.minX), Float(rect.maxY)),
-            topRight: simd_float2(Float(rect.maxX), Float(rect.maxY)),
-            bottomRight: simd_float2(Float(rect.maxX), Float(rect.minY)),
-            bottomLeft: simd_float2(Float(rect.minX), Float(rect.minY))
-        )
-    }
-    
-    init(points: [simd_float2]) {
-        self.init(
-            topLeft: points[0],
-            topRight: points[1],
-            bottomRight: points[2],
-            bottomLeft: points[3]
-        )
-    }
-}
-
-
-extension CGPoint {
-    init(_ point: simd_float2) {
-        self.init(x: CGFloat(point.x), y: CGFloat(point.y))
-    }
-}
-
-extension CIImage {
-    func perspectiveTransformed(by matrix: simd_float3x3) -> CIImage {
-        let bounds = Quad(rect: extent).transformed(by: matrix)
-        let filter = CIFilter.perspectiveTransform()
-        filter.topLeft = CGPoint(bounds.topLeft)
-        filter.topRight = CGPoint(bounds.topRight)
-        filter.bottomRight = CGPoint(bounds.bottomRight)
-        filter.bottomLeft = CGPoint(bounds.bottomLeft)
-        filter.inputImage = self
-        return filter.outputImage!
-    }
-}
+import AVFoundation
+import MetalPerformanceShaders
 
 
 final class PreviewViewController: UIViewController {
@@ -77,7 +12,8 @@ final class PreviewViewController: UIViewController {
     private let newImageView: UIImageView = {
         let view = UIImageView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.contentMode = .scaleAspectFit
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
         view.backgroundColor = .systemGreen
         return view
     }()
@@ -85,81 +21,158 @@ final class PreviewViewController: UIViewController {
     private let oldImageView: UIImageView = {
         let view = UIImageView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.contentMode = .scaleAspectFit
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
         view.backgroundColor = .systemRed
         return view
     }()
     
-    private let backgroundImageView: UIImageView = {
+    private let ixImageView: UIImageView = {
         let view = UIImageView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.contentMode = .scaleAspectFit
-        view.backgroundColor = .systemCyan
-        view.alpha = 1.0
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
+        view.backgroundColor = .systemGreen
+        return view
+    }()
+    
+    private let iyImageView: UIImageView = {
+        let view = UIImageView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
+        view.backgroundColor = .systemRed
+        return view
+    }()
+    
+    private let itImageView: UIImageView = {
+        let view = UIImageView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
+        view.backgroundColor = .systemRed
         return view
     }()
 
-    private let previewImageView: UIImageView = {
+    private let vImageView: UIImageView = {
         let view = UIImageView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.contentMode = .scaleAspectFit
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
         view.backgroundColor = .clear
         view.alpha = 1.0
         return view
     }()
-    
+
+    private let visualizationImageView: UIImageView = {
+        let view = UIImageView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.clipsToBounds = true
+        view.contentMode = .scaleAspectFill
+        view.backgroundColor = .clear
+        view.alpha = 1.0
+        return view
+    }()
+
     private let containerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
-    private let ciContext = CIContext(
+    private static let ciContext = CIContext(
         options: [
             .cacheIntermediates: false
         ]
     )
-    
+        
     private var imageRequestHandler: VNImageRequestHandler?
+    
+    private let sequenceRequestHandler: VNSequenceRequestHandler = {
+        let handler = VNSequenceRequestHandler()
+        return handler
+    }()
+    
+    private let lucasKanade: LucasKanade = LucasKanade(
+        sourceSize: MTLSize(width: 360, height: 640, depth: 1),
+//        outputSize: MTLSize(width: 180, height: 320, depth: 1)
+        outputSize: MTLSize(width: 90, height: 160, depth: 1)
+//        outputSize: MTLSize(width: 45, height: 80, depth: 1)
+//        outputSize: MTLSize(width: 22, height: 40, depth: 1)
+    )
     
     override var prefersStatusBarHidden: Bool {
         return true
     }
-
+    
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
-        updateImages()
+        Task {
+            let fileURL = Bundle.main.url(forResource: "test-05-480p", withExtension: "mov")!
+            await processVideoFile(fileURL: fileURL)
+        }
+//        updateImages()
     }
     
     private func setupView() {
         view.backgroundColor = .systemPurple
         
-        let imagesLayout: UIStackView = {
+        let imagesLayout0: UIStackView = {
             let layout = UIStackView()
             layout.translatesAutoresizingMaskIntoConstraints = false
             layout.axis = .horizontal
             layout.alignment = .center
-            layout.distribution = .equalSpacing
+            layout.distribution = .equalCentering
             layout.addArrangedSubview(oldImageView)
             layout.addArrangedSubview(newImageView)
             return layout
         }()
         
+        let imagesLayout1: UIStackView = {
+            let layout = UIStackView()
+            layout.translatesAutoresizingMaskIntoConstraints = false
+            layout.axis = .horizontal
+            layout.alignment = .center
+            layout.distribution = .equalCentering
+            layout.addArrangedSubview(ixImageView)
+            layout.addArrangedSubview(iyImageView)
+            layout.addArrangedSubview(itImageView)
+            return layout
+        }()
+        
+        let imagesLayout2: UIStackView = {
+            let layout = UIStackView()
+            layout.translatesAutoresizingMaskIntoConstraints = false
+            layout.axis = .horizontal
+            layout.alignment = .center
+            layout.distribution = .equalCentering
+            layout.addArrangedSubview(vImageView)
+            layout.addArrangedSubview(visualizationImageView)
+            return layout
+        }()
+
         let mainLayout: UIStackView = {
             let layout = UIStackView()
             layout.translatesAutoresizingMaskIntoConstraints = false
             layout.axis = .vertical
-            layout.alignment = .center
-            layout.distribution = .equalSpacing
-            layout.spacing = 16
-            layout.addArrangedSubview(imagesLayout)
-            layout.addArrangedSubview(containerView)
+            layout.alignment = .fill
+            layout.distribution = .equalCentering
+            layout.spacing = 4
+            layout.addArrangedSubview(imagesLayout0)
+            layout.addArrangedSubview(imagesLayout1)
+            layout.addArrangedSubview(imagesLayout2)
             return layout
         }()
         
-        containerView.addSubview(backgroundImageView)
-        containerView.addSubview(previewImageView)
         view.addSubview(mainLayout)
         
         NSLayoutConstraint.activate([
@@ -168,19 +181,21 @@ final class PreviewViewController: UIViewController {
             
             oldImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
             oldImageView.heightAnchor.constraint(equalTo: oldImageView.widthAnchor),
+
+            ixImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.33),
+            ixImageView.heightAnchor.constraint(equalTo: ixImageView.widthAnchor),
             
-            containerView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor),
+            iyImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.33),
+            iyImageView.heightAnchor.constraint(equalTo: iyImageView.widthAnchor),
+
+            itImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.33),
+            itImageView.heightAnchor.constraint(equalTo: itImageView.widthAnchor),
             
-            backgroundImageView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
-            backgroundImageView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
-            backgroundImageView.widthAnchor.constraint(equalTo: containerView.widthAnchor),
-            backgroundImageView.heightAnchor.constraint(equalTo: containerView.heightAnchor),
+            vImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
+            vImageView.heightAnchor.constraint(equalTo: vImageView.widthAnchor),
             
-            previewImageView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
-            previewImageView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
-            previewImageView.widthAnchor.constraint(equalTo: containerView.widthAnchor),
-            previewImageView.heightAnchor.constraint(equalTo: containerView.heightAnchor),
+            visualizationImageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
+            visualizationImageView.heightAnchor.constraint(equalTo: visualizationImageView.widthAnchor),
 
             mainLayout.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             mainLayout.widthAnchor.constraint(equalTo: view.widthAnchor),
@@ -188,36 +203,287 @@ final class PreviewViewController: UIViewController {
             mainLayout.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
     }
+    
+    private func processVideoFile(fileURL: URL) async {
+        let asset = AVURLAsset(url: fileURL)
+        let reader = try! AVAssetReader(asset: asset)
+        let videoTrack = reader.asset.tracks(withMediaType: .video).first!
+        let videoTrackTimeRange = try! await videoTrack.load(.timeRange)
+        let videoTrackOutput = AVAssetReaderTrackOutput(
+            track: videoTrack,
+            outputSettings: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferMetalCompatibilityKey as String: true,
+//                AVVideoScalingModeKey: AVVideoScalingModeResize,
+//                AVVideoCleanApertureKey: [
+//                    AVVideoCleanApertureWidthKey: NSNumber(value: 1080.0 * 0.25),
+//                    AVVideoCleanApertureHeightKey: NSNumber(value: 1920.0 * 0.25)
+//                ]
+            ]
+        )
+        videoTrackOutput.supportsRandomAccess = false
+        //videoTrackOutput.reset(forReadingTimeRanges: [NSValue(timeRange: videoTrackTimeRange)])
+        videoTrackOutput.markConfigurationAsFinal()
+        reader.add(videoTrackOutput)
 
+        print(
+            "reading time range",
+            String(format: "%0.2f", videoTrackTimeRange.start.seconds),
+            "-",
+            String(format: "%0.2f", videoTrackTimeRange.end.seconds)
+        )
+        reader.startReading()
+        var count = 0
+        var oldImage: CVImageBuffer?
+        var oldTime = CFAbsoluteTimeGetCurrent()
+        while let sampleBuffer = videoTrackOutput.copyNextSampleBuffer() {
+            let newTime = CFAbsoluteTimeGetCurrent()
+            print(
+                "read sample",
+                count,
+                "at",
+                String(format: "%0.2f", sampleBuffer.presentationTimeStamp.seconds),
+                "/",
+                String(format: "%0.2f", videoTrackTimeRange.end.seconds),
+                "@",
+                String(format: "%0.3f", newTime - oldTime),
+                "seconds"
+            )
+            count += 1
+//            guard count % 10 == 0 else {
+//                continue
+//            }
+            let newImage = sampleBuffer.imageBuffer!
+            if let oldImage = oldImage {
+//                opticalFlowLucasKanade(oldImage, newImage)
+                let snapshot = lucasKanade.perform(oldImage, newImage)
+                setSnapshot(snapshot)
+                await Task.yield()
+            }
+            oldImage = newImage
+            oldTime = newTime
+
+            // try! await Task.sleep(nanoseconds: UInt64(1e9 * 0.2))
+        }
+    }
+    
+    @MainActor private func setSnapshot(_ snapshot: Snapshot) {
+        self.oldImageView.image = UIImage(cgImage: snapshot.oldImage)
+        self.newImageView.image = UIImage(cgImage: snapshot.newImage)
+        self.ixImageView.image = UIImage(cgImage: snapshot.ixImage)
+        self.iyImageView.image = UIImage(cgImage: snapshot.iyImage)
+        self.itImageView.image = UIImage(cgImage: snapshot.itImage)
+        self.vImageView.image = UIImage(cgImage: snapshot.vImage)
+        self.visualizationImageView.image = snapshot.visualizationImage
+    }
+
+    /*
     private func updateImages() {
-        let referenceImage = UIImage(named: "image-d0")
-        let floatingImage = UIImage(named: "image-d1")
+        let referenceImage = UIImage(named: "image-a0")!
+        let floatingImage = UIImage(named: "image-a1")!
         oldImageView.image = referenceImage
         newImageView.image = floatingImage
         
-        guard let referenceImage = referenceImage else {
-            return
-        }
-        guard let floatingImage = floatingImage else {
-            return
-        }
+        let referenceCIImage = CIImage(image: referenceImage)!
+        let floatingCIImage = CIImage(image: floatingImage)!
+
+        opticalFlow(
+            referenceImage: referenceCIImage,
+            floatingImage: floatingCIImage
+        )
         
-        guard let referenceCIImage = CIImage(image: referenceImage) else {
-            return
-        }
+        return
         
-        guard let floatingCIImage = CIImage(image: floatingImage) else {
+//        let homographicCIImage = homographicRegistration(
+//            referenceImage: referenceCIImage,
+//            floatingImage: floatingCIImage
+//        )
+//
+//        guard let homographicCIImage = homographicCIImage else {
+//            return
+//        }
+        
+        let translatedCIImage = translationalRegistration(
+            referenceImage: referenceCIImage,
+            floatingImage: floatingCIImage
+//            floatingImage: homographicCIImage
+        )
+
+        guard let translatedCIImage = translatedCIImage else {
             return
         }
 
+//        let warpedCIImage = translatedCIImage
+
+        let compositeFilter = CIFilter.additionCompositing()
+//        let compositeFilter = CIFilter.sourceOverCompositing()
+//        let compositeFilter = CIFilter.subtractBlendMode()
+        compositeFilter.backgroundImage = referenceCIImage
+        compositeFilter.inputImage = translatedCIImage
+        let compositeCIImage = compositeFilter.outputImage!
+
+        let compositeCGImage = ciContext.createCGImage(compositeCIImage, from: compositeCIImage.extent)!
+
+        previewImageView.image = UIImage(cgImage: compositeCGImage)
+    }
+     */
+
+    /*
+    private func opticalFlowSequence(referenceImage: CVPixelBuffer, floatingImage: CVPixelBuffer) {
+        
+        let referenceCIImage = CIImage(cvPixelBuffer: referenceImage, options: [.applyOrientationProperty: true])
+        
+        let request = VNGenerateOpticalFlowRequest(
+            targetedCVPixelBuffer: floatingImage,
+            completionHandler: { [weak self] request, error in
+                guard let result = request.results?.first else {
+                    print("Cannot perform request. Reason:", error?.localizedDescription ?? "- unknown -")
+                    return
+                }
+                let observation = result as! VNPixelBufferObservation
+                let image = Self.makeOpticalFlowImage(
+                    referenceImage: referenceCIImage,
+                    buffer: observation.pixelBuffer
+                )
+                DispatchQueue.main.async {
+                    self?.previewImageView.image = image
+                }
+            }
+        )
+        request.computationAccuracy = .low
+        request.outputPixelFormat = kCVPixelFormatType_TwoComponent32Float
+        request.preferBackgroundProcessing = false
+        request.usesCPUOnly = false
+        request.regionOfInterest = CGRect(x: 0.1, y: 0.1, width: 0.8, height: 0.8)
+        
+        try! sequenceRequestHandler.perform([request], on: referenceImage)
+    }
+    
+    private func opticalFlow(referenceImage: CIImage, floatingImage: CIImage) {
+        
+        let request = VNGenerateOpticalFlowRequest(
+            targetedCIImage: referenceImage
+        )
+        request.computationAccuracy = .high
+        request.outputPixelFormat = kCVPixelFormatType_TwoComponent32Float
+        
+        imageRequestHandler = VNImageRequestHandler(
+            ciImage: floatingImage
+        )
+        try! imageRequestHandler?.perform([request])
+        
+        guard let results = request.results else {
+            print("No results")
+            return
+        }
+        
+        guard let result = results.first else {
+            print("No result")
+            return
+        }
+
+        print("results", result)
+        let image = Self.makeOpticalFlowImage(
+            referenceImage: referenceImage,
+            buffer: result.pixelBuffer
+        )
+        previewImageView.image = image
+    }
+    
+    private static func makeOpticalFlowImage(referenceImage: CIImage, buffer: CVPixelBuffer) -> UIImage {
+        
+        let referenceCGImage = ciContext.createCGImage(referenceImage, from: referenceImage.extent)!
+        
+        CVPixelBufferLockBaseAddress(buffer, .readOnly)
+        defer {
+            CVPixelBufferUnlockBaseAddress(buffer, .readOnly)
+        }
+        
+        let pixelFormat = CVPixelBufferGetPixelFormatType(buffer)
+        precondition(pixelFormat == kCVPixelFormatType_TwoComponent32Float)
+        let bytesPerComponent = MemoryLayout<simd_packed_float2>.stride
+        precondition(bytesPerComponent == (4 * 2))
+        
+        let isPlanar = CVPixelBufferIsPlanar(buffer)
+        precondition(isPlanar == false)
+        
+        let width = CVPixelBufferGetWidth(buffer)
+        let height = CVPixelBufferGetHeight(buffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
+        let address = CVPixelBufferGetBaseAddress(buffer)!
+        
+        let size = CGSize(width: width, height: height)
+        let bounds = CGRect(origin: .zero, size: size)
+        let grid = 50
+        
+        let scale = Float32(1)
+        let backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        let lineColor = UIColor.systemPink
+        
+        let imageRenderer = UIGraphicsImageRenderer(bounds: bounds)
+        let image = imageRenderer.image { context in
+            
+            let cgContext = context.cgContext
+            
+            cgContext.saveGState()
+            cgContext.scaleBy(x: 1, y: -1)
+            cgContext.translateBy(x: 0, y: -bounds.height)
+            cgContext.draw(referenceCGImage, in: bounds)
+            cgContext.restoreGState()
+            
+            cgContext.setFillColor(backgroundColor.cgColor)
+            cgContext.fill(bounds)
+            
+            let sx = width / grid
+            let sy = height / grid
+            
+            for y in 0 ..< sy {
+                
+                for x in 0 ..< sx {
+                    
+                    let dx = x * grid
+                    let dy = y * grid
+                    let origin = simd_packed_float2(x: Float32(dx), y: Float32(dy))
+                    
+                    let offset = (dy * bytesPerRow) + (dx * bytesPerComponent)
+                    let pointer = address.advanced(by: offset).assumingMemoryBound(to: simd_packed_float2.self)
+                    let direction = pointer.pointee
+                    let vector = direction * scale
+                    let length = simd_length(direction)
+                    
+//                    guard length < 1000 else {
+//                        continue
+//                    }
+                    
+                    let start = CGPoint(origin)
+                    let end = CGPoint(origin + vector)
+                    
+                    cgContext.move(to: start)
+                    cgContext.addLine(to: end)
+                    
+                    let percent = Double((y * sx) + x) / Double(sx * sy)
+                    // print(String(format: "%0.3f%% %0.3f %0.3f %0.3f", percent * 100, direction.x, direction.y, length))
+                }
+            }
+            
+            cgContext.setLineWidth(3)
+            cgContext.setStrokeColor(lineColor.cgColor)
+            cgContext.strokePath()
+        }
+
+        return image
+    }
+
+    private func homographicRegistration(referenceImage: CIImage, floatingImage: CIImage) -> CIImage? {
         // TODO: Use camera intrinsics
+        
         let request = VNHomographicImageRegistrationRequest(
-            targetedCIImage: floatingCIImage
+            targetedCIImage: floatingImage
         )
         
         // TODO: Use VNSequenceRequestHandler
         imageRequestHandler = VNImageRequestHandler(
-            ciImage: referenceCIImage
+            ciImage: referenceImage
         )
         
         do {
@@ -225,10 +491,11 @@ final class PreviewViewController: UIViewController {
         }
         catch {
             print("Cannot process image request: \(error.localizedDescription)")
+            return nil
         }
         
         guard let results = request.results else {
-            return
+            return nil
         }
         
         print("Image processing results")
@@ -237,35 +504,54 @@ final class PreviewViewController: UIViewController {
         }
         
         guard let result = results.first else {
-            return
+            return nil
         }
         
-        let warpedCIImage = floatingCIImage.perspectiveTransformed(
+        let warpedImage = floatingImage.perspectiveTransformed(
             by: result.warpTransform
         )
 
-        let backgroundCIImage = referenceCIImage.cropped(
-            to: warpedCIImage.extent
-        )
-        
-        let compositeFilter = CIFilter.additionCompositing()
-        compositeFilter.backgroundImage = warpedCIImage
-        compositeFilter.inputImage = referenceCIImage
-        let compositeCIImage = compositeFilter.outputImage!
-
-        print("source", referenceCIImage.extent)
-        print("target", floatingCIImage.extent)
-        print("warped", warpedCIImage.extent)
-        print("final", compositeCIImage.extent)
-
-//        let finalCGImage = ciContext.createCGImage(referenceCIImage, from: referenceCIImage.extent)
-//        let finalCGImage = ciContext.createCGImage(floatingCIImage, from: floatingCIImage.extent)
-//        let finalCGImage = ciContext.createCGImage(warpedCIImage, from: warpedCIImage.extent)
-        let backgroundCGImage = ciContext.createCGImage(backgroundCIImage, from: backgroundCIImage.extent)!
-        let compositeCGImage = ciContext.createCGImage(compositeCIImage, from: compositeCIImage.extent)!
-
-//        backgroundImageView.image = UIImage(cgImage: backgroundCGImage)
-        previewImageView.image = UIImage(cgImage: compositeCGImage)
+        return warpedImage
     }
+
+    private func translationalRegistration(referenceImage: CIImage, floatingImage: CIImage) -> CIImage? {
+        // TODO: Use camera intrinsics
+        let request = VNTranslationalImageRegistrationRequest(
+            targetedCIImage: floatingImage
+        )
+//        request.regionOfInterest = CGRect(x: 0, y: 0, width: 1, height: 1).insetBy(dx: 0.1, dy: 0.1)
+
+        // TODO: Use VNSequenceRequestHandler
+        imageRequestHandler = VNImageRequestHandler(
+            ciImage: referenceImage
+        )
+
+        do {
+            try imageRequestHandler?.perform([request])
+        }
+        catch {
+            print("Cannot process image request: \(error.localizedDescription)")
+            return nil
+        }
+
+        guard let results = request.results else {
+            return nil
+        }
+
+        print("Image processing results")
+        for result in results {
+            print(result, result.alignmentTransform)
+        }
+
+        guard let result = results.first else {
+            return nil
+        }
+
+        let warpedImage = floatingImage.transformed(
+            by: result.alignmentTransform
+        )
+        return warpedImage
+    }
+    */
 }
 

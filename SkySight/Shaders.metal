@@ -86,7 +86,7 @@ kernel void lucasKanade(
 
             float ix = ixTexture.read(g).r * w;
             float iy = iyTexture.read(g).r * w;
-            float it = itTexture.read(g).r;
+            float it = itTexture.read(g).r * w;
 
             a += (ix * ix);
             b += (ix * iy);

@@ -40,7 +40,8 @@ final class ImageConversion {
     }
     
     func makeCGImage(_ input: CIImage) -> CGImage {
-        return ciContext.createCGImage(input, from: input.extent)!
+        let output = input.transformed(by: input.orientationTransform(for: .downMirrored))
+        return ciContext.createCGImage(output, from: output.extent)!
     }
 
 }

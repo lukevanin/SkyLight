@@ -6,8 +6,8 @@
 //
 
 import CoreImage
-import simd
 import CoreImage.CIFilterBuiltins
+import simd
 
 
 extension CIImage {
@@ -18,6 +18,12 @@ extension CIImage {
         filter.topRight = CGPoint(bounds.topRight)
         filter.bottomRight = CGPoint(bounds.bottomRight)
         filter.bottomLeft = CGPoint(bounds.bottomLeft)
+        filter.inputImage = self
+        return filter.outputImage!
+    }
+    
+    func colorInverted() -> CIImage {
+        let filter = CIFilter.colorInvert()
         filter.inputImage = self
         return filter.outputImage!
     }

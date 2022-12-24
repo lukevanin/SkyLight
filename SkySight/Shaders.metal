@@ -42,6 +42,75 @@ float gaussian(float x, float y, float sigma) {
 }
 
 
+kernel void nearestNeighborHalfScale(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture [[texture(1)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    outputTexture.write(inputTexture.read(gid * 2), gid);
+}
+
+
+kernel void siftExtrema(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> aTexture [[texture(1)]],
+    texture2d<float, access::read> bTexture [[texture(2)]],
+    texture2d<float, access::read> cTexture [[texture(3)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    const int2 pos = int2(gid);
+    
+    float values[26] = { 0 };
+    
+    values[ 0] = aTexture.read(ushort2(pos + int2(-1, -1))).r;
+    values[ 1] = aTexture.read(ushort2(pos + int2( 0, -1))).r;
+    values[ 2] = aTexture.read(ushort2(pos + int2(+1, -1))).r;
+    values[ 3] = aTexture.read(ushort2(pos + int2(-1,  0))).r;
+    values[ 4] = aTexture.read(ushort2(pos + int2( 0,  0))).r;
+    values[ 5] = aTexture.read(ushort2(pos + int2(+1,  0))).r;
+    values[ 6] = aTexture.read(ushort2(pos + int2(-1, +1))).r;
+    values[ 7] = aTexture.read(ushort2(pos + int2( 0, +1))).r;
+    values[ 8] = aTexture.read(ushort2(pos + int2(+1, +1))).r;
+
+    values[ 9] = bTexture.read(ushort2(pos + int2(-1, -1))).r;
+    values[10] = bTexture.read(ushort2(pos + int2( 0, -1))).r;
+    values[11] = bTexture.read(ushort2(pos + int2(+1, -1))).r;
+    values[12] = bTexture.read(ushort2(pos + int2(-1,  0))).r;
+    
+    values[13] = bTexture.read(ushort2(pos + int2(+1,  0))).r;
+    values[14] = bTexture.read(ushort2(pos + int2(-1, +1))).r;
+    values[15] = bTexture.read(ushort2(pos + int2( 0, +1))).r;
+    values[16] = bTexture.read(ushort2(pos + int2(+1, +1))).r;
+
+    values[17] = cTexture.read(ushort2(pos + int2(-1, -1))).r;
+    values[18] = cTexture.read(ushort2(pos + int2( 0, -1))).r;
+    values[19] = cTexture.read(ushort2(pos + int2(+1, -1))).r;
+    values[20] = cTexture.read(ushort2(pos + int2(-1,  0))).r;
+    values[21] = cTexture.read(ushort2(pos + int2( 0,  0))).r;
+    values[22] = cTexture.read(ushort2(pos + int2(+1,  0))).r;
+    values[23] = cTexture.read(ushort2(pos + int2(-1, +1))).r;
+    values[24] = cTexture.read(ushort2(pos + int2( 0, +1))).r;
+    values[25] = cTexture.read(ushort2(pos + int2(+1, +1))).r;
+    
+    float minimum = +HUGE_VALF;
+    float maximum = -HUGE_VALF;
+
+    for (int i = 0; i < 26; i++) {
+        minimum = min(minimum, values[i]);
+        maximum = max(maximum, values[i]);
+    }
+    
+    int value = bTexture.read(ushort2(pos + int2( 0,  0))).r;
+    
+    if ((value < minimum) || (value > maximum)) {
+        outputTexture.write(float4(value, 0, 0, 0), gid);
+    }
+    else {
+        outputTexture.write(float4(-1, 0, 0, 0), gid);
+    }
+}
+
+
 // https://en.wikipedia.org/wiki/Lucas–Kanade_method
 kernel void lucasKanade(
     texture2d<float, access::read_write> outputTexture [[texture(0)]],

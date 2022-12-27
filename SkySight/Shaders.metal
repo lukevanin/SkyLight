@@ -42,7 +42,35 @@ float gaussian(float x, float y, float sigma) {
 }
 
 
-kernel void nearestNeighborHalfScale(
+kernel void convertSRGBToGraysale(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture [[texture(1)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    const float4 input = inputTexture.read(gid);
+    const float i = 0 +
+        (0.212639005871510 * input.r) +
+        (0.715168678767756 * input.g) +
+        (0.072192315360734 * input.b);
+    const float4 output = float4(i, i, i, input.a);
+    outputTexture.write(output, gid);
+}
+
+
+kernel void subtract(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture0 [[texture(1)]],
+    texture2d<float, access::read> inputTexture1 [[texture(2)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    float4 a = inputTexture0.read(gid);
+    float4 b = inputTexture1.read(gid);
+    float4 c = a - b;
+    outputTexture.write(c, gid);
+}
+
+
+kernel void nearestNeighborDownScale(
     texture2d<float, access::write> outputTexture [[texture(0)]],
     texture2d<float, access::read> inputTexture [[texture(1)]],
     ushort2 gid [[thread_position_in_grid]]
@@ -51,63 +79,200 @@ kernel void nearestNeighborHalfScale(
 }
 
 
-kernel void siftExtrema(
+kernel void nearestNeighborUpScale(
     texture2d<float, access::write> outputTexture [[texture(0)]],
-    texture2d<float, access::read> aTexture [[texture(1)]],
-    texture2d<float, access::read> bTexture [[texture(2)]],
-    texture2d<float, access::read> cTexture [[texture(3)]],
+    texture2d<float, access::read> inputTexture [[texture(1)]],
     ushort2 gid [[thread_position_in_grid]]
 ) {
-    const int2 pos = int2(gid);
-    
-    float values[26] = { 0 };
-    
-    values[ 0] = aTexture.read(ushort2(pos + int2(-1, -1))).r;
-    values[ 1] = aTexture.read(ushort2(pos + int2( 0, -1))).r;
-    values[ 2] = aTexture.read(ushort2(pos + int2(+1, -1))).r;
-    values[ 3] = aTexture.read(ushort2(pos + int2(-1,  0))).r;
-    values[ 4] = aTexture.read(ushort2(pos + int2( 0,  0))).r;
-    values[ 5] = aTexture.read(ushort2(pos + int2(+1,  0))).r;
-    values[ 6] = aTexture.read(ushort2(pos + int2(-1, +1))).r;
-    values[ 7] = aTexture.read(ushort2(pos + int2( 0, +1))).r;
-    values[ 8] = aTexture.read(ushort2(pos + int2(+1, +1))).r;
+    ushort2 inputSize = ushort2(inputTexture.get_width(), inputTexture.get_height());
+    ushort2 outputSize = ushort2(outputTexture.get_width(), outputTexture.get_height());
 
-    values[ 9] = bTexture.read(ushort2(pos + int2(-1, -1))).r;
-    values[10] = bTexture.read(ushort2(pos + int2( 0, -1))).r;
-    values[11] = bTexture.read(ushort2(pos + int2(+1, -1))).r;
-    values[12] = bTexture.read(ushort2(pos + int2(-1,  0))).r;
-    
-    values[13] = bTexture.read(ushort2(pos + int2(+1,  0))).r;
-    values[14] = bTexture.read(ushort2(pos + int2(-1, +1))).r;
-    values[15] = bTexture.read(ushort2(pos + int2( 0, +1))).r;
-    values[16] = bTexture.read(ushort2(pos + int2(+1, +1))).r;
+    ushort2 scale = outputSize / inputSize;
+    outputTexture.write(inputTexture.read(gid / scale), gid);
+}
 
-    values[17] = cTexture.read(ushort2(pos + int2(-1, -1))).r;
-    values[18] = cTexture.read(ushort2(pos + int2( 0, -1))).r;
-    values[19] = cTexture.read(ushort2(pos + int2(+1, -1))).r;
-    values[20] = cTexture.read(ushort2(pos + int2(-1,  0))).r;
-    values[21] = cTexture.read(ushort2(pos + int2( 0,  0))).r;
-    values[22] = cTexture.read(ushort2(pos + int2(+1,  0))).r;
-    values[23] = cTexture.read(ushort2(pos + int2(-1, +1))).r;
-    values[24] = cTexture.read(ushort2(pos + int2( 0, +1))).r;
-    values[25] = cTexture.read(ushort2(pos + int2(+1, +1))).r;
+
+kernel void bilinearUpScale(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture [[texture(1)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
     
-    float minimum = +HUGE_VALF;
-    float maximum = -HUGE_VALF;
+    const int wo = outputTexture.get_width();
+    const int ho = outputTexture.get_height();
+    
+    const int wi = inputTexture.get_width();
+    const int hi = inputTexture.get_height();
+    
+    const float dx = (float)wi / (float)wo;
+    const float dy = (float)hi / (float)ho;
+    
+    int i = gid.x;
+    int j = gid.y;
+    const float x = (float)i * dx;
+    const float y = (float)j * dy;
+    int im = (int)x;
+    int jm = (int)y;
+    int ip = im + 1;
+    int jp = jm + 1;
+    
+    //image extension by symmetrization
+    if (ip >= wi) {
+        ip = 2 * wi - 1 - ip;
+    }
+    if (im >= wi) {
+        im = 2 * wi - 1 - im;
+    }
+    if (jp >= hi) {
+        jp = 2 * hi - 1 - jp;
+    }
+    if (jm >= hi) {
+        jm = 2 * hi - 1 - jm;
+    }
+
+    const float fractional_x = x - floor(x);
+    const float fractional_y = y - floor(y);
+    
+    const float c0 = inputTexture.read(uint2(ip, jp)).r;
+    const float c1 = inputTexture.read(uint2(ip, jm)).r;
+    const float c2 = inputTexture.read(uint2(im, jp)).r;
+    const float c3 = inputTexture.read(uint2(im, jm)).r;
+
+    const float output = fractional_x * (fractional_y * c0
+                           + (1 - fractional_y) * c1 )
+             + (1 - fractional_x) * ( fractional_y  * c2
+                           + (1 - fractional_y) * c3 );
+
+    outputTexture.write(float4(output, 0, 0, 1), gid);
+
+
+//    const c = inputTexture.read(ushort2())
+}
+
+
+static inline int symmetrizedCoordinates(int i, int l) {
+    int ll = 2*l;
+    i = (i+ll)%(ll);
+    if(i>l-1){i = ll-1-i;}
+    return i;
+}
+
+
+kernel void convolutionX(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture [[texture(1)]],
+    device float * weights [[buffer(0)]],
+    device uint & numberOfWeights [[buffer(1)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    const int width = inputTexture.get_width();
+    
+    float sum = 0;
+    const int n = (int)numberOfWeights;
+    const int o = (int)gid.x - (n / 2);
+    for (int i = 0; i < n; i++) {
+        int x = symmetrizedCoordinates(o + i, width);
+        sum += weights[i] * inputTexture.read(ushort2(x, gid.y)).r;
+    }
+    outputTexture.write(float4(sum, 0, 0, 1), gid);
+}
+
+
+kernel void convolutionY(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture [[texture(1)]],
+    device float * weights [[buffer(0)]],
+    device uint & numberOfWeights [[buffer(1)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    const int height = inputTexture.get_height();
+    
+    float sum = 0;
+    const int n = (int)numberOfWeights;
+    const int o = (int)gid.y - (n / 2);
+    for (int i = 0; i < n; i++) {
+        int y = symmetrizedCoordinates(o + i, height);
+        sum += weights[i] * inputTexture.read(ushort2(gid.x, y)).r;
+    }
+    outputTexture.write(float4(sum, 0, 0, 1), gid);
+}
+
+
+constant int3 neighborOffsets[] = {
+    int3(0, -1, -1),
+    int3(0,  0, -1),
+    int3(0, +1, -1),
+    int3(0, -1,  0),
+    int3(0,  0,  0),
+    int3(0, +1,  0),
+    int3(0, -1, +1),
+    int3(0,  0, +1),
+    int3(0, +1, +1),
+    
+    int3(1, -1, -1),
+    int3(1,  0, -1),
+    int3(1, +1, -1),
+    int3(1, -1,  0),
+    
+    int3(1, +1,  0),
+    int3(1, -1, +1),
+    int3(1,  0, +1),
+    int3(1, +1, +1),
+    
+    int3(2, -1, -1),
+    int3(2,  0, -1),
+    int3(2, +1, -1),
+    int3(2, -1,  0),
+    int3(2,  0,  0),
+    int3(2, +1,  0),
+    int3(2, -1, +1),
+    int3(2,  0, +1),
+    int3(2, +1, +1),
+};
+
+
+kernel void siftExtrema(
+    texture2d<float, access::write> outputTexture [[texture(0)]],
+    texture2d<float, access::read> inputTexture0 [[texture(1)]],
+    texture2d<float, access::read> inputTexture1 [[texture(2)]],
+    texture2d<float, access::read> inputTexture2 [[texture(3)]],
+    ushort2 gid [[thread_position_in_grid]]
+) {
+    const texture2d<float, access::read> textures[] = {
+        inputTexture0,
+        inputTexture1,
+        inputTexture2,
+    };
+    
+    const float value = textures[1].read(gid).r;
+    const int2 center = int2(gid);
+    
+    float minValue = 10000;
+    float maxValue = -1000;
 
     for (int i = 0; i < 26; i++) {
-        minimum = min(minimum, values[i]);
-        maximum = max(maximum, values[i]);
+        int3 neighborOffset = neighborOffsets[i];
+        ushort textureIndex = neighborOffset.x;
+        texture2d<float, access::read> texture = textures[textureIndex];
+        int2 neighborDelta = int2(neighborOffset.yz);
+        ushort2 coordinate = ushort2(center + neighborDelta);
+        float neighborValue = texture.read(coordinate).r;
+
+        minValue = min(minValue, neighborValue);
+        maxValue = max(maxValue, neighborValue);
     }
     
-    int value = bTexture.read(ushort2(pos + int2( 0,  0))).r;
+    // value is an extremum
+    float result;
     
-    if ((value < minimum) || (value > maximum)) {
-        outputTexture.write(float4(value, 0, 0, 0), gid);
+    if ((value < minValue) || (value > maxValue)) {
+        result = 1;
     }
     else {
-        outputTexture.write(float4(-1, 0, 0, 0), gid);
+        result = 0;
     }
+
+    outputTexture.write(float4(result, 0, 0, 1), gid);
 }
 
 

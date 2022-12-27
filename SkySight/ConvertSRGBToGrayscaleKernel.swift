@@ -9,14 +9,14 @@ import Foundation
 import MetalPerformanceShaders
 
 
-final class NearestNeighborHalfScaleKernel {
+final class ConvertSRGBToGrayscaleKernel {
     
     private let computePipelineState: MTLComputePipelineState
  
     init(device: MTLDevice) {
         let library = device.makeDefaultLibrary()!
 
-        let function = library.makeFunction(name: "nearestNeighborHalfScale")!
+        let function = library.makeFunction(name: "convertSRGBToGraysale")!
 
         self.computePipelineState = try! device.makeComputePipelineState(
             function: function
@@ -28,8 +28,11 @@ final class NearestNeighborHalfScaleKernel {
         inputTexture: MTLTexture,
         outputTexture: MTLTexture
     ) {
-        precondition((inputTexture.width / 2) == outputTexture.width)
-        precondition((inputTexture.height / 2) == outputTexture.height)
+        precondition(inputTexture.width == outputTexture.width)
+        precondition(inputTexture.height == outputTexture.height)
+//        precondition(inputTexture.pixelFormat == .bgra8Unorm_srgb)
+        precondition(inputTexture.pixelFormat == .bgra8Unorm)
+        precondition(outputTexture.pixelFormat == .r32Float)
 
         let encoder = commandBuffer.makeComputeCommandEncoder()!
         encoder.setComputePipelineState(computePipelineState)

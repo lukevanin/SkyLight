@@ -7,10 +7,41 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */; };
+		FC5C0BEB295A592E00759433 /* butterfly.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BEA295A592E00759433 /* butterfly.png */; };
+		FC5C0BED295A5C4500759433 /* butterfly-nes-keypoints.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BEC295A5C4500759433 /* butterfly-nes-keypoints.txt */; };
+		FC5C0BF6295AE11200759433 /* scalespace_scales_o000_s001.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF0295AE11200759433 /* scalespace_scales_o000_s001.png */; };
+		FC5C0BF7295AE11200759433 /* scalespace_scales_o000_s004.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF1295AE11200759433 /* scalespace_scales_o000_s004.png */; };
+		FC5C0BF8295AE11200759433 /* scalespace_scales_o000_s003.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF2295AE11200759433 /* scalespace_scales_o000_s003.png */; };
+		FC5C0BF9295AE11200759433 /* scalespace_scales_o000_s000.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF3295AE11200759433 /* scalespace_scales_o000_s000.png */; };
+		FC5C0BFA295AE11200759433 /* scalespace_scales_o000_s005.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF4295AE11200759433 /* scalespace_scales_o000_s005.png */; };
+		FC5C0BFB295AE11200759433 /* scalespace_scales_o000_s002.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF5295AE11200759433 /* scalespace_scales_o000_s002.png */; };
+		FC5C0BFC295AE11800759433 /* scalespace_scales_o000_s002.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF5295AE11200759433 /* scalespace_scales_o000_s002.png */; };
+		FC5C0BFD295AE11800759433 /* scalespace_scales_o000_s000.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF3295AE11200759433 /* scalespace_scales_o000_s000.png */; };
+		FC5C0BFE295AE11800759433 /* scalespace_scales_o000_s003.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF2295AE11200759433 /* scalespace_scales_o000_s003.png */; };
+		FC5C0BFF295AE11800759433 /* scalespace_scales_o000_s004.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF1295AE11200759433 /* scalespace_scales_o000_s004.png */; };
+		FC5C0C00295AE11800759433 /* scalespace_scales_o000_s005.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF4295AE11200759433 /* scalespace_scales_o000_s005.png */; };
+		FC5C0C01295AE11800759433 /* scalespace_scales_o000_s001.png in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0BF0295AE11200759433 /* scalespace_scales_o000_s001.png */; };
+		FC5C0C03295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */; };
+		FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */; };
+		FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */; };
+		FC5C0C09295B161000759433 /* BilinearUpScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */; };
+		FC5C0C0D295B41A000759433 /* extra_NES_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C0C295B41A000759433 /* extra_NES_keys.txt */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
 		FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EE293B6380008E8D79 /* LaunchScreen.storyboard */; };
+		FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */; };
+		FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */; };
+		FCD28C942959EB8B0018A2AA /* cubehelix.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C932959EB8B0018A2AA /* cubehelix.png */; };
+		FCD28C972959EBFE0018A2AA /* magma.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C952959EBFD0018A2AA /* magma.png */; };
+		FCD28C982959EBFE0018A2AA /* inferno.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C962959EBFD0018A2AA /* inferno.png */; };
+		FCD28C9D2959F4990018A2AA /* butterfly-keypoints.txt in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C9C2959F4990018A2AA /* butterfly-keypoints.txt */; };
+		FCD28C9E2959F6AD0018A2AA /* butterfly-keypoints.txt in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C9C2959F4990018A2AA /* butterfly-keypoints.txt */; };
+		FCD28CA0295A070E0018A2AA /* butterfly-keypoints-raw.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C9F295A070E0018A2AA /* butterfly-keypoints-raw.png */; };
+		FCD28CA1295A07760018A2AA /* butterfly-keypoints-raw.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C9F295A070E0018A2AA /* butterfly-keypoints-raw.png */; };
+		FCD28CA3295A25540018A2AA /* butterfly-keypoints-final.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28CA2295A25540018A2AA /* butterfly-keypoints-final.png */; };
+		FCD28CA4295A25870018A2AA /* butterfly-keypoints-final.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28CA2295A25540018A2AA /* butterfly-keypoints-final.png */; };
 		FCE9367A2944E86E00E2D486 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = FCE936792944E86E00E2D486 /* Shaders.metal */; };
 		FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDAE294E7C32002BB8EF /* VideoFileReader.swift */; };
 		FCEBCDB1294E7CC4002BB8EF /* CoreVideoMetalCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB0294E7CC4002BB8EF /* CoreVideoMetalCache.swift */; };
@@ -19,29 +50,21 @@
 		FCEBCDB7294E831D002BB8EF /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB6294E831D002BB8EF /* Shared.swift */; };
 		FCEBCDB9294E85BE002BB8EF /* SIFTViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDB8294E85BE002BB8EF /* SIFTViewController.swift */; };
 		FCEBCDBB294E8669002BB8EF /* SIFT.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDBA294E8669002BB8EF /* SIFT.swift */; };
-		FCEBCDC1294F96CF002BB8EF /* test-04-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDBC294F96CD002BB8EF /* test-04-480p.mov */; };
-		FCEBCDC2294F96CF002BB8EF /* test-06-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDBD294F96CD002BB8EF /* test-06-480p.mov */; };
-		FCEBCDC3294F96CF002BB8EF /* test-01-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDBE294F96CF002BB8EF /* test-01-480p.mov */; };
-		FCEBCDC4294F96CF002BB8EF /* test-02-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDBF294F96CF002BB8EF /* test-02-480p.mov */; };
-		FCEBCDC5294F96CF002BB8EF /* test-03-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDC0294F96CF002BB8EF /* test-03-480p.mov */; };
 		FCEBCDC729510974002BB8EF /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDC629510974002BB8EF /* Image.swift */; };
 		FCEBCDC9295247C2002BB8EF /* SIFTExtremaKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */; };
-		FCEBCDCB2952480C002BB8EF /* SIFTOctave.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDCA2952480C002BB8EF /* SIFTOctave.swift */; };
-		FCEBCDCD29524854002BB8EF /* SIFTKeypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDCC29524854002BB8EF /* SIFTKeypoint.swift */; };
 		FCEBCDCF295248AA002BB8EF /* DifferenceOfGaussians.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */; };
-		FCEBCDD129524DA4002BB8EF /* SIFTKeypoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDD029524DA4002BB8EF /* SIFTKeypoints.swift */; };
 		FCEBCDE129572E9F002BB8EF /* DifferenceOfGaussiansTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDE029572E9F002BB8EF /* DifferenceOfGaussiansTests.swift */; };
-		FCEBCDE329573498002BB8EF /* lena_std.tiff in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDE229573498002BB8EF /* lena_std.tiff */; };
-		FCEBCDE4295741A8002BB8EF /* lena_std.tiff in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDE229573498002BB8EF /* lena_std.tiff */; };
 		FCEBCDEA2957926E002BB8EF /* butterfly.tiff in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDE92957926E002BB8EF /* butterfly.tiff */; };
 		FCEBCDEB295792A6002BB8EF /* butterfly.tiff in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDE92957926E002BB8EF /* butterfly.tiff */; };
-		FCEBCDED2957B332002BB8EF /* NearestNeighborScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDEC2957B332002BB8EF /* NearestNeighborScaleKernel.swift */; };
+		FCEBCDED2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */; };
 		FCEBCDF12957BAA7002BB8EF /* viridis.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDEE2957BAA6002BB8EF /* viridis.png */; };
 		FCEBCDF22957BAA7002BB8EF /* warm.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDEF2957BAA6002BB8EF /* warm.png */; };
 		FCEBCDF32957BAA7002BB8EF /* turbo.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDF02957BAA7002BB8EF /* turbo.png */; };
 		FCEBCDF42957BAAC002BB8EF /* warm.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDEF2957BAA6002BB8EF /* warm.png */; };
 		FCEBCDF52957BAAC002BB8EF /* turbo.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDF02957BAA7002BB8EF /* turbo.png */; };
 		FCEBCDF62957BAAC002BB8EF /* viridis.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEBCDEE2957BAA6002BB8EF /* viridis.png */; };
+		FCEBCDF829598663002BB8EF /* KeypointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDF729598663002BB8EF /* KeypointTests.swift */; };
+		FCEBCDFA295986BC002BB8EF /* SharedTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEBCDF9295986BC002BB8EF /* SharedTestCase.swift */; };
 		FCEE19FB294DB77C00FEC893 /* test-05-480p.mov in Resources */ = {isa = PBXBuildFile; fileRef = FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */; };
 		FCEE19FD294DB8AE00FEC893 /* LucasKanade.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */; };
 		FCEE19FF294DB8E600FEC893 /* Quad.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEE19FE294DB8E600FEC893 /* Quad.swift */; };
@@ -60,12 +83,34 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GaussianKernel.swift; sourceTree = "<group>"; };
+		FC5C0BEA295A592E00759433 /* butterfly.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = butterfly.png; sourceTree = "<group>"; };
+		FC5C0BEC295A5C4500759433 /* butterfly-nes-keypoints.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "butterfly-nes-keypoints.txt"; sourceTree = "<group>"; };
+		FC5C0BF0295AE11200759433 /* scalespace_scales_o000_s001.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scalespace_scales_o000_s001.png; sourceTree = "<group>"; };
+		FC5C0BF1295AE11200759433 /* scalespace_scales_o000_s004.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scalespace_scales_o000_s004.png; sourceTree = "<group>"; };
+		FC5C0BF2295AE11200759433 /* scalespace_scales_o000_s003.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scalespace_scales_o000_s003.png; sourceTree = "<group>"; };
+		FC5C0BF3295AE11200759433 /* scalespace_scales_o000_s000.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scalespace_scales_o000_s000.png; sourceTree = "<group>"; };
+		FC5C0BF4295AE11200759433 /* scalespace_scales_o000_s005.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scalespace_scales_o000_s005.png; sourceTree = "<group>"; };
+		FC5C0BF5295AE11200759433 /* scalespace_scales_o000_s002.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scalespace_scales_o000_s002.png; sourceTree = "<group>"; };
+		FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NearestNeighborUpScaleKernel.swift; sourceTree = "<group>"; };
+		FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convolution1DKernel.swift; sourceTree = "<group>"; };
+		FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConvertSRGBToGrayscaleKernel.swift; sourceTree = "<group>"; };
+		FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BilinearUpScaleKernel.swift; sourceTree = "<group>"; };
+		FC5C0C0C295B41A000759433 /* extra_NES_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_NES_keys.txt; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
 		FC9DF9EC293B6380008E8D79 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FC9DF9EF293B6380008E8D79 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FC9DF9F1293B6380008E8D79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubtractKernel.swift; sourceTree = "<group>"; };
+		FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaussianDifferenceTests.swift; sourceTree = "<group>"; };
+		FCD28C932959EB8B0018A2AA /* cubehelix.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cubehelix.png; sourceTree = "<group>"; };
+		FCD28C952959EBFD0018A2AA /* magma.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = magma.png; sourceTree = "<group>"; };
+		FCD28C962959EBFD0018A2AA /* inferno.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = inferno.png; sourceTree = "<group>"; };
+		FCD28C9C2959F4990018A2AA /* butterfly-keypoints.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "butterfly-keypoints.txt"; sourceTree = "<group>"; };
+		FCD28C9F295A070E0018A2AA /* butterfly-keypoints-raw.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "butterfly-keypoints-raw.png"; sourceTree = "<group>"; };
+		FCD28CA2295A25540018A2AA /* butterfly-keypoints-final.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "butterfly-keypoints-final.png"; sourceTree = "<group>"; };
 		FCE936792944E86E00E2D486 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		FCEBCDAE294E7C32002BB8EF /* VideoFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFileReader.swift; sourceTree = "<group>"; };
 		FCEBCDB0294E7CC4002BB8EF /* CoreVideoMetalCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreVideoMetalCache.swift; sourceTree = "<group>"; };
@@ -74,26 +119,19 @@
 		FCEBCDB6294E831D002BB8EF /* Shared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared.swift; sourceTree = "<group>"; };
 		FCEBCDB8294E85BE002BB8EF /* SIFTViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTViewController.swift; sourceTree = "<group>"; };
 		FCEBCDBA294E8669002BB8EF /* SIFT.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFT.swift; sourceTree = "<group>"; };
-		FCEBCDBC294F96CD002BB8EF /* test-04-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-04-480p.mov"; sourceTree = "<group>"; };
-		FCEBCDBD294F96CD002BB8EF /* test-06-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-06-480p.mov"; sourceTree = "<group>"; };
-		FCEBCDBE294F96CF002BB8EF /* test-01-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-01-480p.mov"; sourceTree = "<group>"; };
-		FCEBCDBF294F96CF002BB8EF /* test-02-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-02-480p.mov"; sourceTree = "<group>"; };
-		FCEBCDC0294F96CF002BB8EF /* test-03-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-03-480p.mov"; sourceTree = "<group>"; };
 		FCEBCDC629510974002BB8EF /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTExtremaKernel.swift; sourceTree = "<group>"; };
-		FCEBCDCA2952480C002BB8EF /* SIFTOctave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTOctave.swift; sourceTree = "<group>"; };
-		FCEBCDCC29524854002BB8EF /* SIFTKeypoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTKeypoint.swift; sourceTree = "<group>"; };
 		FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifferenceOfGaussians.swift; sourceTree = "<group>"; };
-		FCEBCDD029524DA4002BB8EF /* SIFTKeypoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTKeypoints.swift; sourceTree = "<group>"; };
 		FCEBCDD629572E6B002BB8EF /* SkySightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkySightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCEBCDDF29572E9E002BB8EF /* SkySightTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SkySightTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		FCEBCDE029572E9F002BB8EF /* DifferenceOfGaussiansTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifferenceOfGaussiansTests.swift; sourceTree = "<group>"; };
-		FCEBCDE229573498002BB8EF /* lena_std.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = lena_std.tiff; sourceTree = "<group>"; };
 		FCEBCDE92957926E002BB8EF /* butterfly.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = butterfly.tiff; sourceTree = "<group>"; };
-		FCEBCDEC2957B332002BB8EF /* NearestNeighborScaleKernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestNeighborScaleKernel.swift; sourceTree = "<group>"; };
+		FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestNeighborDownScaleKernel.swift; sourceTree = "<group>"; };
 		FCEBCDEE2957BAA6002BB8EF /* viridis.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = viridis.png; sourceTree = "<group>"; };
 		FCEBCDEF2957BAA6002BB8EF /* warm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warm.png; sourceTree = "<group>"; };
 		FCEBCDF02957BAA7002BB8EF /* turbo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = turbo.png; sourceTree = "<group>"; };
+		FCEBCDF729598663002BB8EF /* KeypointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeypointTests.swift; sourceTree = "<group>"; };
+		FCEBCDF9295986BC002BB8EF /* SharedTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTestCase.swift; sourceTree = "<group>"; };
 		FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "test-05-480p.mov"; sourceTree = "<group>"; };
 		FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanade.swift; sourceTree = "<group>"; };
 		FCEE19FE294DB8E600FEC893 /* Quad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quad.swift; sourceTree = "<group>"; };
@@ -125,11 +163,6 @@
 				FC9DF9EC293B6380008E8D79 /* Assets.xcassets */,
 				FC9DF9F1293B6380008E8D79 /* Info.plist */,
 				FC9DF9EE293B6380008E8D79 /* LaunchScreen.storyboard */,
-				FCEBCDBE294F96CF002BB8EF /* test-01-480p.mov */,
-				FCEBCDBF294F96CF002BB8EF /* test-02-480p.mov */,
-				FCEBCDC0294F96CF002BB8EF /* test-03-480p.mov */,
-				FCEBCDBC294F96CD002BB8EF /* test-04-480p.mov */,
-				FCEBCDBD294F96CD002BB8EF /* test-06-480p.mov */,
 				FCEE19F8294DB77B00FEC893 /* test-05-480p.mov */,
 			);
 			name = Resources;
@@ -166,15 +199,56 @@
 			path = SkySight;
 			sourceTree = "<group>";
 		};
-		FCEBCDD729572E6B002BB8EF /* SkySightTests */ = {
+		FCD28C992959F2300018A2AA /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */,
 				FCEBCDE029572E9F002BB8EF /* DifferenceOfGaussiansTests.swift */,
+				FCEBCDF729598663002BB8EF /* KeypointTests.swift */,
+				FCEBCDF9295986BC002BB8EF /* SharedTestCase.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		FCD28C9A2959F23A0018A2AA /* Color Gradients */ = {
+			isa = PBXGroup;
+			children = (
 				FCEBCDF02957BAA7002BB8EF /* turbo.png */,
 				FCEBCDEE2957BAA6002BB8EF /* viridis.png */,
 				FCEBCDEF2957BAA6002BB8EF /* warm.png */,
+				FCD28C932959EB8B0018A2AA /* cubehelix.png */,
+				FCD28C962959EBFD0018A2AA /* inferno.png */,
+				FCD28C952959EBFD0018A2AA /* magma.png */,
+			);
+			path = "Color Gradients";
+			sourceTree = "<group>";
+		};
+		FCD28C9B2959F2480018A2AA /* Test Data */ = {
+			isa = PBXGroup;
+			children = (
+				FC5C0C0C295B41A000759433 /* extra_NES_keys.txt */,
+				FC5C0BEC295A5C4500759433 /* butterfly-nes-keypoints.txt */,
+				FCD28C9C2959F4990018A2AA /* butterfly-keypoints.txt */,
+				FCD28C9F295A070E0018A2AA /* butterfly-keypoints-raw.png */,
+				FCD28CA2295A25540018A2AA /* butterfly-keypoints-final.png */,
 				FCEBCDE92957926E002BB8EF /* butterfly.tiff */,
-				FCEBCDE229573498002BB8EF /* lena_std.tiff */,
+				FC5C0BEA295A592E00759433 /* butterfly.png */,
+				FC5C0BF3295AE11200759433 /* scalespace_scales_o000_s000.png */,
+				FC5C0BF0295AE11200759433 /* scalespace_scales_o000_s001.png */,
+				FC5C0BF5295AE11200759433 /* scalespace_scales_o000_s002.png */,
+				FC5C0BF2295AE11200759433 /* scalespace_scales_o000_s003.png */,
+				FC5C0BF1295AE11200759433 /* scalespace_scales_o000_s004.png */,
+				FC5C0BF4295AE11200759433 /* scalespace_scales_o000_s005.png */,
+			);
+			path = "Test Data";
+			sourceTree = "<group>";
+		};
+		FCEBCDD729572E6B002BB8EF /* SkySightTests */ = {
+			isa = PBXGroup;
+			children = (
+				FCD28C992959F2300018A2AA /* Tests */,
+				FCD28C9A2959F23A0018A2AA /* Color Gradients */,
+				FCD28C9B2959F2480018A2AA /* Test Data */,
 				FCEBCDDF29572E9E002BB8EF /* SkySightTests-Bridging-Header.h */,
 			);
 			path = SkySightTests;
@@ -202,12 +276,15 @@
 			isa = PBXGroup;
 			children = (
 				FCEBCDBA294E8669002BB8EF /* SIFT.swift */,
-				FCEBCDCC29524854002BB8EF /* SIFTKeypoint.swift */,
-				FCEBCDCA2952480C002BB8EF /* SIFTOctave.swift */,
-				FCEBCDD029524DA4002BB8EF /* SIFTKeypoints.swift */,
 				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
-				FCEBCDEC2957B332002BB8EF /* NearestNeighborScaleKernel.swift */,
 				FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */,
+				FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */,
+				FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */,
+				FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */,
+				FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */,
+				FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */,
+				FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */,
+				FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */,
 				FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */,
 			);
 			name = Algorithms;
@@ -310,19 +387,22 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FCEBCDE4295741A8002BB8EF /* lena_std.tiff in Resources */,
 				FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */,
+				FC5C0BFF295AE11800759433 /* scalespace_scales_o000_s004.png in Resources */,
 				FCEBCDF62957BAAC002BB8EF /* viridis.png in Resources */,
-				FCEBCDC5294F96CF002BB8EF /* test-03-480p.mov in Resources */,
+				FC5C0BFC295AE11800759433 /* scalespace_scales_o000_s002.png in Resources */,
+				FCD28C9E2959F6AD0018A2AA /* butterfly-keypoints.txt in Resources */,
 				FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */,
 				FCEBCDF42957BAAC002BB8EF /* warm.png in Resources */,
-				FCEBCDC4294F96CF002BB8EF /* test-02-480p.mov in Resources */,
-				FCEBCDC1294F96CF002BB8EF /* test-04-480p.mov in Resources */,
+				FC5C0C01295AE11800759433 /* scalespace_scales_o000_s001.png in Resources */,
+				FC5C0BFE295AE11800759433 /* scalespace_scales_o000_s003.png in Resources */,
 				FCEE19FB294DB77C00FEC893 /* test-05-480p.mov in Resources */,
+				FC5C0BFD295AE11800759433 /* scalespace_scales_o000_s000.png in Resources */,
+				FC5C0C00295AE11800759433 /* scalespace_scales_o000_s005.png in Resources */,
+				FCD28CA1295A07760018A2AA /* butterfly-keypoints-raw.png in Resources */,
 				FCEBCDF52957BAAC002BB8EF /* turbo.png in Resources */,
-				FCEBCDC2294F96CF002BB8EF /* test-06-480p.mov in Resources */,
+				FCD28CA4295A25870018A2AA /* butterfly-keypoints-final.png in Resources */,
 				FCEBCDEB295792A6002BB8EF /* butterfly.tiff in Resources */,
-				FCEBCDC3294F96CF002BB8EF /* test-01-480p.mov in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -330,11 +410,25 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCD28C982959EBFE0018A2AA /* inferno.png in Resources */,
+				FC5C0BF6295AE11200759433 /* scalespace_scales_o000_s001.png in Resources */,
+				FCD28C9D2959F4990018A2AA /* butterfly-keypoints.txt in Resources */,
+				FC5C0BF8295AE11200759433 /* scalespace_scales_o000_s003.png in Resources */,
 				FCEBCDF12957BAA7002BB8EF /* viridis.png in Resources */,
 				FCEBCDEA2957926E002BB8EF /* butterfly.tiff in Resources */,
+				FC5C0BED295A5C4500759433 /* butterfly-nes-keypoints.txt in Resources */,
+				FC5C0BEB295A592E00759433 /* butterfly.png in Resources */,
+				FC5C0C0D295B41A000759433 /* extra_NES_keys.txt in Resources */,
+				FC5C0BFB295AE11200759433 /* scalespace_scales_o000_s002.png in Resources */,
+				FCD28CA0295A070E0018A2AA /* butterfly-keypoints-raw.png in Resources */,
 				FCEBCDF22957BAA7002BB8EF /* warm.png in Resources */,
-				FCEBCDE329573498002BB8EF /* lena_std.tiff in Resources */,
+				FC5C0BF9295AE11200759433 /* scalespace_scales_o000_s000.png in Resources */,
+				FC5C0BF7295AE11200759433 /* scalespace_scales_o000_s004.png in Resources */,
+				FCD28C942959EB8B0018A2AA /* cubehelix.png in Resources */,
 				FCEBCDF32957BAA7002BB8EF /* turbo.png in Resources */,
+				FCD28CA3295A25540018A2AA /* butterfly-keypoints-final.png in Resources */,
+				FC5C0BFA295AE11200759433 /* scalespace_scales_o000_s005.png in Resources */,
+				FCD28C972959EBFE0018A2AA /* magma.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,24 +439,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FCEBCDD129524DA4002BB8EF /* SIFTKeypoints.swift in Sources */,
 				FCEE19FD294DB8AE00FEC893 /* LucasKanade.swift in Sources */,
 				FCEE1A01294DB8F700FEC893 /* CoreGraphicsExtensions.swift in Sources */,
+				FC5C0C09295B161000759433 /* BilinearUpScaleKernel.swift in Sources */,
 				FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */,
+				FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */,
 				FCEE1A03294DB90B00FEC893 /* CoreImageExtensions.swift in Sources */,
+				FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */,
 				FCEBCDC729510974002BB8EF /* Image.swift in Sources */,
 				FCE9367A2944E86E00E2D486 /* Shaders.metal in Sources */,
 				FCEE19FF294DB8E600FEC893 /* Quad.swift in Sources */,
 				FCEBCDB7294E831D002BB8EF /* Shared.swift in Sources */,
+				FC5C0C03295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift in Sources */,
 				FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */,
 				FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */,
+				FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */,
 				FCEBCDBB294E8669002BB8EF /* SIFT.swift in Sources */,
 				FCEBCDB1294E7CC4002BB8EF /* CoreVideoMetalCache.swift in Sources */,
-				FCEBCDCD29524854002BB8EF /* SIFTKeypoint.swift in Sources */,
+				FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */,
 				FCEBCDB9294E85BE002BB8EF /* SIFTViewController.swift in Sources */,
-				FCEBCDCB2952480C002BB8EF /* SIFTOctave.swift in Sources */,
 				FCEBCDB3294E7D96002BB8EF /* Math.swift in Sources */,
-				FCEBCDED2957B332002BB8EF /* NearestNeighborScaleKernel.swift in Sources */,
+				FCEBCDED2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift in Sources */,
 				FCEBCDCF295248AA002BB8EF /* DifferenceOfGaussians.swift in Sources */,
 				FCEBCDB5294E7E39002BB8EF /* ImageConversion.swift in Sources */,
 				FCEBCDC9295247C2002BB8EF /* SIFTExtremaKernel.swift in Sources */,
@@ -373,6 +470,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCEBCDFA295986BC002BB8EF /* SharedTestCase.swift in Sources */,
+				FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */,
+				FCEBCDF829598663002BB8EF /* KeypointTests.swift in Sources */,
 				FCEBCDE129572E9F002BB8EF /* DifferenceOfGaussiansTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

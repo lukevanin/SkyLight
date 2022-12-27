@@ -6,9 +6,129 @@
 //
 
 import Foundation
+import OSLog
 import Metal
 import MetalPerformanceShaders
 
+
+private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier!,
+    category: "SIFT"
+)
+
+
+struct SIFTKeypoint {
+    var x: Float
+    var y: Float
+    var sigma: Float
+}
+
+
+final class SIFTOctave {
+    
+    let scale: DifferenceOfGaussians.Octave
+    
+    let keypointTextures: [MTLTexture]
+    let images: [Image<Float>]
+    
+    private let extremaFunction: SIFTExtremaFunction
+    
+    init(
+        device: MTLDevice,
+        scale: DifferenceOfGaussians.Octave,
+        extremaFunction: SIFTExtremaFunction
+    ) {
+        
+        let textureDescriptor: MTLTextureDescriptor = {
+            let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+                pixelFormat: .r32Float,
+                width: scale.size.width,
+                height: scale.size.height,
+                mipmapped: false
+            )
+            descriptor.usage = [.shaderRead, .shaderWrite]
+            descriptor.storageMode = .shared
+            return descriptor
+        }()
+        
+        let keypointTextures = {
+            var textures = [MTLTexture]()
+            for _ in 0 ..< scale.numberOfScales {
+                let texture = device.makeTexture(
+                    descriptor: textureDescriptor
+                )!
+                textures.append(texture)
+            }
+            return textures
+        }()
+        
+        self.scale = scale
+        self.extremaFunction = extremaFunction
+        self.keypointTextures = keypointTextures
+        self.images = {
+            var images = [Image<Float>]()
+            for texture in keypointTextures {
+                let image = Image<Float>(texture: texture, defaultValue: 0)
+                images.append(image)
+            }
+            return images
+        }()
+    }
+    
+    func encode(commandBuffer: MTLCommandBuffer) {
+        for i in 0 ..< keypointTextures.count {
+            extremaFunction.encode(
+                commandBuffer: commandBuffer,
+                inputTexture0: scale.differenceTextures[i + 0],
+                inputTexture1: scale.differenceTextures[i + 1],
+                inputTexture2: scale.differenceTextures[i + 2],
+                outputTexture: keypointTextures[i]
+            )
+        }
+    }
+    
+    func getKeypoints() -> [SIFTKeypoint] {
+        updateImagesFromTextures()
+        return getKeypointsFromImages()
+    }
+    
+    private func updateImagesFromTextures() {
+        for image in images {
+            image.updateFromTexture()
+        }
+    }
+
+    private func getKeypointsFromImages() -> [SIFTKeypoint] {
+        var keypoints = [SIFTKeypoint]()
+        for z in 0 ..< images.count {
+            for y in 0 ..< scale.size.height {
+                for x in 0 ..< scale.size.width  {
+                    if let keypoint = keypointAt(x: x, y: y, z: z) {
+                        keypoints.append(keypoint)
+                    }
+                }
+            }
+        }
+        return keypoints
+    }
+    
+    private func keypointAt(x: Int, y: Int, z: Int) -> SIFTKeypoint? {
+        let image = images[z]
+        let value = image[x, y]
+        precondition(value == 0 || value == 1)
+
+        if value == 0 {
+            return nil
+        }
+
+        let keypoint = SIFTKeypoint(
+            x: Float(x) * scale.delta,
+            y: Float(y) * scale.delta,
+            sigma: scale.sigmas[z + 1]
+        )
+        return keypoint
+    }
+}
 
 
 /// See: http://www.ipol.im/pub/art/2014/82/article.pdf
@@ -16,25 +136,9 @@ import MetalPerformanceShaders
 final class SIFT {
     
     struct Configuration {
-        // Blur level of v(1, 0) (seed image). Note that the blur level of
-        // v(0, 0) will be higher.
-        var sigmaMinimum: Float = 0.8
         
-        // The sampling distance in image v(0, 1) (see image). The value 0.5
-        // corresponds to a 2× interpolation.
-        var deltaMinimum: Float = 0.5
-        
-        // Assumed blur level in uInput (input image).
-        var sigmaInput: Float = 0.5
-        
-        // Number of octaves (limited by the image size )).
-        // ⌊log2(min(w, h) / deltaMin / 12) + 1⌋
-        var numberOfOctaves: Int = 5
-        
-        // Number of scales per octave.
-        // Number of gaussians per octave = scales per octave + 3.
-        // Number of differences per octave = scales per octave + 2
-        var numberOfScalesPerOctave: Int = 3
+        // Dimensions of the input image.
+        var inputSize: IntegralSize
         
         // Threshold over the Difference of Gaussians response (value
         // relative to scales per octave = 3)
@@ -44,123 +148,75 @@ final class SIFT {
         var edgeThreshold: Float = 10.0
     }
 
-    
     let configuration: Configuration
-
-//    let octaves: [SIFTOctave]
+    let dog: DifferenceOfGaussians
+    let octaves: [SIFTOctave]
     
-//    let inputTexture: MTLTexture
-//
-//    private let colorConversionFunction: MPSImageConversion
-//
-//    private let device: MTLDevice
-//    private let commandQueue: MTLCommandQueue
+    private let commandQueue: MTLCommandQueue
     
     init(
         device: MTLDevice,
         configuration: Configuration
     ) {
-        self.configuration = configuration
+        let dog = DifferenceOfGaussians(
+            device: device,
+            configuration: DifferenceOfGaussians.Configuration(
+                inputDimensions: configuration.inputSize
+            )
+        )
+        let octaves: [SIFTOctave] = {
+            let extremaFunction = SIFTExtremaFunction(device: device)
             
-//        self.device = device
-//        self.configuration = configuration
-//        self.commandQueue = device.makeCommandQueue()!
+            var octaves = [SIFTOctave]()
+            for scale in dog.octaves {
+                let octave = SIFTOctave(
+                    device: device,
+                    scale: scale,
+                    extremaFunction: extremaFunction
+                )
+                octaves.append(octave)
+            }
+            return octaves
+        }()
         
-//        self.colorConversionFunction = {
-//            let conversionInfo = CGColorConversionInfo(
-//                src: CGColorSpace(name: CGColorSpace.sRGB)!,
-//                dst: CGColorSpace(name: CGColorSpace.genericGrayGamma2_2)!
-//            )
-//            let shader = MPSImageConversion(
-//                device: device,
-//                srcAlpha: .alphaIsOne,
-//                destAlpha: .alphaIsOne,
-//                backgroundColor: nil,
-//                conversionInfo: conversionInfo
-//            )
-//            return shader
-//        }()
-        
-//        let textureDescriptor: MTLTextureDescriptor = {
-//            let descriptor = MTLTextureDescriptor.texture2DDescriptor(
-//                pixelFormat: .r32Float,
-//                width: inputSize.width,
-//                height: inputSize.height,
-//                mipmapped: false
-//            )
-//            descriptor.usage = [.shaderRead, .shaderWrite]
-//            descriptor.storageMode = .shared
-//            return descriptor
-//        }()
-        
-//        self.inputTexture = device.makeTexture(
-//            descriptor: textureDescriptor
-//        )!
-        
-//        self.octaves = {
-//            var output = [SIFTOctave]()
-//            for i in 0 ..< configuration.numberOfOctaves {
-//                let size = IntegralSize(
-//                    width: inputSize.width >> i,
-//                    height: inputSize.height >> i
-//                )
-//                let differenceOfGaussians = DifferenceOfGaussians(
-//                    device: device,
-//                    size: size,
-//                    count: 4,
-//                    initialSigma: 1.6 * pow(k, )
-//                )
-//                let keypoints = SIFTKeypoints(
-//                    device: device,
-//                    size: size,
-//                    count: 2,
-//                    differenceOfGaussians: differenceOfGaussians
-//                )
-//                let octave = SIFTOctave(
-//                    device: device,
-//                    keypoints: keypoints
-//                )
-//                output.append(octave)
-//            }
-//            return output
-//        }()
+        self.commandQueue = device.makeCommandQueue()!
+        self.configuration = configuration
+        self.dog = dog
+        self.octaves = octaves
     }
     
-    func process(_ inputTexture: MTLTexture) {
-        
-//        updateOctaves(
-//            texture: inputTexture
-//        )
-//
-//        findKeypoints()
+    func getKeypoints(_ inputTexture: MTLTexture) -> [SIFTKeypoint] {
+        findKeypoints(inputTexture: inputTexture)
+        return getKeypointsFromOctaves()
     }
     
-
-//    private func updateOctaves(
-//        texture: MTLTexture
-//    ) {
-//        let commandBuffer = commandQueue.makeCommandBuffer()!
-//
-//        conversionShader.encode(
-//            commandBuffer: commandBuffer,
-//            sourceTexture: texture,
-//            destinationTexture: inputTexture
-//        )
-//
-//        for octave in octaves {
-//            octave.update(commandBuffer: commandBuffer, texture: inputTexture)
-//        }
-//
-//        commandBuffer.commit()
-//        commandBuffer.waitUntilCompleted()
-//
-//        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
-//        print("Command buffer", String(format: "%0.3f", elapsedTime), "seconds")
-//
-//        for octave in octaves {
-//            octave.updateBuffers()
-//        }
-//    }
+    private func findKeypoints(inputTexture: MTLTexture) {
+        let commandBuffer = commandQueue.makeCommandBuffer()!
+        
+        dog.encode(
+            commandBuffer: commandBuffer,
+            originalTexture: inputTexture
+        )
+        
+        for octave in octaves {
+            octave.encode(
+                commandBuffer: commandBuffer
+            )
+        }
+        
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
+        print("Command buffer", String(format: "%0.3f", elapsedTime), "seconds")
+    }
+    
+    private func getKeypointsFromOctaves() -> [SIFTKeypoint] {
+        var keypoints = [SIFTKeypoint]()
+        for octave in octaves {
+            keypoints.append(contentsOf: octave.getKeypoints())
+        }
+        return keypoints
+    }
 
 //    private func findKeypoints() {
 //        let startTime = CFAbsoluteTimeGetCurrent()

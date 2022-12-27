@@ -1,0 +1,108 @@
+//
+//  KeypointTests.swift
+//  SkySightTests
+//
+//  Created by Luke Van In on 2022/12/26.
+//
+
+import XCTest
+
+@testable import SkySight
+
+
+final class KeypointTests: SharedTestCase {
+    
+    func testKeypoints() throws {
+        
+        let inputTexture = try device.loadTexture(name: "butterfly", extension: "png", srgb: false)
+        let configuration = SIFT.Configuration(
+            inputSize: IntegralSize(
+                width: inputTexture.width,
+                height: inputTexture.height
+            )
+        )
+        let subject = SIFT(device: device, configuration: configuration)
+        var keypoints = subject.getKeypoints(inputTexture)
+        print("Found", keypoints.count, "keypoints")
+
+//        let referenceKeypoints: [SIFTKeypoint] = []
+        let referenceImage: CGImage = {
+            let originalImage = CIImage(
+                mtlTexture: inputTexture,
+                options: [
+                    CIImageOption.colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
+                ]
+            )!
+                .oriented(.downMirrored)
+                .smearColor()
+            let cgImage = ciContext.makeCGImage(ciImage: originalImage)
+            return cgImage
+        }()
+
+        let referenceKeypoints = try loadKeypoints(filename: "extra_NES_keys")
+//        let referenceImage = UIImage(named: "butterfly-keypoints-raw")!.cgImage!
+//        for i in 0 ..< keypoints.count {
+//            var keypoint = keypoints[i]
+//            keypoint.x = Float(inputTexture.width) - keypoint.x
+//            keypoint.y = Float(inputTexture.height) - keypoint.y
+//            keypoints[i] = keypoint
+//        }
+
+        attachImage(
+            name: "keypoints",
+            uiImage: drawKeypoints(
+                sourceImage: referenceImage,
+                referenceKeypoints: referenceKeypoints,
+                foundKeypoints: keypoints
+            )
+        )
+
+        for (scale, octave) in subject.octaves.enumerated() {
+
+            for (index, texture) in octave.keypointTextures.enumerated() {
+                
+                attachImage(
+                    name: "keypoints(\(scale), \(index))",
+                    uiImage: ciContext.makeUIImage(
+                        ciImage: CIImage(
+                            mtlTexture: texture,
+                            options: [
+                                .colorSpace: CGColorSpace(name: CGColorSpace.genericGrayGamma2_2)!
+                            ]
+                        )!
+                            .oriented(.downMirrored)
+                            .smearColor()
+                    )
+                )
+            }
+
+        }
+        
+    }
+    
+    
+    private func loadKeypoints(filename: String, extension: String = "txt") throws -> [SIFTKeypoint] {
+        var keypoints = [SIFTKeypoint]()
+        
+        let fileURL = bundle.url(forResource: filename, withExtension: `extension`)!
+        let data = try Data(contentsOf: fileURL)
+        let string = String(data: data, encoding: .utf8)!
+        let lines = string.split(separator: "\n")
+        
+        for line in lines {
+            let components = line.split(separator: " ")
+            let y = Float(components[0])!
+            let x = Float(components[1])!
+            let s = Float(components[2])!
+            let keypoint = SIFTKeypoint(
+                x: x,
+                y: y,
+                sigma: s
+            )
+            keypoints.append(keypoint)
+        }
+        
+        return keypoints
+    }
+    
+}

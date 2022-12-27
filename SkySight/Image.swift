@@ -26,7 +26,11 @@ final class Image<T> {
         }()
     }
     
-    func update() {
+    deinit {
+        buffer.deallocate()
+    }
+    
+    func updateFromTexture() {
         let region = MTLRegion(
             origin: MTLOrigin(
                 x: 0,

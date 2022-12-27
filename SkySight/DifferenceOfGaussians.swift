@@ -11,7 +11,10 @@ import Metal
 import MetalPerformanceShaders
 
 
-private let logger = Logger(subsystem: "com.lukevanin", category: "DifferenceOfGaussians")
+private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier!,
+    category: "DifferenceOfGaussians"
+)
 
 
 final class DifferenceOfGaussians {
@@ -46,26 +49,32 @@ final class DifferenceOfGaussians {
     
     final class Octave {
         
-        let o: Int
+        let o: Int // octave
+        let delta: Float // delta (pixel space, e.g. 0.5 = 2x)
+        let numberOfScales: Int
+        let sigmas: [Float]
+        let size: IntegralSize
         
         let gaussianTextures: [MTLTexture]
         let differenceTextures: [MTLTexture]
         
-        private let scaleFunction: NearestNeighborHalfScaleKernel
-        private let gaussianBlurFunctions: [MPSImageGaussianBlur]
-        private let subtractFunction: MPSImageSubtract
+        private let scaleFunction: NearestNeighborDownScaleKernel
+        private let gaussianBlurFunctions: [GaussianKernel]
+        private let subtractFunction: SubtractKernel
         
         init(
             device: MTLDevice,
             o: Int,
+            delta: Float,
             size: IntegralSize,
             numberOfScales: Int,
-            gaussianBlurFunctions: [MPSImageGaussianBlur],
-            scaleFunction: NearestNeighborHalfScaleKernel
+            sigmas: [Float],
+            scaleFunction: NearestNeighborDownScaleKernel,
+            subtractFunction: SubtractKernel
         ) {
 
-            let numberOfGaussians = numberOfScales + 2
-            let numberOfDifferences = numberOfScales + 1
+            let numberOfGaussians = numberOfScales + 3
+            let numberOfDifferences = numberOfScales + 2
             
             let textureDescriptor: MTLTextureDescriptor = {
                 let descriptor = MTLTextureDescriptor.texture2DDescriptor(
@@ -80,9 +89,42 @@ final class DifferenceOfGaussians {
             }()
 
             self.o = o
-            self.gaussianBlurFunctions = gaussianBlurFunctions
+            self.delta = delta
+            self.size = size
+            self.numberOfScales = numberOfScales
+            self.sigmas = sigmas
             self.scaleFunction = scaleFunction
+            self.subtractFunction = subtractFunction
 
+            self.gaussianBlurFunctions = {
+                var functions = [GaussianKernel]()
+                for s in 1 ..< numberOfGaussians {
+//                    sig_prev = octave->sigmas[s-1];
+//                                sig_next = octave->sigmas[s];
+//                                sigma_extra = sqrt(sig_next*sig_next- sig_prev*sig_prev)/delta;
+                    let sa = sigmas[s - 1]
+                    let sb = sigmas[s]
+                    let rho = sqrt((sb * sb) - (sa * sa)) / delta
+                    // let offset = Int(floor(rho))
+                    print(
+                        "𝜌[\(s - 1) → \(s)]", "=", rho
+                    )
+    //                let function = MPSImageGaussianBlur(
+    //                    device: device,
+    //                    sigma: rho
+    //                )
+    //                function.edgeMode = .clamp
+    //                function.offset = MPSOffset(
+    //                    x: offset,
+    //                    y: offset,
+    //                    z: 0
+    //                )
+                    let function = GaussianKernel(device: device, sigma: rho)
+                    functions.append(function)
+                }
+                return functions
+            }()
+            
             self.gaussianTextures = {
                 var textures = [MTLTexture]()
                 for _ in 0 ..< numberOfGaussians {
@@ -101,10 +143,10 @@ final class DifferenceOfGaussians {
                 return textures
             }()
             
-            self.subtractFunction = {
-                let function = MPSImageSubtract(device: device)
-                return function
-            }()
+//            self.subtractFunction = {
+//                let function = MPSImageSubtract(device: device)
+//                return function
+//            }()
         }
         
         func encode(commandBuffer: MTLCommandBuffer, inputTexture: MTLTexture) {
@@ -145,16 +187,21 @@ final class DifferenceOfGaussians {
                     inputTexture: inputTexture,
                     outputTexture: gaussianTextures[0]
                 )
+//                scaleFunction.encode(
+//                    commandBuffer: commandBuffer,
+//                    sourceTexture: inputTexture,
+//                    destinationTexture: gaussianTextures[0]
+//                )
             }
         }
         
         private func encodeOtherGaussianTextures(commandBuffer: MTLCommandBuffer) {
-            for i in 1 ..< gaussianTextures.count {
-                logger.info("Encoding gaussian v(\(self.o), \(i))")
-                gaussianBlurFunctions[i - 1].encode(
+            for s in 1 ..< gaussianTextures.count {
+                logger.info("Encoding gaussian v(\(self.o), \(s)) = G𝜌[\(s - 1) → \(s)] v(\(self.o), \(s - 1))")
+                gaussianBlurFunctions[s - 1].encode(
                     commandBuffer: commandBuffer,
-                    sourceTexture: gaussianTextures[i - 1],
-                    destinationTexture: gaussianTextures[i]
+                    inputTexture: gaussianTextures[s - 1],
+                    outputTexture: gaussianTextures[s]
                 )
             }
         }
@@ -164,9 +211,9 @@ final class DifferenceOfGaussians {
                 logger.info("Encoding difference w(\(self.o), \(i))")
                 subtractFunction.encode(
                     commandBuffer: commandBuffer,
-                    primaryTexture: gaussianTextures[i + 1],
-                    secondaryTexture: gaussianTextures[i],
-                    destinationTexture: differenceTextures[i]
+                    inputTexture0: gaussianTextures[i + 1],
+                    inputTexture1: gaussianTextures[i],
+                    outputTexture: differenceTextures[i]
                 )
             }
         }
@@ -180,10 +227,9 @@ final class DifferenceOfGaussians {
     let seedTexture: MTLTexture
     let octaves: [Octave]
 
-    private let colorConversionFunction: MPSImageConversion
-    private let bilinearScaleFunction: MPSImageBilinearScale
-    private let seedGaussianBlurFunction: MPSImageGaussianBlur
-    private let scaleGaussianBlurFunctions: [MPSImageGaussianBlur]
+    private let colorConversionFunction: ConvertSRGBToGrayscaleKernel
+    private let bilinearScaleFunction: BilinearUpScaleKernel
+    private let seedGaussianBlurFunction: GaussianKernel
     
     init(device: MTLDevice, configuration: Configuration) {
         
@@ -193,72 +239,28 @@ final class DifferenceOfGaussians {
         )
         
         self.configuration = configuration
-        
-        self.colorConversionFunction = {
-            let conversionInfo = CGColorConversionInfo(
-//                src: CGColorSpace(name: CGColorSpace.genericRGBLinear)!,
-//                src: CGColorSpace(name: CGColorSpace.linearSRGB)!,
-                src: CGColorSpace(name: CGColorSpace.sRGB)!,
-//                src: CGColorSpaceCreateDeviceRGB(),
-//                dst: CGColorSpace(name: CGColorSpace.genericGrayGamma2_2)!
-                dst: CGColorSpace(name: CGColorSpace.linearGray)!
-//                dst: CGColorSpaceCreateDeviceGray()
-            )
-            let shader = MPSImageConversion(
-                device: device,
-                srcAlpha: .alphaIsOne,
-                destAlpha: .alphaIsOne,
-                backgroundColor: nil,
-                conversionInfo: conversionInfo
-            )
-            return shader
-        }()
 
-        self.bilinearScaleFunction = {
-            let function = MPSImageBilinearScale(device: device)
-            function.edgeMode = .clamp
+        #warning("FIXME: This currently works in gamma corrected space to match the reference implementation.")
+        #warning("TODO: Convert image to linear space before processing. The image should be loaded with sRGB=true.")
+
+        self.colorConversionFunction = {
+            let function = ConvertSRGBToGrayscaleKernel(device: device)
             return function
         }()
 
-        let nearestNeighborScaleFunction = {
-            let function = NearestNeighborHalfScaleKernel(device: device)
+        self.bilinearScaleFunction = {
+            let function = BilinearUpScaleKernel(device: device)
             return function
         }()
 
         self.seedGaussianBlurFunction = {
-            let h = 1.0 / configuration.deltaMinimum
             let i = configuration.sigmaMinimum * configuration.sigmaMinimum
             let j = configuration.sigmaInput * configuration.sigmaInput
-            let k = h * sqrt(i - j)
+            let k = sqrt(i - j) / configuration.deltaMinimum
             print("𝜎(1, 0)", "=", k)
-            let function = MPSImageGaussianBlur(device: device, sigma: k)
-            function.edgeMode = .clamp
+            let function = GaussianKernel(device: device, sigma: k)
             return function
         }()
-
-        let scaleGaussianBlurFunctions = {
-            let numberOfGaussians = configuration.numberOfScalesPerOctave + 2
-            let numberOfScales = configuration.numberOfScalesPerOctave
-            var functions = [MPSImageGaussianBlur]()
-            for s in 1 ..< numberOfGaussians {
-                let h = configuration.sigmaMinimum / configuration.deltaMinimum
-                let i = Float(s) / Float(numberOfScales)
-                let j = Float(s - 1) / Float(numberOfScales)
-                let k = pow(2, 2 * i) - pow(2, 2 * j)
-                let rho = h * sqrt(k)
-                print(
-                    "𝜌[\(s - 1) → \(s)]", "=", rho
-                )
-                let function = MPSImageGaussianBlur(
-                    device: device,
-                    sigma: rho
-                )
-                function.edgeMode = .clamp
-                functions.append(function)
-            }
-            return functions
-        }()
-        self.scaleGaussianBlurFunctions = scaleGaussianBlurFunctions
 
         let inputTextureDescriptor: MTLTextureDescriptor = {
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(
@@ -306,6 +308,10 @@ final class DifferenceOfGaussians {
         }()
         
         self.octaves = {
+            
+            let scaleFunction = NearestNeighborDownScaleKernel(device: device)
+            let subtractFunction = SubtractKernel(device: device)
+
             var octaves = [Octave]()
             for o in 0 ..< configuration.numberOfOctaves {
                 let delta = configuration.deltaMinimum * pow(2, Float(o))
@@ -313,14 +319,24 @@ final class DifferenceOfGaussians {
                     width: Int(Float(configuration.inputDimensions.width) / delta),
                     height: Int(Float(configuration.inputDimensions.height) / delta)
                 )
-                print("octave", o, "dimensions", "=", size)
+                var sigmas = [Float]()
+                for s in 0 ..< configuration.numberOfScalesPerOctave + 3 {
+                    let h = delta / configuration.deltaMinimum
+                    let i = Float(s) / Float(configuration.numberOfScalesPerOctave)
+                    let j = pow(2, i)
+                    let sigma = h * configuration.sigmaMinimum * j
+                    sigmas.append(sigma)
+                }
+                print("octave", o, "dimensions", "=", size, "delta", "=", delta, "sigmas", "=", sigmas)
                 let octave = Octave(
                     device: device,
                     o: o,
+                    delta: delta,
                     size: size,
                     numberOfScales: configuration.numberOfScalesPerOctave,
-                    gaussianBlurFunctions: scaleGaussianBlurFunctions,
-                    scaleFunction: nearestNeighborScaleFunction
+                    sigmas: sigmas,
+                    scaleFunction: scaleFunction,
+                    subtractFunction: subtractFunction
                 )
                 octaves.append(octave)
             }
@@ -355,23 +371,27 @@ final class DifferenceOfGaussians {
         logger.debug("v(1, 0) Convert texture to grayscale")
         colorConversionFunction.encode(
             commandBuffer: commandBuffer,
-            sourceTexture: inputTexture,
-            destinationTexture: luminosityTexture
+            inputTexture: inputTexture,
+            outputTexture: luminosityTexture
         )
 
         logger.debug("v(1, 0) Scale texture from \(inputSize.width)x\(inputSize.height) to \(outputSize.width)x\(outputSize.height)")
         bilinearScaleFunction.encode(
             commandBuffer: commandBuffer,
-            sourceTexture: luminosityTexture,
-            destinationTexture: scaledTexture
+            inputTexture: luminosityTexture,
+            outputTexture: scaledTexture
         )
-
         logger.debug("v(1, 0) Blur texture")
         seedGaussianBlurFunction.encode(
             commandBuffer: commandBuffer,
-            sourceTexture: scaledTexture,
-            destinationTexture: seedTexture
+            inputTexture: scaledTexture,
+            outputTexture: seedTexture
         )
+//        bilinearScaleFunction.encode(
+//            commandBuffer: commandBuffer,
+//            inputTexture: luminosityTexture,
+//            outputTexture: seedTexture
+//        )
     }
 
     private func encodeOctaves(commandBuffer: MTLCommandBuffer) {

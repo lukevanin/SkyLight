@@ -45,7 +45,7 @@ final class SIFTViewController: UIViewController {
         self.videoSize = IntegralSize(width: 360, height: 640)
         let sift = SIFT(
             device: device,
-            configuration: SIFT.Configuration()
+            configuration: SIFT.Configuration(inputSize: videoSize)
         )
         self.videoFileURL = Bundle.main.url(forResource: "test-03-480p", withExtension: "mov")!
         self.cvMetalCache = CoreVideoMetalCache(device: device)
@@ -134,11 +134,11 @@ final class SIFTViewController: UIViewController {
     }
     
     @ProcessActor private func processSample(_ imageBuffer: CVImageBuffer) async {
-        let newImage = cvMetalCache.makeTexture(
+        let newTexture = cvMetalCache.makeTexture(
             from: imageBuffer,
             size: videoSize
         )
-        sift.process(newImage)
+        sift.getKeypoints(newTexture)
 //        await self.updateViews(
 //            inputImage: imageConverter.makeCGImage(sift.inputTexture),
 //            scaleImages: sift.octaves.flatMap { octave in

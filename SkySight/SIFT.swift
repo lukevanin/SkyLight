@@ -157,7 +157,7 @@ final class SIFT {
         // Threshold over the Difference of Gaussians response (value
         // relative to scales per octave = 3)
         var differenceOfGaussiansThreshold: Float = 0.0133 // 0.015
-        
+
         // Threshold over the ratio of principal curvatures (edgeness).
         var edgeThreshold: Float = 10.0
         
@@ -208,6 +208,7 @@ final class SIFT {
     func getKeypoints(_ inputTexture: MTLTexture) -> [SIFTKeypoint] {
         findKeypoints(inputTexture: inputTexture)
         let allKeypoints = getKeypointsFromOctaves()
+        
         let softThreshold = configuration.differenceOfGaussiansThreshold * 0.8
         let candidateKeypoints = allKeypoints.filter {
             abs($0.value) > softThreshold
@@ -310,9 +311,29 @@ final class SIFT {
                 break
             }
             
-            coordinate.x += Int(alpha.x.rounded())
-            coordinate.y += Int(alpha.y.rounded())
-            coordinate.z += Int(alpha.z.rounded())
+//            coordinate.x += Int(alpha.x.rounded())
+//            coordinate.y += Int(alpha.y.rounded())
+//            coordinate.z += Int(alpha.z.rounded())
+            
+            
+            if (alpha.x > +maximumOffset) {
+                coordinate.x += 1
+            }
+            if (alpha.x < -maximumOffset) {
+                coordinate.x -= 1
+            }
+            if (alpha.y > +maximumOffset) {
+                coordinate.y += 1
+            }
+            if (alpha.y < -maximumOffset) {
+                coordinate.y -= 1
+            }
+            if (alpha.z > +maximumOffset) {
+                coordinate.z += 1
+            }
+            if (alpha.z < -maximumOffset) {
+                coordinate.z -= 1
+            }
             
             // Check coordinates are within the scale space.
             guard !outOfBounds(octave: octave, coordinate: coordinate) else {
@@ -331,77 +352,21 @@ final class SIFT {
 
         print("point converged \(i) out of \(maximumIterations): coordinate=\(coordinate) alpha=\(alpha) value=\(newValue)")
 
-        
-//        var iterationCount: Int = 0 // nIntrp
-//        var isConverged = false
-//        var interpolation = Interpolation(dx: 0, dy: 0, ds: 0, value: value)
-
-//        while iterationCount < maximumIterations {
-//
-//            // Extrema interpolation via a quadratic function
-//            // Only if the detection is not too close to the border (so the
-//            // discrete 3D Hessian is well defined).
-//            guard (ic > 0) && (ic < (w - 1)) && (jc > 0) && (jc < (h - 1)) else {
-//                break
-//            }
-//            let x = inverseTaylorSecondOrderExpansion(images: images, x: ic, y: jc, s: sc)
-//            interpolation = x
-//
-//            if (abs(interpolation.dx) < maximumOffset) && (abs(interpolation.dy) < maximumOffset) && (abs(interpolation.ds) < maximumOffset) {
-//                isConverged = true
-//                break
-//            }
-//            else {
-//                if (interpolation.dx > +maximumOffset) && ((ic + 1) < (w - 1)) {
-//                    ic += 1
-//                }
-//                if (interpolation.dx < -maximumOffset) && ((ic - 1) > 0) {
-//                    ic -= 1
-//                }
-//                if (interpolation.dy > +maximumOffset) && ((jc + 1) < (h - 1)) {
-//                    jc += 1
-//                }
-//                if (interpolation.dy < -maximumOffset) && ((jc - 1) > 0) {
-//                    jc -= 1
-//                }
-//                if (interpolation.ds > +maximumOffset) && ((sc + 1) < (ns - 1)) {
-//                    sc += 1
-//                }
-//                if (interpolation.ds < -maximumOffset) && ((sc - 1) > 0) {
-//                    sc -= 1
-//                }
-//            }
-//
-//            iterationCount += 1
-//        }
-//
-//        guard isConverged else {
-//            print("point rejected \(iterationCount) / \(maximumIterations)")
-//            return nil
-//        }
-//
         return SIFTKeypoint(
             octave: keypoint.octave,
             scale: s,
             scaledCoordinate: SIMD2<Int>(
-                x: Int((Float(x) + alpha.x).rounded()),
-                y: Int((Float(y) + alpha.y).rounded())
+                x: coordinate.x,
+                y: coordinate.y
             ),
             absoluteCoordinate: SIMD2<Int>(
-                x: Int(((Float(x) + alpha.x) * delta).rounded()),
-                y: Int(((Float(y) + alpha.y) * delta).rounded())
+                x: Int((Float(coordinate.x) + alpha.x) * delta),
+                y: Int((Float(coordinate.y) + alpha.y) * delta)
             ),
             sigma: octave.sigmas[s] * pow(sigmaRatio, alpha.z),
             value: newValue
         )
     }
-    
-//    struct Interpolation {
-//        var dx: Float
-//        var dy: Float
-//        var ds: Float
-//        var value: Float
-//    }
     
     private func outOfBounds(octave: DifferenceOfGaussians.Octave, coordinate: SIMD3<Int>) -> Bool {
         let minX = configuration.imageBorder
@@ -420,7 +385,7 @@ final class SIFT {
         
         let H = hessian3D(i: images, c: coordinate)
         precondition(H.determinant != 0)
-        let Hi = H.inverse
+        let Hi = -H.inverse.transpose
         
         let dD = derivatives3D(i: images, c: coordinate)
         

@@ -156,7 +156,7 @@ final class SIFT {
         
         // Threshold over the Difference of Gaussians response (value
         // relative to scales per octave = 3)
-        var differenceOfGaussiansThreshold: Float = 0.0133 // 0.015
+        var differenceOfGaussiansThreshold: Float = 0.0133
 
         // Threshold over the ratio of principal curvatures (edgeness).
         var edgeThreshold: Float = 10.0
@@ -208,13 +208,8 @@ final class SIFT {
     func getKeypoints(_ inputTexture: MTLTexture) -> [SIFTKeypoint] {
         findKeypoints(inputTexture: inputTexture)
         let allKeypoints = getKeypointsFromOctaves()
-        
-        let softThreshold = configuration.differenceOfGaussiansThreshold * 0.8
-        let candidateKeypoints = allKeypoints.filter {
-            abs($0.value) > softThreshold
-        }
         let interpolatedKeypoints = interpolateKeypoints(
-            keypoints: candidateKeypoints
+            keypoints: allKeypoints
         )
         return interpolatedKeypoints
     }
@@ -246,6 +241,7 @@ final class SIFT {
         }
         return keypoints
     }
+    
 
     private func interpolateKeypoints(keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
         var interpolatedKeypoints = [SIFTKeypoint]()
@@ -267,6 +263,10 @@ final class SIFT {
     }
     
     private func interpolateKeypoint(keypoint: SIFTKeypoint) -> SIFTKeypoint? {
+        
+        guard abs(keypoint.value) > configuration.differenceOfGaussiansThreshold * 0.8 else {
+            return nil
+        }
         
         // Note: x and y are swapped in the original algorithm.
         
@@ -349,6 +349,10 @@ final class SIFT {
         }
         
         let newValue = interpolateContrast(i: images, c: coordinate, alpha: alpha)
+        
+        guard abs(newValue) > configuration.differenceOfGaussiansThreshold else {
+            return nil
+        }
 
         print("point converged \(i) out of \(maximumIterations): coordinate=\(coordinate) alpha=\(alpha) value=\(newValue)")
 

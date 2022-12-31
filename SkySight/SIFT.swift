@@ -145,6 +145,8 @@ final class SIFTOctave {
 }
 
 
+///
+/// See: https://github.com/robwhess/opensift/blob/master/src/sift.c
 /// See: http://www.ipol.im/pub/art/2014/82/article.pdf
 /// See: https://medium.com/jun94-devpblog/cv-13-scale-invariant-local-feature-extraction-3-sift-315b5de72d48
 final class SIFT {
@@ -284,18 +286,14 @@ final class SIFT {
         let x: Int = keypoint.scaledCoordinate.x
         let y: Int = keypoint.scaledCoordinate.y
         let octave: DifferenceOfGaussians.Octave = dog.octaves[o]
-//        let w: Int = octave.size.width
-//        let h: Int = octave.size.height
-//        let ns: Int = octave.numberOfScales
         let delta: Float = octave.delta
         let images: [Image<Float>] = octave.differenceImages
-//        let value: Float = keypoint.value
         
         var coordinate = SIMD3<Int>(x: x, y: y, z: s)
         
         // Check coordinates are within the scale space.
         guard !outOfBounds(octave: octave, coordinate: coordinate) else {
-            print("out of bounds coordinate=\(coordinate)")
+            print("keypoint \(coordinate): rejected: out of bounds")
             return nil
         }
 
@@ -311,11 +309,12 @@ final class SIFT {
                 break
             }
             
-//            coordinate.x += Int(alpha.x.rounded())
-//            coordinate.y += Int(alpha.y.rounded())
-//            coordinate.z += Int(alpha.z.rounded())
+            // Whess
+            // coordinate.x += Int(alpha.x.rounded())
+            // coordinate.y += Int(alpha.y.rounded())
+            // coordinate.z += Int(alpha.z.rounded())
             
-            
+            // IPOL
             if (alpha.x > +maximumOffset) {
                 coordinate.x += 1
             }
@@ -337,7 +336,7 @@ final class SIFT {
             
             // Check coordinates are within the scale space.
             guard !outOfBounds(octave: octave, coordinate: coordinate) else {
-                print("out of bounds coordinate=\(coordinate)")
+                print("keypoint \(coordinate): rejected: interpolated out of bounds")
                 return nil
             }
             
@@ -351,14 +350,23 @@ final class SIFT {
         let newValue = interpolateContrast(i: images, c: coordinate, alpha: alpha)
         
         guard abs(newValue) > configuration.differenceOfGaussiansThreshold else {
+            print("keypoint \(coordinate): rejected: low contrast=\(newValue)")
+            return nil
+        }
+        
+        // Discard keypoint with high edge response
+        let isEdge = isOnEdge(images: images, coordinate: coordinate)
+        guard !isEdge else {
+            print("keypoint \(coordinate): rejected: edge")
             return nil
         }
 
-        print("point converged \(i) out of \(maximumIterations): coordinate=\(coordinate) alpha=\(alpha) value=\(newValue)")
+        print("keypoint \(coordinate): accepted: \(i) out of \(maximumIterations): alpha=\(alpha) value=\(newValue)")
 
+        // Return keypoint
         return SIFTKeypoint(
             octave: keypoint.octave,
-            scale: s,
+            scale: s, // keypoint.z
             scaledCoordinate: SIMD2<Int>(
                 x: coordinate.x,
                 y: coordinate.y
@@ -452,4 +460,53 @@ final class SIFT {
         )
     }
 
+    ///
+    /// Compute Edge response
+    ///
+    /// Determines whether a feature is too edge like to be stable by computing the ratio of principal
+    /// curvatures at that feature.  Based on Section 4.1 of Lowe's paper.
+    ///
+    /// i.e.  Compute the ratio of principal curvatures
+    /// Compute the ratio (hXX + hYY)*(hXX + hYY)/(hXX*hYY - hXY*hXY);
+    ///
+    /// The 2D hessian of the DoG operator is computed via finite difference schemes.
+    ///
+    private func isOnEdge(images: [Image<Float>], coordinate c: SIMD3<Int>) -> Bool {
+        let i = images[c.z]
+        let v = i[c.x, c.y]
+        
+        // Compute the 2d Hessian at pixel (i,j) - i = y, j = x
+        // IPOL implementation uses hxx for y axis, and hyy for x axis
+        let hxx = i[c.x, c.y - 1] + i[c.x, c.y + 1] - 2 * v
+        let hyy = i[c.x + 1, c.y] + i[c.x - 1, c.y] - 2 * v
+        let hxy = ((i[c.x + 1, c.y + 1] - i[c.x - 1, c.y + 1]) - (i[c.x + 1, c.y - 1] - i[c.x - 1, c.y - 1])) * 0.25
+        
+        // Whess
+        let trace = hxx + hyy
+        let determinant = (hxx * hyy) - (hxy * hxy)
+        
+        guard determinant > 0 else {
+            // Negative determinant -> curvatures have different signs
+            return true
+        }
+        
+        let edgeThreshold = configuration.edgeThreshold
+        let threshold = ((edgeThreshold + 1) * (edgeThreshold + 1)) / edgeThreshold
+        let curvature = (trace * trace) / determinant
+        
+        guard curvature < threshold else {
+            // Feature is on an edge
+            return true
+        }
+        
+        // Feature is not on an edge
+        return false
+        
+        // let edgeThreshold = pow(threshold + 1, 2) / configuration.edgeThreshold
+
+        // IPOL
+        // Harris and Stephen Edge response
+        // let edgeResponse = (hxx + hyy) * (hxx + hyy) / (hxx * hyy - hxy * hxy)
+        // return edgeResponse
+    }
 }

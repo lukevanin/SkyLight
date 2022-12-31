@@ -355,9 +355,25 @@ final class SIFT {
         }
         
         // Discard keypoint with high edge response
-        let isEdge = isOnEdge(images: images, coordinate: coordinate)
-        guard !isEdge else {
-            print("keypoint \(coordinate): rejected: edge")
+        let isOnEdge = self.isOnEdge(images: images, coordinate: coordinate)
+        guard !isOnEdge else {
+            print("keypoint \(coordinate): rejected: on edge")
+            return nil
+        }
+        
+        let sigma = octave.sigmas[s] * pow(sigmaRatio, alpha.z)
+        let absoluteCoordinate = SIMD2<Int>(
+            x: Int((Float(coordinate.x) + alpha.x) * delta),
+            y: Int((Float(coordinate.y) + alpha.y) * delta)
+        )
+        
+        // Discard keypoint that lies too close to the boundary.
+        let isCloseToBoundary = self.isCloseToBoundary(
+            sigma: sigma,
+            coordinate: absoluteCoordinate
+        )
+        guard !isCloseToBoundary else {
+            print("keypoint \(coordinate): rejected: close to boundary")
             return nil
         }
 
@@ -371,11 +387,8 @@ final class SIFT {
                 x: coordinate.x,
                 y: coordinate.y
             ),
-            absoluteCoordinate: SIMD2<Int>(
-                x: Int((Float(coordinate.x) + alpha.x) * delta),
-                y: Int((Float(coordinate.y) + alpha.y) * delta)
-            ),
-            sigma: octave.sigmas[s] * pow(sigmaRatio, alpha.z),
+            absoluteCoordinate: absoluteCoordinate,
+            sigma: sigma,
             value: newValue
         )
     }
@@ -508,5 +521,21 @@ final class SIFT {
         // Harris and Stephen Edge response
         // let edgeResponse = (hxx + hyy) * (hxx + hyy) / (hxx * hyy - hxy * hxy)
         // return edgeResponse
+    }
+    
+    ///
+    /// Determines whether the keypoint is within the allowed distance from the boundary of the image. A
+    /// keypoint that lies too close to the edge cannot be used to extract a feature descriptor.
+    ///
+    func isCloseToBoundary(sigma s: Float, coordinate c: SIMD2<Int>) -> Bool {
+        let size = configuration.inputSize
+        let w = Float(size.width)
+        let h = Float(size.height)
+        let p = SIMD2<Float>(x: Float(c.x), y: Float(c.y))
+        let minX = s
+        let minY = s
+        let maxX = w - s - 1
+        let maxY = h - s - 1
+        return (p.x < minX) || (p.x > maxX) || (p.y < minY) || (p.y > maxY)
     }
 }

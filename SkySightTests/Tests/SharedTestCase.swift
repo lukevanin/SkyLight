@@ -166,8 +166,8 @@ func drawKeypoints(
         for keypoint in referenceKeypoints {
             let radius = CGFloat(keypoint.sigma)
             let bounds = CGRect(
-                x: CGFloat(keypoint.x) - radius,
-                y: CGFloat(keypoint.y) - radius,
+                x: CGFloat(keypoint.absoluteCoordinate.x) - radius,
+                y: CGFloat(keypoint.absoluteCoordinate.y) - radius,
                 width: radius * 2,
                 height: radius * 2
             )
@@ -184,8 +184,8 @@ func drawKeypoints(
         for keypoint in foundKeypoints {
             let radius = CGFloat(keypoint.sigma)
             let bounds = CGRect(
-                x: CGFloat(keypoint.x) - radius,
-                y: CGFloat(keypoint.y) - radius,
+                x: CGFloat(keypoint.absoluteCoordinate.x) - radius,
+                y: CGFloat(keypoint.absoluteCoordinate.y) - radius,
                 width: radius * 2,
                 height: radius * 2
             )

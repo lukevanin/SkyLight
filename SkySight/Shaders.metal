@@ -238,13 +238,16 @@ kernel void siftExtrema(
     texture2d<float, access::read> inputTexture2 [[texture(3)]],
     ushort2 gid [[thread_position_in_grid]]
 ) {
-    const texture2d<float, access::read> textures[] = {
+    const texture2d<float, access::read> w[] = {
         inputTexture0,
         inputTexture1,
         inputTexture2,
     };
     
-    const float value = textures[1].read(gid).r;
+    int s = 1;
+//    int m = gid.x;
+//    int n = gid.y;
+    const float value = w[s].read(gid).r;
     const int2 center = int2(gid);
     
     float minValue = 10000;
@@ -253,7 +256,7 @@ kernel void siftExtrema(
     for (int i = 0; i < 26; i++) {
         int3 neighborOffset = neighborOffsets[i];
         ushort textureIndex = neighborOffset.x;
-        texture2d<float, access::read> texture = textures[textureIndex];
+        texture2d<float, access::read> texture = w[textureIndex];
         int2 neighborDelta = int2(neighborOffset.yz);
         ushort2 coordinate = ushort2(center + neighborDelta);
         float neighborValue = texture.read(coordinate).r;
@@ -262,17 +265,13 @@ kernel void siftExtrema(
         maxValue = max(maxValue, neighborValue);
     }
     
-    // value is an extremum
-    float result;
+    float result = 0;
     
     if ((value < minValue) || (value > maxValue)) {
         result = 1;
     }
-    else {
-        result = 0;
-    }
 
-    outputTexture.write(float4(result, 0, 0, 1), gid);
+    outputTexture.write(float4(result, value, 0, 1), gid);
 }
 
 

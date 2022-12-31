@@ -58,6 +58,8 @@ final class DifferenceOfGaussians {
         let gaussianTextures: [MTLTexture]
         let differenceTextures: [MTLTexture]
         
+        let differenceImages: [Image<Float>]
+        
         private let scaleFunction: NearestNeighborDownScaleKernel
         private let gaussianBlurFunctions: [GaussianKernel]
         private let subtractFunction: SubtractKernel
@@ -99,9 +101,6 @@ final class DifferenceOfGaussians {
             self.gaussianBlurFunctions = {
                 var functions = [GaussianKernel]()
                 for s in 1 ..< numberOfGaussians {
-//                    sig_prev = octave->sigmas[s-1];
-//                                sig_next = octave->sigmas[s];
-//                                sigma_extra = sqrt(sig_next*sig_next- sig_prev*sig_prev)/delta;
                     let sa = sigmas[s - 1]
                     let sb = sigmas[s]
                     let rho = sqrt((sb * sb) - (sa * sa)) / delta
@@ -109,16 +108,6 @@ final class DifferenceOfGaussians {
                     print(
                         "𝜌[\(s - 1) → \(s)]", "=", rho
                     )
-    //                let function = MPSImageGaussianBlur(
-    //                    device: device,
-    //                    sigma: rho
-    //                )
-    //                function.edgeMode = .clamp
-    //                function.offset = MPSOffset(
-    //                    x: offset,
-    //                    y: offset,
-    //                    z: 0
-    //                )
                     let function = GaussianKernel(device: device, sigma: rho)
                     functions.append(function)
                 }
@@ -134,7 +123,7 @@ final class DifferenceOfGaussians {
                 return textures
             }()
 
-            self.differenceTextures = {
+            let differenceTextures = {
                 var textures = [MTLTexture]()
                 for _ in 0 ..< numberOfDifferences {
                     let texture = device.makeTexture(descriptor: textureDescriptor)!
@@ -142,11 +131,17 @@ final class DifferenceOfGaussians {
                 }
                 return textures
             }()
+            self.differenceTextures = differenceTextures
             
-//            self.subtractFunction = {
-//                let function = MPSImageSubtract(device: device)
-//                return function
-//            }()
+            self.differenceImages = {
+                var images = [Image<Float>]()
+                for i in 0 ..< differenceTextures.count {
+                    let texture = differenceTextures[i]
+                    let image = Image<Float>(texture: texture, defaultValue: 0)
+                    images.append(image)
+                }
+                return images
+            }()
         }
         
         func encode(commandBuffer: MTLCommandBuffer, inputTexture: MTLTexture) {
@@ -187,11 +182,6 @@ final class DifferenceOfGaussians {
                     inputTexture: inputTexture,
                     outputTexture: gaussianTextures[0]
                 )
-//                scaleFunction.encode(
-//                    commandBuffer: commandBuffer,
-//                    sourceTexture: inputTexture,
-//                    destinationTexture: gaussianTextures[0]
-//                )
             }
         }
         
@@ -387,11 +377,6 @@ final class DifferenceOfGaussians {
             inputTexture: scaledTexture,
             outputTexture: seedTexture
         )
-//        bilinearScaleFunction.encode(
-//            commandBuffer: commandBuffer,
-//            inputTexture: luminosityTexture,
-//            outputTexture: seedTexture
-//        )
     }
 
     private func encodeOctaves(commandBuffer: MTLCommandBuffer) {

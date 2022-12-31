@@ -27,6 +27,11 @@
 		FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */; };
 		FC5C0C09295B161000759433 /* BilinearUpScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */; };
 		FC5C0C0D295B41A000759433 /* extra_NES_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C0C295B41A000759433 /* extra_NES_keys.txt */; };
+		FC5C0C13295B4FAE00759433 /* extra_DoGSoftThresh_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C0E295B4FAE00759433 /* extra_DoGSoftThresh_keys.txt */; };
+		FC5C0C14295B4FAE00759433 /* extra_ExtrInterp_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C0F295B4FAE00759433 /* extra_ExtrInterp_keys.txt */; };
+		FC5C0C15295B4FAE00759433 /* extra_FarFromBorder_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C10295B4FAE00759433 /* extra_FarFromBorder_keys.txt */; };
+		FC5C0C16295B4FAE00759433 /* extra_OnEdgeResp_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C11295B4FAE00759433 /* extra_OnEdgeResp_keys.txt */; };
+		FC5C0C17295B4FAE00759433 /* extra_DoGThresh_keys.txt in Resources */ = {isa = PBXBuildFile; fileRef = FC5C0C12295B4FAE00759433 /* extra_DoGThresh_keys.txt */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
@@ -97,6 +102,11 @@
 		FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConvertSRGBToGrayscaleKernel.swift; sourceTree = "<group>"; };
 		FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BilinearUpScaleKernel.swift; sourceTree = "<group>"; };
 		FC5C0C0C295B41A000759433 /* extra_NES_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_NES_keys.txt; sourceTree = "<group>"; };
+		FC5C0C0E295B4FAE00759433 /* extra_DoGSoftThresh_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_DoGSoftThresh_keys.txt; sourceTree = "<group>"; };
+		FC5C0C0F295B4FAE00759433 /* extra_ExtrInterp_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_ExtrInterp_keys.txt; sourceTree = "<group>"; };
+		FC5C0C10295B4FAE00759433 /* extra_FarFromBorder_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_FarFromBorder_keys.txt; sourceTree = "<group>"; };
+		FC5C0C11295B4FAE00759433 /* extra_OnEdgeResp_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_OnEdgeResp_keys.txt; sourceTree = "<group>"; };
+		FC5C0C12295B4FAE00759433 /* extra_DoGThresh_keys.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = extra_DoGThresh_keys.txt; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
@@ -227,6 +237,11 @@
 			isa = PBXGroup;
 			children = (
 				FC5C0C0C295B41A000759433 /* extra_NES_keys.txt */,
+				FC5C0C0E295B4FAE00759433 /* extra_DoGSoftThresh_keys.txt */,
+				FC5C0C12295B4FAE00759433 /* extra_DoGThresh_keys.txt */,
+				FC5C0C0F295B4FAE00759433 /* extra_ExtrInterp_keys.txt */,
+				FC5C0C10295B4FAE00759433 /* extra_FarFromBorder_keys.txt */,
+				FC5C0C11295B4FAE00759433 /* extra_OnEdgeResp_keys.txt */,
 				FC5C0BEC295A5C4500759433 /* butterfly-nes-keypoints.txt */,
 				FCD28C9C2959F4990018A2AA /* butterfly-keypoints.txt */,
 				FCD28C9F295A070E0018A2AA /* butterfly-keypoints-raw.png */,
@@ -410,6 +425,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FC5C0C13295B4FAE00759433 /* extra_DoGSoftThresh_keys.txt in Resources */,
 				FCD28C982959EBFE0018A2AA /* inferno.png in Resources */,
 				FC5C0BF6295AE11200759433 /* scalespace_scales_o000_s001.png in Resources */,
 				FCD28C9D2959F4990018A2AA /* butterfly-keypoints.txt in Resources */,
@@ -420,13 +436,17 @@
 				FC5C0BEB295A592E00759433 /* butterfly.png in Resources */,
 				FC5C0C0D295B41A000759433 /* extra_NES_keys.txt in Resources */,
 				FC5C0BFB295AE11200759433 /* scalespace_scales_o000_s002.png in Resources */,
+				FC5C0C15295B4FAE00759433 /* extra_FarFromBorder_keys.txt in Resources */,
 				FCD28CA0295A070E0018A2AA /* butterfly-keypoints-raw.png in Resources */,
 				FCEBCDF22957BAA7002BB8EF /* warm.png in Resources */,
 				FC5C0BF9295AE11200759433 /* scalespace_scales_o000_s000.png in Resources */,
 				FC5C0BF7295AE11200759433 /* scalespace_scales_o000_s004.png in Resources */,
+				FC5C0C14295B4FAE00759433 /* extra_ExtrInterp_keys.txt in Resources */,
 				FCD28C942959EB8B0018A2AA /* cubehelix.png in Resources */,
 				FCEBCDF32957BAA7002BB8EF /* turbo.png in Resources */,
 				FCD28CA3295A25540018A2AA /* butterfly-keypoints-final.png in Resources */,
+				FC5C0C17295B4FAE00759433 /* extra_DoGThresh_keys.txt in Resources */,
+				FC5C0C16295B4FAE00759433 /* extra_OnEdgeResp_keys.txt in Resources */,
 				FC5C0BFA295AE11200759433 /* scalespace_scales_o000_s005.png in Resources */,
 				FCD28C972959EBFE0018A2AA /* magma.png in Resources */,
 			);

@@ -39,7 +39,7 @@ final class SIFTExtremaFunction {
         precondition(inputTexture0.pixelFormat == .r32Float)
         precondition(inputTexture1.pixelFormat == .r32Float)
         precondition(inputTexture2.pixelFormat == .r32Float)
-        precondition(outputTexture.pixelFormat == .r32Float)
+        precondition(outputTexture.pixelFormat == .rg32Float)
 
         let encoder = commandBuffer.makeComputeCommandEncoder()!
         encoder.setComputePipelineState(computePipelineState)

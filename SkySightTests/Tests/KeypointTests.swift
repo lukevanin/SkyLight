@@ -22,7 +22,7 @@ final class KeypointTests: SharedTestCase {
             )
         )
         let subject = SIFT(device: device, configuration: configuration)
-        var keypoints = subject.getKeypoints(inputTexture)
+        let keypoints = subject.getKeypoints(inputTexture)
         print("Found", keypoints.count, "keypoints")
 
 //        let referenceKeypoints: [SIFTKeypoint] = []
@@ -39,7 +39,8 @@ final class KeypointTests: SharedTestCase {
             return cgImage
         }()
 
-        let referenceKeypoints = try loadKeypoints(filename: "extra_NES_keys")
+//        let referenceKeypoints = try loadKeypoints(filename: "extra_DoGSoftThresh_keys")
+        let referenceKeypoints = try loadKeypoints(filename: "extra_ExtrInterp_keys")
 //        let referenceImage = UIImage(named: "butterfly-keypoints-raw")!.cgImage!
 //        for i in 0 ..< keypoints.count {
 //            var keypoint = keypoints[i]
@@ -95,9 +96,12 @@ final class KeypointTests: SharedTestCase {
             let x = Float(components[1])!
             let s = Float(components[2])!
             let keypoint = SIFTKeypoint(
-                x: x,
-                y: y,
-                sigma: s
+                octave: 0,
+                scale: 0,
+                scaledCoordinate: .zero,
+                absoluteCoordinate: SIMD2<Int>(x: Int(x), y: Int(y)),
+                sigma: s,
+                value: 0
             )
             keypoints.append(keypoint)
         }

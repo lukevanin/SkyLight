@@ -198,6 +198,74 @@ func drawKeypoints(
 }
 
 
+func drawDescriptors(
+    sourceImage: CGImage,
+    overlayColor: UIColor = UIColor.black.withAlphaComponent(0.8),
+    referenceColor: UIColor = UIColor.green,
+    foundColor: UIColor = UIColor.red,
+    referenceDescriptors: [SIFTDescriptor],
+    foundDescriptors: [SIFTDescriptor]
+) -> UIImage {
+    
+    let bounds = CGRect(x: 0, y: 0, width: sourceImage.width, height: sourceImage.height)
+
+    let renderer = UIGraphicsImageRenderer(size: bounds.size)
+    let uiImage = renderer.image { context in
+        let cgContext = context.cgContext
+        
+        cgContext.saveGState()
+        cgContext.scaleBy(x: 1, y: -1)
+        cgContext.translateBy(x: 0, y: -bounds.height)
+        cgContext.draw(sourceImage, in: bounds)
+        cgContext.restoreGState()
+                
+        cgContext.saveGState()
+        cgContext.setBlendMode(.multiply)
+        cgContext.setFillColor(overlayColor.cgColor)
+        cgContext.fill([bounds])
+        cgContext.restoreGState()
+
+        drawDescriptors(cgContext: cgContext, color: referenceColor, descriptors: referenceDescriptors)
+        
+        drawDescriptors(cgContext: cgContext, color: foundColor, descriptors: foundDescriptors)
+        
+    }
+    return uiImage
+}
+
+
+private func drawDescriptors(cgContext: CGContext, color: UIColor, descriptors: [SIFTDescriptor]) {
+    cgContext.saveGState()
+    cgContext.setLineWidth(1)
+    cgContext.setStrokeColor(color.cgColor)
+    cgContext.setBlendMode(.screen)
+    for descriptor in descriptors {
+        let keypoint = descriptor.keypoint
+        let radius = 1.5 * CGFloat(keypoint.sigma)
+        let center = CGPoint(
+            x: CGFloat(keypoint.absoluteCoordinate.x),
+            y: CGFloat(keypoint.absoluteCoordinate.y)
+        )
+        let bounds = CGRect(
+            x: center.x - radius,
+            y: center.y - radius,
+            width: radius * 2,
+            height: radius * 2
+        )
+        cgContext.addEllipse(in: bounds)
+        
+        cgContext.move(to: center)
+        cgContext.addLine(
+            to: CGPoint(
+                x: center.x + cos(CGFloat(descriptor.theta)) * radius,
+                y: center.y + sin(CGFloat(descriptor.theta)) * radius
+            )
+        )
+    }
+    cgContext.strokePath()
+    cgContext.restoreGState()
+}
+
 
 class SharedTestCase: XCTestCase {
 

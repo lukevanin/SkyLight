@@ -58,6 +58,7 @@ final class DifferenceOfGaussians {
         let gaussianTextures: [MTLTexture]
         let differenceTextures: [MTLTexture]
         
+        let gaussianImages: [Image<Float>]
         let differenceImages: [Image<Float>]
         
         private let scaleFunction: NearestNeighborDownScaleKernel
@@ -114,7 +115,7 @@ final class DifferenceOfGaussians {
                 return functions
             }()
             
-            self.gaussianTextures = {
+            let gaussianTextures = {
                 var textures = [MTLTexture]()
                 for _ in 0 ..< numberOfGaussians {
                     let texture = device.makeTexture(descriptor: textureDescriptor)!
@@ -122,6 +123,7 @@ final class DifferenceOfGaussians {
                 }
                 return textures
             }()
+            self.gaussianTextures = gaussianTextures
 
             let differenceTextures = {
                 var textures = [MTLTexture]()
@@ -137,6 +139,16 @@ final class DifferenceOfGaussians {
                 var images = [Image<Float>]()
                 for i in 0 ..< differenceTextures.count {
                     let texture = differenceTextures[i]
+                    let image = Image<Float>(texture: texture, defaultValue: 0)
+                    images.append(image)
+                }
+                return images
+            }()
+            
+            self.gaussianImages = {
+                var images = [Image<Float>]()
+                for i in 0 ..< gaussianTextures.count {
+                    let texture = gaussianTextures[i]
                     let image = Image<Float>(texture: texture, defaultValue: 0)
                     images.append(image)
                 }

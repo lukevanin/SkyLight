@@ -101,8 +101,9 @@ final class KeypointTests: SharedTestCase {
             let keypoint = SIFTKeypoint(
                 octave: 0,
                 scale: 0,
+                subScale: 0,
                 scaledCoordinate: .zero,
-                absoluteCoordinate: SIMD2<Int>(x: Int(x), y: Int(y)),
+                absoluteCoordinate: SIMD2<Float>(x: x, y: y),
                 sigma: s,
                 value: 0
             )

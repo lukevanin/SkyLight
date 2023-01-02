@@ -36,6 +36,9 @@
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
 		FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EE293B6380008E8D79 /* LaunchScreen.storyboard */; };
+		FCB2DBD2296194FD00F19CEB /* DescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */; };
+		FCB2DBD42961972300F19CEB /* butterfly-descriptors.txt in Resources */ = {isa = PBXBuildFile; fileRef = FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */; };
+		FCB2DBD52961972300F19CEB /* butterfly-descriptors.txt in Resources */ = {isa = PBXBuildFile; fileRef = FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */; };
 		FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */; };
 		FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */; };
 		FCD28C942959EB8B0018A2AA /* cubehelix.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C932959EB8B0018A2AA /* cubehelix.png */; };
@@ -113,6 +116,8 @@
 		FC9DF9EC293B6380008E8D79 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FC9DF9EF293B6380008E8D79 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FC9DF9F1293B6380008E8D79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DescriptorTests.swift; sourceTree = "<group>"; };
+		FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "butterfly-descriptors.txt"; sourceTree = "<group>"; };
 		FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubtractKernel.swift; sourceTree = "<group>"; };
 		FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaussianDifferenceTests.swift; sourceTree = "<group>"; };
 		FCD28C932959EB8B0018A2AA /* cubehelix.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cubehelix.png; sourceTree = "<group>"; };
@@ -215,6 +220,7 @@
 				FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */,
 				FCEBCDE029572E9F002BB8EF /* DifferenceOfGaussiansTests.swift */,
 				FCEBCDF729598663002BB8EF /* KeypointTests.swift */,
+				FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */,
 				FCEBCDF9295986BC002BB8EF /* SharedTestCase.swift */,
 			);
 			path = Tests;
@@ -244,6 +250,7 @@
 				FC5C0C11295B4FAE00759433 /* extra_OnEdgeResp_keys.txt */,
 				FC5C0BEC295A5C4500759433 /* butterfly-nes-keypoints.txt */,
 				FCD28C9C2959F4990018A2AA /* butterfly-keypoints.txt */,
+				FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */,
 				FCD28C9F295A070E0018A2AA /* butterfly-keypoints-raw.png */,
 				FCD28CA2295A25540018A2AA /* butterfly-keypoints-final.png */,
 				FCEBCDE92957926E002BB8EF /* butterfly.tiff */,
@@ -402,6 +409,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCB2DBD42961972300F19CEB /* butterfly-descriptors.txt in Resources */,
 				FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */,
 				FC5C0BFF295AE11800759433 /* scalespace_scales_o000_s004.png in Resources */,
 				FCEBCDF62957BAAC002BB8EF /* viridis.png in Resources */,
@@ -440,6 +448,7 @@
 				FCD28CA0295A070E0018A2AA /* butterfly-keypoints-raw.png in Resources */,
 				FCEBCDF22957BAA7002BB8EF /* warm.png in Resources */,
 				FC5C0BF9295AE11200759433 /* scalespace_scales_o000_s000.png in Resources */,
+				FCB2DBD52961972300F19CEB /* butterfly-descriptors.txt in Resources */,
 				FC5C0BF7295AE11200759433 /* scalespace_scales_o000_s004.png in Resources */,
 				FC5C0C14295B4FAE00759433 /* extra_ExtrInterp_keys.txt in Resources */,
 				FCD28C942959EB8B0018A2AA /* cubehelix.png in Resources */,
@@ -494,6 +503,7 @@
 				FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */,
 				FCEBCDF829598663002BB8EF /* KeypointTests.swift in Sources */,
 				FCEBCDE129572E9F002BB8EF /* DifferenceOfGaussiansTests.swift in Sources */,
+				FCB2DBD2296194FD00F19CEB /* DescriptorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

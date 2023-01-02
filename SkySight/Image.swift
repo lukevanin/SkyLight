@@ -64,6 +64,19 @@ final class Image<T> {
     }
     
     private func offset(x: Int, y: Int) -> Int {
-        (y * texture.width) + x
+        precondition(x >= 0 && y >= 0 && x <= texture.width - 1 && y <= texture.height - 1)
+        return (y * texture.width) + x
+    }
+}
+
+extension Image where T == Float {
+    
+    func getGradient(at coordinate: SIMD2<Int>) -> SIMD2<Float> {
+        #warning("FIXME: IPOL implementation seems to swap dx and dy")
+        let py: Float = self[coordinate.x + 1, coordinate.y]
+        let my: Float = self[coordinate.x - 1, coordinate.y]
+        let px: Float = self[coordinate.x, coordinate.y + 1]
+        let mx: Float = self[coordinate.x, coordinate.y - 1]
+        return SIMD2<Float>(x: (px - mx) * 0.5, y: (py - my) * 0.5)
     }
 }

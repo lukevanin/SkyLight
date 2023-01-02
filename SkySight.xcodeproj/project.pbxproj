@@ -39,6 +39,7 @@
 		FCB2DBD2296194FD00F19CEB /* DescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */; };
 		FCB2DBD42961972300F19CEB /* butterfly-descriptors.txt in Resources */ = {isa = PBXBuildFile; fileRef = FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */; };
 		FCB2DBD52961972300F19CEB /* butterfly-descriptors.txt in Resources */ = {isa = PBXBuildFile; fileRef = FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */; };
+		FCD244742962E0ED00459437 /* SIFTPatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD244732962E0ED00459437 /* SIFTPatch.swift */; };
 		FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */; };
 		FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */; };
 		FCD28C942959EB8B0018A2AA /* cubehelix.png in Resources */ = {isa = PBXBuildFile; fileRef = FCD28C932959EB8B0018A2AA /* cubehelix.png */; };
@@ -118,6 +119,7 @@
 		FC9DF9F1293B6380008E8D79 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DescriptorTests.swift; sourceTree = "<group>"; };
 		FCB2DBD32961972300F19CEB /* butterfly-descriptors.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "butterfly-descriptors.txt"; sourceTree = "<group>"; };
+		FCD244732962E0ED00459437 /* SIFTPatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTPatch.swift; sourceTree = "<group>"; };
 		FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubtractKernel.swift; sourceTree = "<group>"; };
 		FCD28C912959E50B0018A2AA /* GaussianDifferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaussianDifferenceTests.swift; sourceTree = "<group>"; };
 		FCD28C932959EB8B0018A2AA /* cubehelix.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cubehelix.png; sourceTree = "<group>"; };
@@ -298,6 +300,7 @@
 			isa = PBXGroup;
 			children = (
 				FCEBCDBA294E8669002BB8EF /* SIFT.swift */,
+				FCD244732962E0ED00459437 /* SIFTPatch.swift */,
 				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
 				FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */,
 				FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */,
@@ -491,6 +494,7 @@
 				FCEBCDED2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift in Sources */,
 				FCEBCDCF295248AA002BB8EF /* DifferenceOfGaussians.swift in Sources */,
 				FCEBCDB5294E7E39002BB8EF /* ImageConversion.swift in Sources */,
+				FCD244742962E0ED00459437 /* SIFTPatch.swift in Sources */,
 				FCEBCDC9295247C2002BB8EF /* SIFTExtremaKernel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -69,14 +69,27 @@ final class Image<T> {
     }
 }
 
+struct Gradient {
+    let orientation: Float
+    let magnitude: Float
+}
+
 extension Image where T == Float {
     
-    func getGradient(at coordinate: SIMD2<Int>) -> SIMD2<Float> {
+    func getGradient(x: Int, y: Int) -> Gradient {
         #warning("FIXME: IPOL implementation seems to swap dx and dy")
-        let py: Float = self[coordinate.x + 1, coordinate.y]
-        let my: Float = self[coordinate.x - 1, coordinate.y]
-        let px: Float = self[coordinate.x, coordinate.y + 1]
-        let mx: Float = self[coordinate.x, coordinate.y - 1]
+        let g = getGradientVector(x: x, y: y)
+        return Gradient(
+            orientation: atan2(g.x, g.y),
+            magnitude: sqrt(g.x * g.x + g.y * g.y)
+        )
+    }
+    
+    func getGradientVector(x: Int, y: Int) -> SIMD2<Float> {
+        let px: Float = self[x + 1, y]
+        let mx: Float = self[x - 1, y]
+        let py: Float = self[x, y + 1]
+        let my: Float = self[x, y - 1]
         return SIMD2<Float>(x: (px - mx) * 0.5, y: (py - my) * 0.5)
     }
 }

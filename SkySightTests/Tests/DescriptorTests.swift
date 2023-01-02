@@ -40,7 +40,7 @@ final class DescriptorTests: SharedTestCase {
         }()
 
         let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
-
+        
         attachImage(
             name: "descriptors",
             uiImage: drawDescriptors(
@@ -91,6 +91,11 @@ final class DescriptorTests: SharedTestCase {
             let x = Float(components[1])!
             let s = Float(components[2])!
             let theta = Float(components[3])!
+            var features = Array<Int>(repeating: 0, count: 4 * 4 * 8)
+            for i in 0 ..< features.count {
+                features[i] = Int(components[i + 4])!
+            }
+                
             let descriptor = SIFTDescriptor(
                 keypoint: SIFTKeypoint(
                     octave: 0,
@@ -101,7 +106,9 @@ final class DescriptorTests: SharedTestCase {
                     sigma: s,
                     value: 0
                 ),
-                theta: theta
+                theta: theta,
+                rawFeatures: [],
+                features: features
             )
             descriptors.append(descriptor)
         }

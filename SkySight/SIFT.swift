@@ -17,118 +17,6 @@ private let logger = Logger(
 )
 
 
-struct SIFTKeypoint {
-    // Index of the level of the difference-of-gaussians pyramid.
-    var octave: Int
-    // Index of the image in the octave.
-    var scale: Int
-    //
-    var subScale: Float
-    // Coordinate relative to the difference-of-gaussians image size.
-    var scaledCoordinate: SIMD2<Int>
-    // Coordinate relative to the original image.
-    var absoluteCoordinate: SIMD2<Float>
-    // "Blur"
-    var sigma: Float
-    // Pixel color (intensity)
-    var value: Float
-}
-
-
-struct SIFTDescriptor {
- 
-    // Detected keypoint.
-    let keypoint: SIFTKeypoint
-    // Principal orientation.
-    let theta: Float
-    // Raw floating point features
-    let rawFeatures: [Float]
-    // Quantized features
-    let features: [Int]
-    
-    static func distance(_ a: SIFTDescriptor, _ b: SIFTDescriptor) -> Float {
-        precondition(a.features.count == 128)
-        precondition(b.features.count == 128)
-        var t = 0
-        for i in 0 ..< 128 {
-            let d = b.features[i] - a.features[i]
-            t += (d * d)
-        }
-        return sqrt(Float(t))
-    }
-
-    static func match(
-        source: [SIFTDescriptor],
-        target: [SIFTDescriptor],
-        absoluteThreshold: Float,
-        relativeThreshold: Float
-    ) -> [SIFTCorrespondence] {
-        var output = [SIFTCorrespondence]()
-        for s in source {
-            let correspondence = match(
-                source: s,
-                target: target,
-                absoluteThreshold: absoluteThreshold,
-                relativeThreshold: relativeThreshold
-            )
-            if let correspondence {
-                output.append(correspondence)
-            }
-        }
-        return output
-    }
-    
-    static func match(
-        source: SIFTDescriptor,
-        target: [SIFTDescriptor],
-        absoluteThreshold: Float,
-        relativeThreshold: Float
-    ) -> SIFTCorrespondence? {
-        var bestMatchDistance = Float.greatestFiniteMagnitude
-        var secondBestMatchDistance = Float.greatestFiniteMagnitude
-        var bestMatch: SIFTDescriptor!
-
-        for t in target {
-            let distance = self.distance(source, t)
-            
-            guard distance < absoluteThreshold else {
-                continue
-            }
-            
-            guard distance < bestMatchDistance else {
-                continue
-            }
-            
-            bestMatch = t
-            secondBestMatchDistance = bestMatchDistance
-            bestMatchDistance = distance
-        }
-        
-        guard let bestMatch = bestMatch else {
-            return nil
-        }
-        
-        guard bestMatchDistance < (secondBestMatchDistance * relativeThreshold) else {
-            return nil
-        }
-        
-        return SIFTCorrespondence(
-            source: source,
-            target: bestMatch,
-            featureDistance: bestMatchDistance
-        )
-    }
-}
-
-
-struct SIFTCorrespondence {
-
-    var source: SIFTDescriptor
-    var target: SIFTDescriptor
-    var featureDistance: Float
-}
-
-
 typealias SIFTHistogram = [Float]
 
 
@@ -429,7 +317,7 @@ final class SIFT {
         
         // Check coordinates are within the scale space.
         guard !outOfBounds(octave: octave, coordinate: coordinate) else {
-            print("keypoint \(coordinate): rejected: out of bounds")
+            // print("keypoint \(coordinate): rejected: out of bounds")
             return nil
         }
 
@@ -472,7 +360,7 @@ final class SIFT {
             
             // Check coordinates are within the scale space.
             guard !outOfBounds(octave: octave, coordinate: coordinate) else {
-                print("keypoint \(coordinate): rejected: interpolated out of bounds")
+                // print("keypoint \(coordinate): rejected: interpolated out of bounds")
                 return nil
             }
             
@@ -486,14 +374,14 @@ final class SIFT {
         let newValue = interpolateContrast(i: images, c: coordinate, alpha: alpha)
         
         guard abs(newValue) > configuration.differenceOfGaussiansThreshold else {
-            print("keypoint \(coordinate): rejected: low contrast=\(newValue)")
+            // print("keypoint \(coordinate): rejected: low contrast=\(newValue)")
             return nil
         }
         
         // Discard keypoint with high edge response
         let isOnEdge = self.isOnEdge(images: images, coordinate: coordinate)
         guard !isOnEdge else {
-            print("keypoint \(coordinate): rejected: on edge")
+            // print("keypoint \(coordinate): rejected: on edge")
             return nil
         }
         
@@ -514,11 +402,7 @@ final class SIFT {
 //            return nil
 //        }
 
-        print("keypoint \(coordinate): accepted: \(i) out of \(maximumIterations): alpha=\(alpha) value=\(newValue)")
-        
-        // intvl = ddata->intvl + ddata->subintvl;
-        // feat->scl = sigma * pow( 2.0, ddata->octv + intvl / intvls );
-        // ddata->scl_octv = sigma * pow( 2.0, intvl / intvls );
+//        logger.info("keypoint \(coordinate): accepted: \(i) out of \(maximumIterations): alpha=\(alpha) value=\(newValue)")
         
         // Return keypoint
         return SIFTKeypoint(

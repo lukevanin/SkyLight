@@ -89,8 +89,8 @@ final class DescriptorTests: SharedTestCase {
         
         print("Finding matches")
         let matches = SIFTDescriptor.match(
-            source: filter(foundDescriptors),
-            target: referenceDescriptors,
+            source: filter(foundDescriptors, every: 10),
+            target: filter(referenceDescriptors, every: 2),
             absoluteThreshold: 300,
             relativeThreshold: 0.6
         )
@@ -102,12 +102,12 @@ final class DescriptorTests: SharedTestCase {
             uiImage: drawMatches(
                 sourceImage: referenceImage,
                 targetImage: referenceImage,
-                matches: filter(matches, every: 5)
+                matches: matches
             )
         )
     }
     
-    private func filter<E>(_ input: Array<E>, every step: Int = 10, limit: Int = 100) -> [E] {
+    private func filter<E>(_ input: Array<E>, every step: Int = 10, limit: Int = 10000) -> [E] {
         Array(input.enumerated().filter({ $0.offset % step == 0 }).map({ $0.element }).prefix(limit))
     }
     

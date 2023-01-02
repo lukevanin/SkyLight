@@ -238,8 +238,8 @@ func drawMatches(
     sourceImage: CGImage,
     targetImage: CGImage,
     overlayColor: UIColor = UIColor.black.withAlphaComponent(0.8),
-    sourceColor: UIColor = UIColor.green,
-    targetColor: UIColor = UIColor.red,
+    sourceColor: UIColor = UIColor.cyan,
+    targetColor: UIColor = UIColor.yellow,
     matches: [SIFTCorrespondence]
 ) -> UIImage {
     
@@ -319,10 +319,15 @@ func drawMatches(
             cgContext.move(to: ps)
             cgContext.addLine(to: pt)
 
-            cgContext.addEllipse(in: bs)
-            cgContext.addEllipse(in: bt)
+            if i % 10 == 0 {
+                cgContext.setLineWidth(2)
+                cgContext.setStrokeColor(color.withAlphaComponent(0.5).cgColor)
+            }
+            else {
+                cgContext.setLineWidth(0.5)
+                cgContext.setStrokeColor(color.withAlphaComponent(0.3).cgColor)
+            }
             
-            cgContext.setStrokeColor(color.cgColor)
             cgContext.strokePath()
         }
         

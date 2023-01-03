@@ -20,124 +20,6 @@ private let logger = Logger(
 typealias SIFTHistogram = [Float]
 
 
-final class SIFTOctave {
-    
-    let scale: DifferenceOfGaussians.Octave
-    
-    let keypointTextures: [MTLTexture]
-    let images: [Image<SIMD2<Float>>]
-    
-    private let extremaFunction: SIFTExtremaFunction
-    
-    init(
-        device: MTLDevice,
-        scale: DifferenceOfGaussians.Octave,
-        extremaFunction: SIFTExtremaFunction
-    ) {
-        
-        let textureDescriptor: MTLTextureDescriptor = {
-            let descriptor = MTLTextureDescriptor.texture2DDescriptor(
-                pixelFormat: .rg32Float,
-                width: scale.size.width,
-                height: scale.size.height,
-                mipmapped: false
-            )
-            descriptor.usage = [.shaderRead, .shaderWrite]
-            descriptor.storageMode = .shared
-            return descriptor
-        }()
-        
-        let keypointTextures = {
-            var textures = [MTLTexture]()
-            for _ in 0 ..< scale.numberOfScales {
-                let texture = device.makeTexture(
-                    descriptor: textureDescriptor
-                )!
-                textures.append(texture)
-            }
-            return textures
-        }()
-        
-        self.scale = scale
-        self.extremaFunction = extremaFunction
-        self.keypointTextures = keypointTextures
-        self.images = {
-            var images = [Image<SIMD2<Float>>]()
-            for texture in keypointTextures {
-                let image = Image<SIMD2<Float>>(texture: texture, defaultValue: .zero)
-                images.append(image)
-            }
-            return images
-        }()
-    }
-    
-    func encode(commandBuffer: MTLCommandBuffer) {
-        for i in 0 ..< keypointTextures.count {
-            extremaFunction.encode(
-                commandBuffer: commandBuffer,
-                inputTexture0: scale.differenceTextures[i + 0],
-                inputTexture1: scale.differenceTextures[i + 1],
-                inputTexture2: scale.differenceTextures[i + 2],
-                outputTexture: keypointTextures[i]
-            )
-        }
-    }
-    
-    func getKeypoints() -> [SIFTKeypoint] {
-        updateImagesFromTextures()
-        updateImagesFromTextures()
-        return getKeypointsFromImages()
-    }
-    
-    private func updateImagesFromTextures() {
-        for image in images {
-            image.updateFromTexture()
-        }
-    }
-
-    private func getKeypointsFromImages() -> [SIFTKeypoint] {
-        var keypoints = [SIFTKeypoint]()
-        for s in 0 ..< images.count {
-            for y in 0 ..< scale.size.height {
-                for x in 0 ..< scale.size.width  {
-                    if let keypoint = keypointAt(x: x, y: y, s: s) {
-                        keypoints.append(keypoint)
-                    }
-                }
-            }
-        }
-        return keypoints
-    }
-    
-    private func keypointAt(x: Int, y: Int, s: Int) -> SIFTKeypoint? {
-        let image = images[s]
-        let output = image[x, y]
-        let extrema = output[0] == 1
-        let value = output[1]
-
-        if extrema == false {
-            return nil
-        }
-
-        let keypoint = SIFTKeypoint(
-            octave: scale.o,
-            scale: s + 1,
-            subScale: 0,
-            scaledCoordinate: SIMD2<Int>(
-                x: x,
-                y: y
-            ),
-            absoluteCoordinate: SIMD2<Float>(
-                x: Float(x) * scale.delta,
-                y: Float(y) * scale.delta
-            ),
-            sigma: scale.sigmas[s + 1],
-            value: value
-        )
-        return keypoint
-    }
-}
-
 
 ///
 /// See: https://github.com/robwhess/opensift/blob/master/src/sift.c
@@ -207,13 +89,15 @@ final class SIFT {
         )
         let octaves: [SIFTOctave] = {
             let extremaFunction = SIFTExtremaFunction(device: device)
-            
+            let gradientFunction = SIFTGradientKernel(device: device)
+
             var octaves = [SIFTOctave]()
             for scale in dog.octaves {
                 let octave = SIFTOctave(
                     device: device,
                     scale: scale,
-                    extremaFunction: extremaFunction
+                    extremaFunction: extremaFunction,
+                    gradientFunction: gradientFunction
                 )
                 octaves.append(octave)
             }
@@ -258,24 +142,20 @@ final class SIFT {
     }
     
     private func getKeypointsFromOctaves() -> [SIFTKeypoint] {
-        var keypoints = [SIFTKeypoint]()
+        var output = [SIFTKeypoint]()
         for octave in octaves {
-            keypoints.append(contentsOf: octave.getKeypoints())
+            octave.updateImagesFromTextures()
+            let keypoints = octave.getKeypoints()
+            output.append(contentsOf: keypoints)
         }
-        return keypoints
+        return output
     }
 
     private func interpolateKeypoints(keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
         var interpolatedKeypoints = [SIFTKeypoint]()
         
         for octave in dog.octaves {
-            for image in octave.differenceImages {
-                image.updateFromTexture()
-            }
-            
-            for image in octave.gaussianImages {
-                image.updateFromTexture()
-            }
+            octave.updateImagesFromTextures()
         }
         
         for i in 0 ..< keypoints.count {
@@ -612,7 +492,8 @@ final class SIFT {
         let x = Int(Float(keypoint.absoluteCoordinate.x) / octave.delta)
         let y = Int(Float(keypoint.absoluteCoordinate.y) / octave.delta)
         let sigma = keypoint.sigma / octave.delta
-        let image = octave.gaussianImages[keypoint.scale]
+//        let image = octave.gaussianImages[keypoint.scale]
+        let image = octaves[keypoint.octave].gradientImages[keypoint.scale]
 
         let lambda = configuration.lambdaOrientation
         let exponentDenominator = 2 * lambda * lambda
@@ -624,8 +505,8 @@ final class SIFT {
         
         let minX = 1
         let minY = 1
-        let maxX = octave.size.width - 2
-        let maxY = octave.size.height - 2
+        let maxX = image.size.width - 2
+        let maxY = image.size.height - 2
         
         // Reject keypoint outside of the image bounds
         guard x - r >= minX else {
@@ -656,7 +537,7 @@ final class SIFT {
                 let w = exp(-r2 / exponentDenominator)
 
                 // Gradient orientation
-                let gradient = image.getGradient(x: x + i, y: y + j)
+                let gradient = image[x + i, y + j]
                 let orientation = gradient.orientation
                 let magnitude = gradient.magnitude
                 
@@ -754,11 +635,11 @@ final class SIFT {
         // let images = octave.gaussianImages
         // let histogramsPerAxis = configuration.descriptorHistogramsPerAxis
         let bins = configuration.descriptorOrientationBins
-        let image = octave.gaussianImages[keypoint.scale]
+        let image = octaves[keypoint.octave].gradientImages[keypoint.scale]
         
         // let delta = octave.delta
         // let lambda = configuration.lambdaDescriptor
-        let a = keypoint.absoluteCoordinate
+        // let a = keypoint.absoluteCoordinate
         let p = SIMD2<Float>(
             x: Float(keypoint.absoluteCoordinate.x) / octave.delta,
             y: Float(keypoint.absoluteCoordinate.y) / octave.delta
@@ -771,8 +652,6 @@ final class SIFT {
         // let diagonal = Float(2).squareRoot() * lambda * sigma
         // let f = Float(histogramsPerAxis + 1) / Float(histogramsPerAxis)
         // let side = Int((diagonal * f).rounded())
-        
-
         
         //let radius = lambda * f
         let d = 4 // width of 2d array of histograms
@@ -831,7 +710,7 @@ final class SIFT {
                 )
                 // print(String(format: "%0.3f %0.3f", b.x, b.y))
 
-                let g = image.getGradient(x: Int(p.x) + j, y: Int(p.y) + i)
+                let g = image[Int(p.x) + j, Int(p.y) + i]
                 var orientation = g.orientation - theta
                 while orientation < 0 {
                     orientation += 2 * .pi

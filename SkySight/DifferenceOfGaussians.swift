@@ -219,6 +219,16 @@ final class DifferenceOfGaussians {
                 )
             }
         }
+        
+        func updateImagesFromTextures() {
+            for image in differenceImages {
+                image.updateFromTexture()
+            }
+            
+            for image in gaussianImages {
+                image.updateFromTexture()
+            }
+        }
     }
     
     

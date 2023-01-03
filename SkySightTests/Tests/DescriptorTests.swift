@@ -112,80 +112,35 @@ final class DescriptorTests: SharedTestCase {
     }
     
     private func matchDescriptors(detected: [SIFTDescriptor], reference: [SIFTDescriptor]) {
-        var pass = 0
-        var fail = 0
-        var total = 0
         
-        for i in 0 ..< detected.count {
-            let d = detected[i]
-            
-            var bestMatchDistance = Float.greatestFiniteMagnitude
-            var secondBestMatchDistance = Float.greatestFiniteMagnitude
-            var bestMatch: SIFTDescriptor!
-            var secondBestMatch: SIFTDescriptor!
-
-            for r in reference {
-                
-                var magnitude = 0
-                
-                for k in 0 ..< 128 {
-                    
-                    let fd = d.features[k]
-                    let fr = r.features[k]
-                    let d = fd - fr
-                    magnitude += (d * d)
-                }
-                
-                let distance = sqrt(Float(magnitude))
-                
-                guard distance < 300 else {
-                    // Points do not match
-                    continue
-                }
-                
-                if distance < bestMatchDistance {
-                    secondBestMatchDistance = bestMatchDistance
-                    bestMatchDistance = distance
-                    secondBestMatch = bestMatch
-                    bestMatch = r
-                }
-            }
-            
-            guard let bestMatch = bestMatch else {
-                continue
-            }
-            guard let secondBestMatch = secondBestMatch else {
-                continue
-            }
-            
-            let r = bestMatchDistance / secondBestMatchDistance
-            
-            guard r < 0.6 else {
-                continue
-            }
-
-            let m: SIFTDescriptor! = secondBestMatch
-            let a = d.keypoint.absoluteCoordinate
-            let b = m.keypoint.absoluteCoordinate
-            let c = simd_abs(b - a)
-            let distance = simd_length(b - a)
-
-            let icon: String
-            if distance < 10.0 {
-                pass += 1
-                icon = "✅"
-            }
-            else {
-                fail += 1
-                icon = "❌"
-            }
-            total += 1
-            
-            print("\(icon) #\(i) @\(a) == \(b) Δ\(bestMatchDistance ) \(c) \(distance)")
-        }
+        let matches = SIFTDescriptor.match(
+            source: detected,
+            target: reference,
+            absoluteThreshold: 300,
+            relativeThreshold: 0.6
+        )
         
-        print("pass: \(pass) \(Float(pass) / Float(total))")
-        print("fail: \(fail) \(Float(fail) / Float(total))")
+        let rate = Float(matches.count) / Float(detected.count)
+        print("found \(matches.count) out of \(detected.count) = \(rate * 100)%")
+        XCTAssertGreaterThanOrEqual(rate, 80.0)
+
+//        for match in matches {
+//            let icon: String
+//            if distance < 10.0 {
+//                pass += 1
+//                icon = "✅"
+//            }
+//            else {
+//                fail += 1
+//                icon = "❌"
+//            }
+//            total += 1
+//
+//            print("\(icon) #\(i) @\(a) == \(b) Δ\(bestMatchDistance ) \(c) \(distance)")
+//        }
+        
+//        print("pass: \(pass) \(Float(pass) / Float(total))")
+//        print("fail: \(fail) \(Float(fail) / Float(total))")
     }
     
     

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import MetalKit
 
 
 @globalActor actor ProcessActor {
@@ -33,21 +34,26 @@ final class SIFTViewController: UIViewController {
     
     private let videoFileURL: URL
     private let videoSize: IntegralSize
+    private let imageFileURL: URL
     
     private let videoReader: VideoFileReader
     private let cvMetalCache: CoreVideoMetalCache
     private let imageConverter: ImageConversion
+    private let device: MTLDevice
 
     init() {
         let octaves = 4
         let extrema = 2
         let device = MTLCreateSystemDefaultDevice()!
+        self.device = device
         self.videoSize = IntegralSize(width: 360, height: 640)
+        let imageSize = IntegralSize(width: 512, height: 340)
         let sift = SIFT(
             device: device,
-            configuration: SIFT.Configuration(inputSize: videoSize)
+            configuration: SIFT.Configuration(inputSize: imageSize)
         )
-        self.videoFileURL = Bundle.main.url(forResource: "test-03-480p", withExtension: "mov")!
+        self.videoFileURL = Bundle.main.url(forResource: "test-05-480p", withExtension: "mov")!
+        self.imageFileURL = Bundle.main.url(forResource: "butterfly", withExtension: "png")!
         self.cvMetalCache = CoreVideoMetalCache(device: device)
         self.videoReader = VideoFileReader()
         self.sift = sift
@@ -73,7 +79,10 @@ final class SIFTViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         setupView()
-        processVideo()
+        // processVideo()
+        DispatchQueue.main.asyncAfter(wallDeadline: .now() + 2) { [weak self] in
+            self?.processImage()
+        }
     }
     
     private func setupView() {
@@ -138,7 +147,7 @@ final class SIFTViewController: UIViewController {
             from: imageBuffer,
             size: videoSize
         )
-        sift.getKeypoints(newTexture)
+//        sift.getKeypoints(newTexture)
 //        await self.updateViews(
 //            inputImage: imageConverter.makeCGImage(sift.inputTexture),
 //            scaleImages: sift.octaves.flatMap { octave in
@@ -148,6 +157,35 @@ final class SIFTViewController: UIViewController {
 //                }
 //            }
 //        )
+    }
+    
+    private func processImage() {
+        Task { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.processImageFile()
+        }
+    }
+    
+    private func processImageFile() {
+        let loader = MTKTextureLoader(device: device)
+        let texture = try! loader.newTexture(
+            URL: self.imageFileURL,
+            options: [
+                .SRGB: NSNumber(value: false),
+            ]
+        )
+        let startTime = CFAbsoluteTimeGetCurrent()
+        print("Finding keypoints")
+        let keypoints = sift.getKeypoints(texture)
+        print("Found \(keypoints.count) keypoints")
+        print("Finding descriptors")
+        let descriptors = sift.getDescriptors(keypoints: keypoints)
+        print("Found \(descriptors.count) descriptors")
+        let endTime = CFAbsoluteTimeGetCurrent()
+        let elapsedTime = endTime - startTime
+        print("Time: \(elapsedTime) seconds")
     }
     
     @MainActor private func updateViews(

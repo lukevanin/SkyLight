@@ -72,6 +72,10 @@
 		FCB0DB7A296365110047FC1C /* SIFTDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB0DB79296365110047FC1C /* SIFTDescriptor.swift */; };
 		FCB0DB7C296365220047FC1C /* SIFTCorrespondence.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB0DB7B296365220047FC1C /* SIFTCorrespondence.swift */; };
 		FCB0DB7E296365330047FC1C /* SIFTKeypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB0DB7D296365330047FC1C /* SIFTKeypoint.swift */; };
+		FCB0DB80296377F20047FC1C /* SIFTInterpolateKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */; };
+		FCB0DB822964BFA80047FC1C /* SIFTGradientKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */; };
+		FCB0DB842964CB320047FC1C /* SIFTOctave.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB0DB832964CB320047FC1C /* SIFTOctave.swift */; };
+		FCB0DB852964DD150047FC1C /* butterfly.png in Resources */ = {isa = PBXBuildFile; fileRef = FCB0DB32296362480047FC1C /* butterfly.png */; };
 		FCB2DBD2296194FD00F19CEB /* DescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */; };
 		FCD244742962E0ED00459437 /* SIFTPatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD244732962E0ED00459437 /* SIFTPatch.swift */; };
 		FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */; };
@@ -185,6 +189,9 @@
 		FCB0DB79296365110047FC1C /* SIFTDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTDescriptor.swift; sourceTree = "<group>"; };
 		FCB0DB7B296365220047FC1C /* SIFTCorrespondence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTCorrespondence.swift; sourceTree = "<group>"; };
 		FCB0DB7D296365330047FC1C /* SIFTKeypoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTKeypoint.swift; sourceTree = "<group>"; };
+		FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTInterpolateKernel.swift; sourceTree = "<group>"; };
+		FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTGradientKernel.swift; sourceTree = "<group>"; };
+		FCB0DB832964CB320047FC1C /* SIFTOctave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTOctave.swift; sourceTree = "<group>"; };
 		FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DescriptorTests.swift; sourceTree = "<group>"; };
 		FCD244732962E0ED00459437 /* SIFTPatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTPatch.swift; sourceTree = "<group>"; };
 		FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubtractKernel.swift; sourceTree = "<group>"; };
@@ -397,11 +404,14 @@
 			isa = PBXGroup;
 			children = (
 				FCEBCDBA294E8669002BB8EF /* SIFT.swift */,
+				FCB0DB832964CB320047FC1C /* SIFTOctave.swift */,
 				FCB0DB79296365110047FC1C /* SIFTDescriptor.swift */,
 				FCB0DB7B296365220047FC1C /* SIFTCorrespondence.swift */,
 				FCB0DB7D296365330047FC1C /* SIFTKeypoint.swift */,
 				FCD244732962E0ED00459437 /* SIFTPatch.swift */,
 				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
+				FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */,
+				FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */,
 				FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */,
 				FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */,
 				FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */,
@@ -515,6 +525,7 @@
 				FC9DF9F0293B6380008E8D79 /* LaunchScreen.storyboard in Resources */,
 				FCEBCDF62957BAAC002BB8EF /* viridis.png in Resources */,
 				FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */,
+				FCB0DB852964DD150047FC1C /* butterfly.png in Resources */,
 				FCEBCDF42957BAAC002BB8EF /* warm.png in Resources */,
 				FCEE19FB294DB77C00FEC893 /* test-05-480p.mov in Resources */,
 				FCEBCDF52957BAAC002BB8EF /* turbo.png in Resources */,
@@ -600,6 +611,7 @@
 				FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */,
 				FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */,
 				FCEE1A03294DB90B00FEC893 /* CoreImageExtensions.swift in Sources */,
+				FCB0DB822964BFA80047FC1C /* SIFTGradientKernel.swift in Sources */,
 				FCB0DB7A296365110047FC1C /* SIFTDescriptor.swift in Sources */,
 				FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */,
 				FCEBCDC729510974002BB8EF /* Image.swift in Sources */,
@@ -611,9 +623,11 @@
 				FCB0DB7C296365220047FC1C /* SIFTCorrespondence.swift in Sources */,
 				FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */,
 				FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */,
+				FCB0DB80296377F20047FC1C /* SIFTInterpolateKernel.swift in Sources */,
 				FCEBCDBB294E8669002BB8EF /* SIFT.swift in Sources */,
 				FCEBCDB1294E7CC4002BB8EF /* CoreVideoMetalCache.swift in Sources */,
 				FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */,
+				FCB0DB842964CB320047FC1C /* SIFTOctave.swift in Sources */,
 				FCEBCDB9294E85BE002BB8EF /* SIFTViewController.swift in Sources */,
 				FCEBCDB3294E7D96002BB8EF /* Math.swift in Sources */,
 				FCB0DB7E296365330047FC1C /* SIFTKeypoint.swift in Sources */,

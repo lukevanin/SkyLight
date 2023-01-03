@@ -11,10 +11,13 @@ import Metal
 
 final class Image<T> {
     
+    let size: IntegralSize
+    
     private let texture: MTLTexture
     private let buffer: UnsafeMutableBufferPointer<T>
     
     init(texture: MTLTexture, defaultValue: T) {
+        self.size = IntegralSize(width: texture.width, height: texture.height)
         self.texture = texture
         self.buffer = {
             let capacity = texture.width * texture.height
@@ -69,27 +72,22 @@ final class Image<T> {
     }
 }
 
-struct Gradient {
-    let orientation: Float
-    let magnitude: Float
-}
-
-extension Image where T == Float {
-    
-    func getGradient(x: Int, y: Int) -> Gradient {
-        #warning("FIXME: IPOL implementation seems to swap dx and dy")
-        let g = getGradientVector(x: x, y: y)
-        return Gradient(
-            orientation: atan2(g.x, g.y),
-            magnitude: sqrt(g.x * g.x + g.y * g.y)
-        )
-    }
-    
-    func getGradientVector(x: Int, y: Int) -> SIMD2<Float> {
-        let px: Float = self[x + 1, y]
-        let mx: Float = self[x - 1, y]
-        let py: Float = self[x, y + 1]
-        let my: Float = self[x, y - 1]
-        return SIMD2<Float>(x: (px - mx) * 0.5, y: (py - my) * 0.5)
-    }
-}
+//extension Image where T == Float {
+//    
+//    func getGradient(x: Int, y: Int) -> Gradient {
+//        #warning("FIXME: IPOL implementation seems to swap dx and dy")
+//        let g = getGradientVector(x: x, y: y)
+//        return Gradient(
+//            orientation: atan2(g.x, g.y),
+//            magnitude: sqrt(g.x * g.x + g.y * g.y)
+//        )
+//    }
+//    
+//    func getGradientVector(x: Int, y: Int) -> SIMD2<Float> {
+//        let px: Float = self[x + 1, y]
+//        let mx: Float = self[x - 1, y]
+//        let py: Float = self[x, y + 1]
+//        let my: Float = self[x, y - 1]
+//        return SIMD2<Float>(x: (px - mx) * 0.5, y: (py - my) * 0.5)
+//    }
+//}

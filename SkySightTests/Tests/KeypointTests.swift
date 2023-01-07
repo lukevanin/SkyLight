@@ -41,8 +41,8 @@ final class KeypointTests: SharedTestCase {
 
 //        let referenceKeypoints = try loadKeypoints(filename: "extra_DoGSoftThresh_butterfly")
 //        let referenceKeypoints = try loadKeypoints(filename: "extra_ExtrInterp_butterfly")
-        let referenceKeypoints = try loadKeypoints(filename: "extra_DoGThresh_butterfly")
-//        let referenceKeypoints = try loadKeypoints(filename: "extra_OnEdgeResp_keys")
+//        let referenceKeypoints = try loadKeypoints(filename: "extra_DoGThresh_butterfly")
+        let referenceKeypoints = try loadKeypoints(filename: "extra_OnEdgeResp_butterfly")
 //        let referenceKeypoints = try loadKeypoints(filename: "extra_FarFromBorder_butterfly")
 //        let referenceImage = UIImage(named: "butterfly-keypoints-raw")!.cgImage!
 //        for i in 0 ..< keypoints.count {

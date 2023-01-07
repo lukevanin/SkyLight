@@ -685,9 +685,9 @@ kernel void siftInterpolate(
     }
         
     // Discard keypoint with high edge response
-//    if (isOnEdge(gradientTextures, coordinate.x, coordinate.y, scale, parameters.edgeThreshold)) {
-//        return;
-//    }
+    if (isOnEdge(dogTextures, x, y, scale, parameters.edgeThreshold)) {
+        return;
+    }
         
 //    float sigma = parameters.baseSigma * pow(parameters.sigmaRatio, alpha.z);
 

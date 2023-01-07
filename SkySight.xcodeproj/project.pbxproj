@@ -12,6 +12,7 @@
 		FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */; };
 		FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */; };
 		FC5C0C09295B161000759433 /* BilinearUpScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */; };
+		FC831CD82969B05A00C978BA /* SIFTCPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831CD72969B05A00C978BA /* SIFTCPU.swift */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
@@ -128,6 +129,7 @@
 		FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convolution1DKernel.swift; sourceTree = "<group>"; };
 		FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConvertSRGBToGrayscaleKernel.swift; sourceTree = "<group>"; };
 		FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BilinearUpScaleKernel.swift; sourceTree = "<group>"; };
+		FC831CD72969B05A00C978BA /* SIFTCPU.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTCPU.swift; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
@@ -406,6 +408,7 @@
 			isa = PBXGroup;
 			children = (
 				FCEBCDBA294E8669002BB8EF /* SIFT.swift */,
+				FC831CD72969B05A00C978BA /* SIFTCPU.swift */,
 				FCB0DB832964CB320047FC1C /* SIFTOctave.swift */,
 				FCB0DB79296365110047FC1C /* SIFTDescriptor.swift */,
 				FCB0DB7B296365220047FC1C /* SIFTCorrespondence.swift */,
@@ -618,6 +621,7 @@
 				FCB0DB822964BFA80047FC1C /* SIFTGradientKernel.swift in Sources */,
 				FCB0DB7A296365110047FC1C /* SIFTDescriptor.swift in Sources */,
 				FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */,
+				FC831CD82969B05A00C978BA /* SIFTCPU.swift in Sources */,
 				FCEBCDC729510974002BB8EF /* Image.swift in Sources */,
 				FCE9367A2944E86E00E2D486 /* Shaders.metal in Sources */,
 				FCEE19FF294DB8E600FEC893 /* Quad.swift in Sources */,

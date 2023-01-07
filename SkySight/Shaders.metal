@@ -544,14 +544,7 @@ float3 interpolationStep(
 ) {
     const float3x3 H = hessian3D(t, x, y, scale);
     float3x3 Hi = -1.0 * invert(H);
-//    for (int j = 0; j < 3; j++) {
-//        for (int i = 0; i < 3; i++) {
-//            Hi[i][j] = -H[i][j];
-//        }
-//    }
-    
     const float3 dD = derivatives3D(t, x, y, scale);
-    
     return Hi * dD;
 }
 
@@ -608,7 +601,7 @@ kernel void siftInterpolate(
     device OutputKeypoint * outputKeypoints [[buffer(0)]],
     device InputKeypoint * inputKeypoints [[buffer(1)]],
     device InterpolateParameters & parameters [[buffer(2)]],
-    texture2d_array<float, access::read> gradientTextures [[texture(0)]],
+    texture2d_array<float, access::read> dogTextures [[texture(0)]],
     ushort gid [[thread_position_in_grid]]
 ) {
     InputKeypoint input = inputKeypoints[gid];
@@ -641,7 +634,7 @@ kernel void siftInterpolate(
 
     int i = 0;
     while (i < maxIterations) {
-        alpha = interpolationStep(gradientTextures, x, y, scale);
+        alpha = interpolationStep(dogTextures, x, y, scale);
             
         if ((abs(alpha.x) < maxOffset) && (abs(alpha.y) < maxOffset) && (abs(alpha.z) < maxOffset)) {
             converged = true;
@@ -685,11 +678,11 @@ kernel void siftInterpolate(
         return;
     }
 
-//    float newValue = interpolateContrast(gradientTextures, x, y, scale, alpha);
+    float newValue = interpolateContrast(dogTextures, x, y, scale, alpha);
         
-//    if (abs(newValue) <= parameters.dogThreshold) {
-//        return;
-//    }
+    if (abs(newValue) <= parameters.dogThreshold) {
+        return;
+    }
         
     // Discard keypoint with high edge response
 //    if (isOnEdge(gradientTextures, coordinate.x, coordinate.y, scale, parameters.edgeThreshold)) {
@@ -707,7 +700,7 @@ kernel void siftInterpolate(
     output.relativeY = y;
     output.absoluteX = ((float)x + alpha.x) * delta;
     output.absoluteY = ((float)y + alpha.y) * delta;
-    output.value = 0; //newValue;
+    output.value = newValue;
     output.alphaX = alpha.x;
     output.alphaY = alpha.y;
     output.alphaZ = alpha.z;

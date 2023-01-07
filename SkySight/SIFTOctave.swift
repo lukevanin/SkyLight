@@ -28,8 +28,10 @@ final class SIFTOctave {
     let gradientTextures: [MTLTexture]
     let gradientImages: [Image<SIFTGradient>]
 
+    private let device: MTLDevice
     private let extremaFunction: SIFTExtremaFunction
     private let gradientFunction: SIFTGradientKernel
+    private let interpolateFunction: SIFTInterpolateKernel
 
     init(
         device: MTLDevice,
@@ -37,9 +39,16 @@ final class SIFTOctave {
         extremaFunction: SIFTExtremaFunction,
         gradientFunction: SIFTGradientKernel
     ) {
+        self.device = device
         self.scale = scale
         self.extremaFunction = extremaFunction
         self.gradientFunction = gradientFunction
+
+        self.interpolateFunction = SIFTInterpolateKernel(
+            device: device,
+            textureSize: scale.size,
+            numberOfTextures: scale.differenceTextures.count
+        )
 
         let keypointTextures = {
             var textures = [MTLTexture]()
@@ -185,6 +194,90 @@ final class SIFTOctave {
             value: value
         )
         return keypoint
+    }
+    
+    func interpolateKeypoints(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
+        let sigmaRatio = scale.sigmas[1] / scale.sigmas[0]
+        
+        let inputBuffer = Buffer<SIFTInterpolateKernel.InputKeypoint>(
+            device: device,
+            count: keypoints.count
+        )
+        let outputBuffer = Buffer<SIFTInterpolateKernel.OutputKeypoint>(
+            device: device,
+            count: keypoints.count
+        )
+        let parametersBuffer = Buffer<SIFTInterpolateKernel.Parameters>(
+            device: device,
+            count: 1
+        )
+        
+        parametersBuffer[0] = SIFTInterpolateKernel.Parameters(
+            dogThreshold: 0.0133, // configuration.differenceOfGaussiansThreshold,
+            maxIterations: 5, // Int32(configuration.maximumInterpolationIterations),
+            maxOffset: 0.6,
+            width: Int32(scale.size.width),
+            height: Int32(scale.size.height),
+            octaveDelta: scale.delta,
+            edgeThreshold: 10.0, // configuration.edgeThreshold
+            numberOfScales: Int32(scale.numberOfScales)
+        )
+
+        // Copy keypoints to metal buffer
+        for j in 0 ..< keypoints.count {
+            let keypoint = keypoints[j]
+            inputBuffer[j] = SIFTInterpolateKernel.InputKeypoint(
+                x: Int32(keypoint.scaledCoordinate.x),
+                y: Int32(keypoint.scaledCoordinate.y),
+                scale: Int32(keypoint.scale),
+                value: keypoint.value
+            )
+        }
+        
+        //
+        let commandBuffer = commandQueue.makeCommandBuffer()!
+        
+        interpolateFunction.encode(
+            commandBuffer: commandBuffer,
+            parameters: parametersBuffer,
+            differenceTextures: scale.differenceTextures,
+            inputKeypoints: inputBuffer,
+            outputKeypoints: outputBuffer
+        )
+        
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
+        print("interpolateKeypoints: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
+
+        //
+        var output = [SIFTKeypoint]()
+        for k in 0 ..< outputBuffer.count {
+            let p = outputBuffer[k]
+            guard p.converged != 0 else {
+//                print("octave \(scale.o) keypoint \(k) not converged \(p.alphaX) \(p.alphaY) \(p.alphaZ)")
+                continue
+            }
+            print("octave \(scale.o) keypoint \(k) converged \(p.alphaX) \(p.alphaY) \(p.alphaZ)")
+
+            let keypoint = SIFTKeypoint(
+                octave: scale.o,
+                scale: Int(p.scale),
+                subScale: p.subScale,
+                scaledCoordinate: SIMD2<Int>(
+                    x: Int(p.relativeX),
+                    y: Int(p.relativeY)
+                ),
+                absoluteCoordinate: SIMD2<Float>(
+                    x: p.absoluteX,
+                    y: p.absoluteY
+                ),
+                sigma: scale.sigmas[Int(p.scale)] * pow(sigmaRatio, p.subScale),
+                value: p.value
+            )
+            output.append(keypoint)
+        }
+        return output
     }
 }
 

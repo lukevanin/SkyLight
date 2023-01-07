@@ -75,12 +75,15 @@ final class SIFT {
     let dog: DifferenceOfGaussians
     let octaves: [SIFTOctave]
     
+    private let device: MTLDevice
     private let commandQueue: MTLCommandQueue
     
     init(
         device: MTLDevice,
         configuration: Configuration
     ) {
+        self.device = device
+        
         let dog = DifferenceOfGaussians(
             device: device,
             configuration: DifferenceOfGaussians.Configuration(
@@ -114,14 +117,16 @@ final class SIFT {
     
     func getKeypoints(_ inputTexture: MTLTexture) -> [SIFTKeypoint] {
         findKeypoints(inputTexture: inputTexture)
-        let allKeypoints = getKeypointsFromOctaves()
-        let interpolatedKeypoints = interpolateKeypoints(
-            keypoints: allKeypoints
-        )
-        return interpolatedKeypoints
+        let keypointOctaves = getKeypointsFromOctaves()
+        let interpolatedKeypoints = interpolateKeypoints(keypointOctaves: keypointOctaves)
+//        let interpolatedKeypoints = interpolateKeypoints(
+//            keypoints: allKeypoints
+//        )
+        return Array(interpolatedKeypoints.joined())
     }
     
     private func findKeypoints(inputTexture: MTLTexture) {
+        logger.info("findKeypoints")
         let commandBuffer = commandQueue.makeCommandBuffer()!
         
         dog.encode(
@@ -138,35 +143,48 @@ final class SIFT {
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
         let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
-        print("Command buffer", String(format: "%0.3f", elapsedTime), "seconds")
+        logger.info("findKeypoints: Command buffer \(String(format: "%0.3f", elapsedTime)) seconds")
     }
     
-    private func getKeypointsFromOctaves() -> [SIFTKeypoint] {
-        var output = [SIFTKeypoint]()
+    private func getKeypointsFromOctaves() -> [[SIFTKeypoint]] {
+        // TODO: Sort keypoints by octave
+        var output = [[SIFTKeypoint]]()
         for octave in octaves {
             octave.updateImagesFromTextures()
             let keypoints = octave.getKeypoints()
-            output.append(contentsOf: keypoints)
+            output.append(keypoints)
+        }
+        return output
+    }
+    
+    private func interpolateKeypoints(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTKeypoint]] {
+        var output = [[SIFTKeypoint]]()
+        for o in 0 ..< keypointOctaves.count {
+            let keypoints = keypointOctaves[o]
+            output.append(octaves[o].interpolateKeypoints(
+                commandQueue: commandQueue,
+                keypoints: keypoints
+            ))
         }
         return output
     }
 
-    private func interpolateKeypoints(keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
-        var interpolatedKeypoints = [SIFTKeypoint]()
-        
-        for octave in dog.octaves {
-            octave.updateImagesFromTextures()
-        }
-        
-        for i in 0 ..< keypoints.count {
-            let keypoint = keypoints[i]
-            let interpolatedKeypoint = interpolateKeypoint(keypoint: keypoint)
-            if let interpolatedKeypoint {
-                interpolatedKeypoints.append(interpolatedKeypoint)
-            }
-        }
-        return interpolatedKeypoints
-    }
+//    private func interpolateKeypoints(keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
+//        var interpolatedKeypoints = [SIFTKeypoint]()
+//
+//        for octave in dog.octaves {
+//            octave.updateImagesFromTextures()
+//        }
+//
+//        for i in 0 ..< keypoints.count {
+//            let keypoint = keypoints[i]
+//            let interpolatedKeypoint = interpolateKeypoint(keypoint: keypoint)
+//            if let interpolatedKeypoint {
+//                interpolatedKeypoints.append(interpolatedKeypoint)
+//            }
+//        }
+//        return interpolatedKeypoints
+//    }
     
     private func interpolateKeypoint(keypoint: SIFTKeypoint) -> SIFTKeypoint? {
         
@@ -270,19 +288,6 @@ final class SIFT {
             x: (Float(coordinate.x) + alpha.x) * delta,
             y: (Float(coordinate.y) + alpha.y) * delta
         )
-        
-        // Discard keypoint that lies too close to the boundary.
-//        let isCloseToBoundary = self.isCloseToBoundary(
-//            sigma: sigma,
-//            coordinate: absoluteCoordinate,
-//            delta: delta
-//        )
-//        guard !isCloseToBoundary else {
-//            print("keypoint \(coordinate): rejected: close to boundary")
-//            return nil
-//        }
-
-//        logger.info("keypoint \(coordinate): accepted: \(i) out of \(maximumIterations): alpha=\(alpha) value=\(newValue)")
         
         // Return keypoint
         return SIFTKeypoint(

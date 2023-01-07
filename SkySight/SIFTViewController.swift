@@ -30,34 +30,27 @@ final class SIFTViewController: UIViewController {
     
     private let scaleImageViews: [UIImageView]
     
-    private let sift: SIFT
+    private var sift: SIFT!
     
-    private let videoFileURL: URL
-    private let videoSize: IntegralSize
+//    private let videoFileURL: URL
+//    private let videoSize: IntegralSize
     private let imageFileURL: URL
     
-    private let videoReader: VideoFileReader
-    private let cvMetalCache: CoreVideoMetalCache
-    private let imageConverter: ImageConversion
-    private let device: MTLDevice
+    private var videoReader: VideoFileReader!
+    private var cvMetalCache: CoreVideoMetalCache!
+    private var imageConverter: ImageConversion!
+    private var device: MTLDevice!
 
     init() {
         let octaves = 4
         let extrema = 2
-        let device = MTLCreateSystemDefaultDevice()!
-        self.device = device
-        self.videoSize = IntegralSize(width: 360, height: 640)
-        let imageSize = IntegralSize(width: 512, height: 340)
-        let sift = SIFT(
-            device: device,
-            configuration: SIFT.Configuration(inputSize: imageSize)
-        )
-        self.videoFileURL = Bundle.main.url(forResource: "test-05-480p", withExtension: "mov")!
+//        self.videoSize = IntegralSize(width: 360, height: 640)
+//        self.videoFileURL = Bundle.main.url(forResource: "test-05-480p", withExtension: "mov")!
         self.imageFileURL = Bundle.main.url(forResource: "butterfly", withExtension: "png")!
-        self.cvMetalCache = CoreVideoMetalCache(device: device)
-        self.videoReader = VideoFileReader()
-        self.sift = sift
-        self.imageConverter = ImageConversion(device: device, colorSpace: CGColorSpaceCreateDeviceGray())
+//        self.cvMetalCache = CoreVideoMetalCache(device: device)
+//        self.videoReader = VideoFileReader()
+//        self.sift = sift
+//        self.imageConverter = ImageConversion(device: device, colorSpace: CGColorSpaceCreateDeviceGray())
         self.inputImageView = makeImageView()
         self.scaleImageViews = {
             var views = [UIImageView]()
@@ -80,6 +73,16 @@ final class SIFTViewController: UIViewController {
         super.viewDidAppear(animated)
         setupView()
         // processVideo()
+        let device = MTLCreateSystemDefaultDevice()!
+        let imageSize = IntegralSize(width: 512, height: 340)
+        let sift = SIFT(
+            device: device,
+            configuration: SIFT.Configuration(inputSize: imageSize)
+        )
+
+        self.device = device
+        self.sift = sift
+
         DispatchQueue.main.asyncAfter(wallDeadline: .now() + 2) { [weak self] in
             self?.processImage()
         }
@@ -124,29 +127,29 @@ final class SIFTViewController: UIViewController {
         ])
     }
     
-    private func processVideo() {
-        Task { [weak self] in
-            guard let self = self else {
-                return
-            }
-            await self.processVideoFile(fileURL: self.videoFileURL)
-        }
-    }
+//    private func processVideo() {
+//        Task { [weak self] in
+//            guard let self = self else {
+//                return
+//            }
+//            await self.processVideoFile(fileURL: self.videoFileURL)
+//        }
+//    }
     
-    private func processVideoFile(fileURL: URL) async {
-        await videoReader.readVideoFile(
-            fileURL: fileURL,
-            sample: { [unowned self] sample in
-                await self.processSample(sample.imageBuffer!)
-            }
-        )
-    }
+//    private func processVideoFile(fileURL: URL) async {
+//        await videoReader.readVideoFile(
+//            fileURL: fileURL,
+//            sample: { [unowned self] sample in
+//                await self.processSample(sample.imageBuffer!)
+//            }
+//        )
+//    }
     
-    @ProcessActor private func processSample(_ imageBuffer: CVImageBuffer) async {
-        let newTexture = cvMetalCache.makeTexture(
-            from: imageBuffer,
-            size: videoSize
-        )
+//    @ProcessActor private func processSample(_ imageBuffer: CVImageBuffer) async {
+//        let newTexture = cvMetalCache.makeTexture(
+//            from: imageBuffer,
+//            size: videoSize
+//        )
 //        sift.getKeypoints(newTexture)
 //        await self.updateViews(
 //            inputImage: imageConverter.makeCGImage(sift.inputTexture),
@@ -157,7 +160,7 @@ final class SIFTViewController: UIViewController {
 //                }
 //            }
 //        )
-    }
+//    }
     
     private func processImage() {
         Task { [weak self] in

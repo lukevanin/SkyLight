@@ -24,9 +24,16 @@ final class DescriptorTests: SharedTestCase {
         )
         let subject = SIFT(device: device, configuration: configuration)
         let keypoints = subject.getKeypoints(inputTexture)
-        let foundDescriptors = subject.getDescriptors(keypointOctaves: keypoints)
+        let descriptorOctaves = subject.getDescriptors(keypointOctaves: keypoints)
+        let foundDescriptors = Array(descriptorOctaves.joined())
         print("Found", foundDescriptors.count, "descriptors")
 
+        print("loading reference desriptors")
+        let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
+        
+//        matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
+
+        print("rendering image")
         let referenceImage: CGImage = {
             let originalImage = CIImage(
                 mtlTexture: inputTexture,
@@ -40,10 +47,6 @@ final class DescriptorTests: SharedTestCase {
             return cgImage
         }()
 
-        let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
-        
-//        matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
-        
         attachImage(
             name: "descriptors",
             uiImage: drawDescriptors(
@@ -52,6 +55,22 @@ final class DescriptorTests: SharedTestCase {
                 foundDescriptors: foundDescriptors
             )
         )
+    }
+    
+    func testDescriptorsPerformance() throws {
+        
+        let inputTexture = try device.loadTexture(name: "butterfly", extension: "png", srgb: false)
+        let configuration = SIFT.Configuration(
+            inputSize: IntegralSize(
+                width: inputTexture.width,
+                height: inputTexture.height
+            )
+        )
+        let subject = SIFT(device: device, configuration: configuration)
+        measure {
+            let keypoints = subject.getKeypoints(inputTexture)
+            let descriptorOctaves = subject.getDescriptors(keypointOctaves: keypoints)
+        }
     }
     
     private func matchDescriptors(detected: [SIFTDescriptor], reference: [SIFTDescriptor]) {
@@ -97,7 +116,8 @@ final class DescriptorTests: SharedTestCase {
         )
         let subject = SIFT(device: device, configuration: configuration)
         let keypoints = subject.getKeypoints(inputTexture)
-        let foundDescriptors = subject.getDescriptors(keypointOctaves: keypoints)
+        let descriptorOctaves = subject.getDescriptors(keypointOctaves: keypoints)
+        let foundDescriptors = Array(descriptorOctaves.joined())
         print("Found", foundDescriptors.count, "descriptors")
 
         let referenceImage: CGImage = {

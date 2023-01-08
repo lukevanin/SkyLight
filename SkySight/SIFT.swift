@@ -172,6 +172,23 @@ final class SIFT {
     
     // MARK: Descriptora
     
+    func getDescriptors(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTDescriptor]] {
+        precondition(keypointOctaves.count == octaves.count)
+        let output = zip(octaves, keypointOctaves).map { octave, keypoints in
+            let orientations = octave.getKeypointOrientations(
+                commandQueue: commandQueue,
+                keypoints: keypoints
+            )
+            return octave.getDescriptors(
+                commandQueue: commandQueue,
+                keypoints: keypoints,
+                orientations: orientations
+            )
+        }
+        return output
+    }
+    
+    /*
     func getDescriptors(keypointOctaves: [[SIFTKeypoint]]) -> [SIFTDescriptor] {
         var output = [SIFTDescriptor]()
         let orientationOctaves = getPrincipalOrientations(keypointOctaves: keypointOctaves)
@@ -204,160 +221,6 @@ final class SIFT {
         }
         return output
     }
-    
-    /*
-    private func getPrincipalOrientations(keypoint: SIFTKeypoint) -> [Float] {
-        guard let histogram = getOrientationsHistogram(from: keypoint) else {
-            return []
-        }
-        let orientations = getPrincipalOrientations(from: histogram)
-        return orientations
-    }
-    
-    private func getOrientationsHistogram(from keypoint: SIFTKeypoint) -> SIFTHistogram? {
-        let octave = dog.octaves[keypoint.octave]
-        // TODO: Use keypoint.scaledCoordinate (but first update scaledCoordinate to include alpha)
-        let x = Int(Float(keypoint.absoluteCoordinate.x) / octave.delta)
-        let y = Int(Float(keypoint.absoluteCoordinate.y) / octave.delta)
-        let sigma = keypoint.sigma / octave.delta
-//        let image = octave.gaussianImages[keypoint.scale]
-        let image = octaves[keypoint.octave].gradientImages[keypoint.scale]
-
-        let lambda = configuration.lambdaOrientation
-        let exponentDenominator = 2 * lambda * lambda
-        
-        let r = Int((3 * lambda * sigma).rounded(.up))
-        
-        let bins = configuration.orientationBins
-        var histogram = Array<Float>(repeating: 0, count: bins)
-        
-        let minX = 1
-        let minY = 1
-        let maxX = image.size.width - 2
-        let maxY = image.size.height - 2
-        
-        // Reject keypoint outside of the image bounds
-        guard x - r >= minX else {
-            return nil
-        }
-        guard x + r <= maxX else {
-            return nil
-        }
-        guard y - r >= minY else {
-            return nil
-        }
-        guard y + r <= maxY else {
-            return nil
-        }
-        
-//        print("x=\(x) y=\(y) sigma=\(sigma.formatted())")
-
-//        print("histogram at \(x),\(y) radius=\(r) ")
-        for j in -r ... r {
-            for i in -r ... r {
-
-                // Gaussian weighting
-//                let u = Float(i) / Float(r)
-//                let v = Float(j) / Float(r)
-                let u = Float(i) / sigma
-                let v = Float(j) / sigma
-                let r2 = Float(u * u + v * v)
-                let w = exp(-r2 / exponentDenominator)
-
-                // Gradient orientation
-                let gradient = image[x + i, y + j]
-                let orientation = gradient.orientation
-                let magnitude = gradient.magnitude
-                
-                // Add to histogram
-                let t = orientation / (2 * .pi)
-                var bin = Int((t * Float(bins)).rounded())
-                if bin >= bins {
-                    bin -= bins
-                }
-                if bin < 0 {
-                    bin += bins
-                }
-                
-                let m = (w * magnitude)
-                // printf( si, sj, sX, sY, r2, dx, dy, ori, gamma, M);
-//                print("\(c.x),\(c.y) \(u.formatted()),\(v.formatted()) (r=\(r2.formatted())): dx=\(d.x.formatted()) dy=\(d.y.formatted()) orientation=\(orientation.formatted()) bin=\(bin) w=\(w.formatted()) value=\(m.formatted())")
-                
-                histogram[bin] += m
-//                print("\(i),\(j): \(bin) += \(w)")
-            }
-        }
-        
-//        print("histogram=\(histogram)")
-        return histogram
-    }
-    
-    private func getPrincipalOrientations(from histogram: [Float]) -> [Float] {
-        var orientations = [Float]()
-        let histogram = smoothHistogram(histogram: histogram)
-        let maximum = histogram.max()!
-        let n = configuration.orientationBins
-        let threshold = configuration.orientationThreshold * maximum
-        for i in 0 ..< n {
-            let hm = histogram[((i - 1) + n) % n]
-            let h0 = histogram[i]
-            let hp = histogram[(i + 1) % n]
-            guard (h0 > threshold) && (h0 > hm) && (h0 > hp) else {
-                continue
-            }
-            let offset = interpolatePeak(hm, h0, hp)
-            let orientation = orientationFromBin(Float(i) + offset)
-            orientations.append(orientation)
-        }
-//        print("found \(orientations.count) principal orientations")
-        return orientations
-    }
-    
-    private func smoothHistogram(histogram: [Float]) -> [Float] {
-        let n = histogram.count
-        let iterations = configuration.orientationSmoothingIterations
-        var output = histogram
-        for _ in 0 ..< iterations {
-            let temp = output
-            for i in 0 ..< n {
-                let h0 = temp[((i - 1) + n) % n]
-                let h1 = temp[i]
-                let h2 = temp[(i + 1) % n]
-                let v = (h0 + h1 + h2) / 3
-                output[i] = v
-            }
-        }
-        return output
-    }
-    
-    private func interpolatePeak(_ h1: Float, _ h2: Float, _ h3: Float) -> Float {
-        let peak = (h1 - h3) / (2 * (h1 + h3 - 2 * h2))
-        return peak
-    }
-    
-    private func binFromOrientation(_ orientation: Float) -> Int {
-        let n = configuration.orientationBins
-        var o = orientation
-        if (o < 0) {
-            o += 2 * .pi;
-        }
-        let b = Int(o / (2 * Float.pi) * Float(n) + 0.5) % n
-        return b
-    }
-
-    private func orientationFromBin(_ bin: Float) -> Float {
-        let n = configuration.orientationBins
-        let t = bin / Float(n)
-        var orientation = t * 2 * .pi;
-        if (orientation > (2 * .pi)) {
-            orientation -= 2 * .pi
-        }
-        if (orientation < 0) {
-            orientation += 2 * .pi
-        }
-        return orientation
-    }
-     */
     
     private func makeDescriptor(keypoint: SIFTKeypoint, theta: Float) -> SIFTDescriptor? {
         let octave = dog.octaves[keypoint.octave]
@@ -501,4 +364,5 @@ final class SIFT {
             Int(min(255, ($0 * 512)))
         }
     }
+     */
 }

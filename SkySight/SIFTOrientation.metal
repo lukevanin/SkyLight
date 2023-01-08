@@ -95,41 +95,14 @@ void getOrientationsHistogram(
     float lambda,
     thread float * histogram
 ) {
-//    let octave = dog.octaves[keypoint.octave]
     const int bins = SIFT_ORIENTATION_HISTOGRAM_BINS;
-    int x = (float)absoluteX / delta;
-    int y = (float)absoluteY / delta;
+    int x = round((float)absoluteX / delta);
+    int y = round((float)absoluteY / delta);
     float sigma = keypointSigma / delta;
-//        let image = octave.gaussianImages[keypoint.scale]
-//    let image = octaves[keypoint.octave].gradientImages[keypoint.scale]
 
-//    let lambda = configuration.lambdaOrientation
     float exponentDenominator = 2.0 * lambda * lambda;
     
     int r = ceil(3 * lambda * sigma);
-    
-//    let bins = configuration.orientationBins
-//    var histogram = Array<Float>(repeating: 0, count: bins)
-    
-    // TODO: Reject keypoints after interpolation
-//    int minX = 1;
-//    int minY = 1;
-//    int maxX = g.get_width() - 2;
-//    int maxY = g.get_height() - 2;
-    
-    // Reject keypoint outside of the image bounds
-//    if ((x - r) < minX) {
-//        return false;
-//    }
-//    if ((x + r) > maxX) {
-//        return false;
-//    }
-//    if ((y - r) < minY) {
-//        return false;
-//    }
-//    if ((y + r) > maxY) {
-//        return false;
-//    }
     
     for (int j = -r; j <= r; j++) {
         for (int i = -r; i <= r; i++) {

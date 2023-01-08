@@ -3,3 +3,4 @@
 //
 
 #import "SIFTOrientation.h"
+#import "SIFTDescriptor.h"

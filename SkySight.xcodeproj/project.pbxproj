@@ -25,6 +25,8 @@
 		FC831CED2969C33300C978BA /* Convolution.metal in Sources */ = {isa = PBXBuildFile; fileRef = FC831CEC2969C33300C978BA /* Convolution.metal */; };
 		FC831CEF2969C35200C978BA /* SIFTExtrema.metal in Sources */ = {isa = PBXBuildFile; fileRef = FC831CEE2969C35200C978BA /* SIFTExtrema.metal */; };
 		FC831CF12969C55400C978BA /* SIFTOrientation.metal in Sources */ = {isa = PBXBuildFile; fileRef = FC831CF02969C55400C978BA /* SIFTOrientation.metal */; };
+		FC831CF7296ACF4C00C978BA /* SIFTDescriptorKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831CF6296ACF4C00C978BA /* SIFTDescriptorKernel.swift */; };
+		FC831CF9296ACF6C00C978BA /* SIFTDescriptor.metal in Sources */ = {isa = PBXBuildFile; fileRef = FC831CF8296ACF6C00C978BA /* SIFTDescriptor.metal */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
@@ -157,6 +159,9 @@
 		FC831CF02969C55400C978BA /* SIFTOrientation.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SIFTOrientation.metal; sourceTree = "<group>"; };
 		FC831CF2296ABFD200C978BA /* SIFTOrientation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SIFTOrientation.h; sourceTree = "<group>"; };
 		FC831CF3296AC0AB00C978BA /* SkySight-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SkySight-Bridging-Header.h"; sourceTree = "<group>"; };
+		FC831CF6296ACF4C00C978BA /* SIFTDescriptorKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTDescriptorKernel.swift; sourceTree = "<group>"; };
+		FC831CF8296ACF6C00C978BA /* SIFTDescriptor.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SIFTDescriptor.metal; sourceTree = "<group>"; };
+		FC831CFA296ACF8200C978BA /* SIFTDescriptor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SIFTDescriptor.h; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
@@ -319,6 +324,8 @@
 				FC831CDB2969C22500C978BA /* SIFTInterpolate.metal */,
 				FC831CF2296ABFD200C978BA /* SIFTOrientation.h */,
 				FC831CF02969C55400C978BA /* SIFTOrientation.metal */,
+				FC831CFA296ACF8200C978BA /* SIFTDescriptor.h */,
+				FC831CF8296ACF6C00C978BA /* SIFTDescriptor.metal */,
 				FC831CEC2969C33300C978BA /* Convolution.metal */,
 				FC831CE82969C2DF00C978BA /* BilinearUpScale.metal */,
 				FC831CE62969C2CD00C978BA /* NearestNeighborUpScale.metal */,
@@ -459,6 +466,7 @@
 				FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */,
 				FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */,
 				FC831CD92969C14A00C978BA /* SIFTOrientationKernel.swift */,
+				FC831CF6296ACF4C00C978BA /* SIFTDescriptorKernel.swift */,
 				FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */,
 				FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */,
 				FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */,
@@ -668,6 +676,7 @@
 				FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */,
 				FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */,
 				FCEE1A03294DB90B00FEC893 /* CoreImageExtensions.swift in Sources */,
+				FC831CF9296ACF6C00C978BA /* SIFTDescriptor.metal in Sources */,
 				FC831CE72969C2CD00C978BA /* NearestNeighborUpScale.metal in Sources */,
 				FCB0DB822964BFA80047FC1C /* SIFTGradientKernel.swift in Sources */,
 				FCB0DB7A296365110047FC1C /* SIFTDescriptor.swift in Sources */,
@@ -691,6 +700,7 @@
 				FCD28C902959DFCA0018A2AA /* SubtractKernel.swift in Sources */,
 				FCB0DB842964CB320047FC1C /* SIFTOctave.swift in Sources */,
 				FCEBCDB9294E85BE002BB8EF /* SIFTViewController.swift in Sources */,
+				FC831CF7296ACF4C00C978BA /* SIFTDescriptorKernel.swift in Sources */,
 				FCEBCDB3294E7D96002BB8EF /* Math.swift in Sources */,
 				FCB0DB7E296365330047FC1C /* SIFTKeypoint.swift in Sources */,
 				FCEBCDED2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift in Sources */,

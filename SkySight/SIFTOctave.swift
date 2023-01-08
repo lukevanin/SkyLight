@@ -33,6 +33,7 @@ final class SIFTOctave {
     private let gradientFunction: SIFTGradientKernel
     private let interpolateFunction: SIFTInterpolateKernel
     private let orientationFunction: SIFTOrientationKernel
+    private let descriptorFunction: SIFTDescriptorKernel
 
     init(
         device: MTLDevice,
@@ -99,6 +100,12 @@ final class SIFTOctave {
         )
 
         self.orientationFunction = SIFTOrientationKernel(
+            device: device,
+            textureSize: scale.size,
+            numberOfTextures: gradientTextures.count
+        )
+
+        self.descriptorFunction = SIFTDescriptorKernel(
             device: device,
             textureSize: scale.size,
             numberOfTextures: gradientTextures.count
@@ -318,8 +325,8 @@ final class SIFTOctave {
         for j in 0 ..< keypoints.count {
             let keypoint = keypoints[j]
             #warning("TODO: Discard keypoint if it is too close to the boundary")
-            let x = Int(Float(keypoint.absoluteCoordinate.x) / parameters.delta)
-            let y = Int(Float(keypoint.absoluteCoordinate.y) / parameters.delta)
+            let x = Int((Float(keypoint.absoluteCoordinate.x) / parameters.delta).rounded())
+            let y = Int((Float(keypoint.absoluteCoordinate.y) / parameters.delta).rounded())
             let sigma = keypoint.sigma / parameters.delta
             let r = Int(ceil(3 * parameters.lambda * sigma))
 
@@ -375,7 +382,120 @@ final class SIFTOctave {
             }
             output.append(orientations)
         }
+        print("getKeypointOrientations: \(output.joined().count) orientations")
         return output
     }
     
+    func getDescriptors(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint], orientations: [[Float]]) -> [SIFTDescriptor] {
+        
+        let descriptorCount = orientations.joined().count
+        
+        guard descriptorCount > 0 else {
+            return []
+        }
+        
+        let inputBuffer = Buffer<SIFTDescriptorInput>(
+            device: device,
+            count: descriptorCount
+        )
+        let outputBuffer = Buffer<SIFTDescriptorResult>(
+            device: device,
+            count: descriptorCount
+        )
+        let parametersBuffer = Buffer<SIFTDescriptorParameters>(
+            device: device,
+            count: 1
+        )
+        
+        let parameters = SIFTDescriptorParameters(
+            delta: scale.delta,
+            scalesPerOctave: 3,
+            width: Int32(scale.size.width),
+            height: Int32(scale.size.height)
+        )
+        parametersBuffer[0] = parameters
+
+//        let minX = 1
+//        let minY = 1
+//        let maxX = scale.size.width - 2
+//        let maxY = scale.size.height - 2
+
+        // Copy keypoints to metal buffer
+        var i = 0
+        for j in 0 ..< keypoints.count {
+            let keypoint = keypoints[j]
+            let orientations = orientations[j]
+            for orientation in orientations {
+                inputBuffer[i] = SIFTDescriptorInput(
+                    keypoint: Int32(j),
+                    absoluteX: Int32(keypoint.absoluteCoordinate.x),
+                    absoluteY: Int32(keypoint.absoluteCoordinate.y),
+                    scale: Int32(keypoint.scale),
+                    subScale: keypoint.subScale,
+                    theta: orientation
+                )
+                i += 1
+            }
+//            #warning("TODO: Discard keypoint if it is too close to the boundary")
+//            let x = Int((Float(keypoint.absoluteCoordinate.x) / parameters.delta).rounded())
+//            let y = Int((Float(keypoint.absoluteCoordinate.y) / parameters.delta).rounded())
+//            let sigma = keypoint.sigma / parameters.delta
+//            let r = Int(ceil(3 * parameters.lambda * sigma))
+//
+//            // Reject keypoint outside of the image bounds
+//            if ((x - r) < minX) {
+//                continue
+//            }
+//            if ((x + r) > maxX) {
+//                continue
+//            }
+//            if ((y - r) < minY) {
+//                continue
+//            }
+//            if ((y + r) > maxY) {
+//                continue
+//            }
+        }
+        
+        //
+        let commandBuffer = commandQueue.makeCommandBuffer()!
+        
+        descriptorFunction.encode(
+            commandBuffer: commandBuffer,
+            parameters: parametersBuffer,
+            gradientTextures: gradientTextures,
+            inputKeypoints: inputBuffer,
+            outputKeypoints: outputBuffer
+        )
+        
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
+        print("getDescriptors: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
+
+        //
+        let numberOfFeatures = 128
+        var output = [SIFTDescriptor]()
+        for k in 0 ..< descriptorCount {
+            var result = outputBuffer[k]
+            let keypoint = keypoints[Int(result.keypoint)]
+            let theta = result.theta
+            var features = Array<Int>(repeating: 0, count: numberOfFeatures)
+            withUnsafePointer(to: &result.features) { p in
+                let p = UnsafeRawPointer(p).assumingMemoryBound(to: Int32.self)
+                for i in 0 ..< numberOfFeatures {
+                    features[i] = Int(p[i])
+                }
+            }
+            let descriptor = SIFTDescriptor(
+                keypoint: keypoint,
+                theta: theta,
+                rawFeatures: [],
+                features: features
+            )
+            output.append(descriptor)
+        }
+        print("getDescriptors: \(output.count) descriptors")
+        return output
+    }
 }

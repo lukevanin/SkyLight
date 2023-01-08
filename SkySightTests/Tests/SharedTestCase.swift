@@ -345,7 +345,7 @@ private func drawDescriptors(
     descriptors: [SIFTDescriptor]
 ) {
     cgContext.saveGState()
-    cgContext.setLineWidth(1)
+    cgContext.setLineWidth(0.5)
     cgContext.setStrokeColor(color.cgColor)
     cgContext.setBlendMode(.screen)
     for descriptor in descriptors {
@@ -363,6 +363,7 @@ private func drawDescriptors(
         )
         cgContext.addEllipse(in: bounds)
         
+        // Primary Orientation
         cgContext.move(to: center)
         cgContext.addLine(
             to: CGPoint(
@@ -370,6 +371,8 @@ private func drawDescriptors(
                 y: center.y + sin(CGFloat(descriptor.theta)) * radius
             )
         )
+        
+        //
     }
     cgContext.strokePath()
     cgContext.restoreGState()

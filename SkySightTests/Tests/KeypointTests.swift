@@ -22,7 +22,8 @@ final class KeypointTests: SharedTestCase {
             )
         )
         let subject = SIFT(device: device, configuration: configuration)
-        let keypoints = subject.getKeypoints(inputTexture)
+        let octaveKeypoints = subject.getKeypoints(inputTexture)
+        let keypoints = Array(octaveKeypoints.joined())
         print("Found", keypoints.count, "keypoints")
 
 //        let referenceKeypoints: [SIFTKeypoint] = []

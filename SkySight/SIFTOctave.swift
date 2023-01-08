@@ -32,6 +32,7 @@ final class SIFTOctave {
     private let extremaFunction: SIFTExtremaFunction
     private let gradientFunction: SIFTGradientKernel
     private let interpolateFunction: SIFTInterpolateKernel
+    private let orientationFunction: SIFTOrientationKernel
 
     init(
         device: MTLDevice,
@@ -43,12 +44,6 @@ final class SIFTOctave {
         self.scale = scale
         self.extremaFunction = extremaFunction
         self.gradientFunction = gradientFunction
-
-        self.interpolateFunction = SIFTInterpolateKernel(
-            device: device,
-            textureSize: scale.size,
-            numberOfTextures: scale.differenceTextures.count
-        )
 
         let keypointTextures = {
             var textures = [MTLTexture]()
@@ -95,6 +90,19 @@ final class SIFTOctave {
             return textures
         }()
         self.gradientTextures = gradientTextures
+        
+        
+        self.interpolateFunction = SIFTInterpolateKernel(
+            device: device,
+            textureSize: scale.size,
+            numberOfTextures: scale.differenceTextures.count
+        )
+
+        self.orientationFunction = SIFTOrientationKernel(
+            device: device,
+            textureSize: scale.size,
+            numberOfTextures: gradientTextures.count
+        )
 
         self.keypointImages = {
             var images = [Image<SIMD2<Float>>]()
@@ -258,7 +266,7 @@ final class SIFTOctave {
 //                print("octave \(scale.o) keypoint \(k) not converged \(p.alphaX) \(p.alphaY) \(p.alphaZ)")
                 continue
             }
-            print("octave \(scale.o) keypoint \(k) converged \(p.alphaX) \(p.alphaY) \(p.alphaZ)")
+//            print("octave \(scale.o) keypoint \(k) converged \(p.alphaX) \(p.alphaY) \(p.alphaZ)")
 
             let keypoint = SIFTKeypoint(
                 octave: scale.o,
@@ -279,5 +287,95 @@ final class SIFTOctave {
         }
         return output
     }
-}
+    
+    func getKeypointOrientations(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint]) -> [[Float]] {
+        let inputBuffer = Buffer<SIFTOrientationKeypoint>(
+            device: device,
+            count: keypoints.count
+        )
+        let outputBuffer = Buffer<SIFTOrientationResult>(
+            device: device,
+            count: keypoints.count
+        )
+        let parametersBuffer = Buffer<SIFTOrientationParameters>(
+            device: device,
+            count: 1
+        )
+        
+        let parameters = SIFTOrientationParameters(
+            delta: scale.delta,
+            lambda: 1.5,
+            orientationThreshold: 0.8
+        )
+        parametersBuffer[0] = parameters
 
+        let minX = 1
+        let minY = 1
+        let maxX = scale.size.width - 2
+        let maxY = scale.size.height - 2
+
+        // Copy keypoints to metal buffer
+        for j in 0 ..< keypoints.count {
+            let keypoint = keypoints[j]
+            #warning("TODO: Discard keypoint if it is too close to the boundary")
+            let x = Int(Float(keypoint.absoluteCoordinate.x) / parameters.delta)
+            let y = Int(Float(keypoint.absoluteCoordinate.y) / parameters.delta)
+            let sigma = keypoint.sigma / parameters.delta
+            let r = Int(ceil(3 * parameters.lambda * sigma))
+
+            // Reject keypoint outside of the image bounds
+            if ((x - r) < minX) {
+                continue
+            }
+            if ((x + r) > maxX) {
+                continue
+            }
+            if ((y - r) < minY) {
+                continue
+            }
+            if ((y + r) > maxY) {
+                continue
+            }
+
+            inputBuffer[j] = SIFTOrientationKeypoint(
+                absoluteX: Int32(keypoint.absoluteCoordinate.x),
+                absoluteY: Int32(keypoint.absoluteCoordinate.y),
+                scale: Int32(keypoint.scale),
+                sigma: keypoint.sigma
+            )
+        }
+        
+        //
+        let commandBuffer = commandQueue.makeCommandBuffer()!
+        
+        orientationFunction.encode(
+            commandBuffer: commandBuffer,
+            parameters: parametersBuffer,
+            gradientTextures: gradientTextures,
+            inputKeypoints: inputBuffer,
+            outputKeypoints: outputBuffer
+        )
+        
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
+        print("getKeypointOrientations: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
+
+        //
+        var output = [[Float]]()
+        for k in 0 ..< outputBuffer.count {
+            var result = outputBuffer[k]
+            let count = Int(result.count)
+            var orientations = Array<Float>(repeating: 0, count: count)
+            withUnsafePointer(to: &result.orientations) { p in
+                let p = UnsafeRawPointer(p).assumingMemoryBound(to: Float.self)
+                for i in 0 ..< count {
+                    orientations[i] = p[i]
+                }
+            }
+            output.append(orientations)
+        }
+        return output
+    }
+    
+}

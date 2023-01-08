@@ -24,7 +24,7 @@ final class DescriptorTests: SharedTestCase {
         )
         let subject = SIFT(device: device, configuration: configuration)
         let keypoints = subject.getKeypoints(inputTexture)
-        let foundDescriptors = subject.getDescriptors(keypoints: keypoints)
+        let foundDescriptors = subject.getDescriptors(keypointOctaves: keypoints)
         print("Found", foundDescriptors.count, "descriptors")
 
         let referenceImage: CGImage = {
@@ -42,7 +42,7 @@ final class DescriptorTests: SharedTestCase {
 
         let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
         
-        matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
+//        matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
         
         attachImage(
             name: "descriptors",
@@ -54,6 +54,37 @@ final class DescriptorTests: SharedTestCase {
         )
     }
     
+    private func matchDescriptors(detected: [SIFTDescriptor], reference: [SIFTDescriptor]) {
+        
+        let matches = SIFTDescriptor.match(
+            source: detected,
+            target: reference,
+            absoluteThreshold: 300,
+            relativeThreshold: 0.6
+        )
+        
+        let rate = Float(matches.count) / Float(detected.count)
+        print("found \(matches.count) out of \(detected.count) = \(rate * 100)%")
+        XCTAssertGreaterThanOrEqual(rate, 80.0)
+
+//        for match in matches {
+//            let icon: String
+//            if distance < 10.0 {
+//                pass += 1
+//                icon = "✅"
+//            }
+//            else {
+//                fail += 1
+//                icon = "❌"
+//            }
+//            total += 1
+//
+//            print("\(icon) #\(i) @\(a) == \(b) Δ\(bestMatchDistance ) \(c) \(distance)")
+//        }
+        
+//        print("pass: \(pass) \(Float(pass) / Float(total))")
+//        print("fail: \(fail) \(Float(fail) / Float(total))")
+    }
     
     func testMatches() throws {
         
@@ -66,7 +97,7 @@ final class DescriptorTests: SharedTestCase {
         )
         let subject = SIFT(device: device, configuration: configuration)
         let keypoints = subject.getKeypoints(inputTexture)
-        let foundDescriptors = subject.getDescriptors(keypoints: keypoints)
+        let foundDescriptors = subject.getDescriptors(keypointOctaves: keypoints)
         print("Found", foundDescriptors.count, "descriptors")
 
         let referenceImage: CGImage = {
@@ -109,38 +140,6 @@ final class DescriptorTests: SharedTestCase {
     
     private func filter<E>(_ input: Array<E>, every step: Int = 10, limit: Int = 10000) -> [E] {
         Array(input.enumerated().filter({ $0.offset % step == 0 }).map({ $0.element }).prefix(limit))
-    }
-    
-    private func matchDescriptors(detected: [SIFTDescriptor], reference: [SIFTDescriptor]) {
-        
-        let matches = SIFTDescriptor.match(
-            source: detected,
-            target: reference,
-            absoluteThreshold: 300,
-            relativeThreshold: 0.6
-        )
-        
-        let rate = Float(matches.count) / Float(detected.count)
-        print("found \(matches.count) out of \(detected.count) = \(rate * 100)%")
-        XCTAssertGreaterThanOrEqual(rate, 80.0)
-
-//        for match in matches {
-//            let icon: String
-//            if distance < 10.0 {
-//                pass += 1
-//                icon = "✅"
-//            }
-//            else {
-//                fail += 1
-//                icon = "❌"
-//            }
-//            total += 1
-//
-//            print("\(icon) #\(i) @\(a) == \(b) Δ\(bestMatchDistance ) \(c) \(distance)")
-//        }
-        
-//        print("pass: \(pass) \(Float(pass) / Float(total))")
-//        print("fail: \(fail) \(Float(fail) / Float(total))")
     }
     
     

@@ -115,14 +115,14 @@ final class SIFT {
 
     // MARK: Keypoints
     
-    func getKeypoints(_ inputTexture: MTLTexture) -> [SIFTKeypoint] {
+    func getKeypoints(_ inputTexture: MTLTexture) -> [[SIFTKeypoint]] {
         findKeypoints(inputTexture: inputTexture)
         let keypointOctaves = getKeypointsFromOctaves()
         let interpolatedKeypoints = interpolateKeypoints(keypointOctaves: keypointOctaves)
 //        let interpolatedKeypoints = interpolateKeypoints(
 //            keypoints: allKeypoints
 //        )
-        return Array(interpolatedKeypoints.joined())
+        return interpolatedKeypoints
     }
     
     private func findKeypoints(inputTexture: MTLTexture) {
@@ -169,320 +169,43 @@ final class SIFT {
         return output
     }
 
-//    private func interpolateKeypoints(keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
-//        var interpolatedKeypoints = [SIFTKeypoint]()
-//
-//        for octave in dog.octaves {
-//            octave.updateImagesFromTextures()
-//        }
-//
-//        for i in 0 ..< keypoints.count {
-//            let keypoint = keypoints[i]
-//            let interpolatedKeypoint = interpolateKeypoint(keypoint: keypoint)
-//            if let interpolatedKeypoint {
-//                interpolatedKeypoints.append(interpolatedKeypoint)
-//            }
-//        }
-//        return interpolatedKeypoints
-//    }
-    
-    private func interpolateKeypoint(keypoint: SIFTKeypoint) -> SIFTKeypoint? {
-        
-        guard abs(keypoint.value) > configuration.differenceOfGaussiansThreshold * 0.8 else {
-            return nil
-        }
-        
-        // Note: x and y are swapped in the original algorithm.
-        
-        // Maximum number of consecutive unsuccessful interpolation.
-        let maximumIterations: Int = configuration.maximumInterpolationIterations
-        
-        let maximumOffset: Float = 0.6
-        
-        // Ratio between two consecutive scales in the scalespace assuming the
-        // ratio is constant over all scales and over all octaves.
-        let sigmaRatio = dog.octaves[0].sigmas[1] / dog.octaves[0].sigmas[0]
-        
-        let o: Int = keypoint.octave
-        let s: Int = keypoint.scale
-        let x: Int = keypoint.scaledCoordinate.x
-        let y: Int = keypoint.scaledCoordinate.y
-        let octave: DifferenceOfGaussians.Octave = dog.octaves[o]
-        let delta: Float = octave.delta
-        let images: [Image<Float>] = octave.differenceImages
-        
-        var coordinate = SIMD3<Int>(x: x, y: y, z: s)
-        
-        // Check coordinates are within the scale space.
-        guard !outOfBounds(octave: octave, coordinate: coordinate) else {
-            // print("keypoint \(coordinate): rejected: out of bounds")
-            return nil
-        }
-
-        var converged = false
-        var alpha: SIMD3<Float> = .zero
-        
-        var i = 0
-        while i < maximumIterations {
-            alpha = interpolationStep(images: images, coordinate: coordinate)
-            
-            if (abs(alpha.x) < maximumOffset) && (abs(alpha.y) < maximumOffset) && (abs(alpha.z) < maximumOffset) {
-                converged = true
-                break
-            }
-            
-            // Whess
-            // coordinate.x += Int(alpha.x.rounded())
-            // coordinate.y += Int(alpha.y.rounded())
-            // coordinate.z += Int(alpha.z.rounded())
-            
-            // IPOL
-            if (alpha.x > +maximumOffset) {
-                coordinate.x += 1
-            }
-            if (alpha.x < -maximumOffset) {
-                coordinate.x -= 1
-            }
-            if (alpha.y > +maximumOffset) {
-                coordinate.y += 1
-            }
-            if (alpha.y < -maximumOffset) {
-                coordinate.y -= 1
-            }
-            if (alpha.z > +maximumOffset) {
-                coordinate.z += 1
-            }
-            if (alpha.z < -maximumOffset) {
-                coordinate.z -= 1
-            }
-            
-            // Check coordinates are within the scale space.
-            guard !outOfBounds(octave: octave, coordinate: coordinate) else {
-                // print("keypoint \(coordinate): rejected: interpolated out of bounds")
-                return nil
-            }
-            
-            i += 1
-        }
-        
-        guard converged == true else {
-            return nil
-        }
-        
-        let newValue = interpolateContrast(i: images, c: coordinate, alpha: alpha)
-        
-        guard abs(newValue) > configuration.differenceOfGaussiansThreshold else {
-            // print("keypoint \(coordinate): rejected: low contrast=\(newValue)")
-            return nil
-        }
-        
-        // Discard keypoint with high edge response
-        let isOnEdge = self.isOnEdge(images: images, coordinate: coordinate)
-        guard !isOnEdge else {
-            // print("keypoint \(coordinate): rejected: on edge")
-            return nil
-        }
-        
-        let sigma = octave.sigmas[s] * pow(sigmaRatio, alpha.z)
-        let absoluteCoordinate = SIMD2<Float>(
-            x: (Float(coordinate.x) + alpha.x) * delta,
-            y: (Float(coordinate.y) + alpha.y) * delta
-        )
-        
-        // Return keypoint
-        return SIFTKeypoint(
-            octave: keypoint.octave,
-            scale: coordinate.z,
-            subScale: alpha.z,
-            scaledCoordinate: SIMD2<Int>(
-                x: coordinate.x,
-                y: coordinate.y
-            ),
-            absoluteCoordinate: absoluteCoordinate,
-            sigma: sigma,
-            value: newValue
-        )
-    }
-    
-    private func outOfBounds(octave: DifferenceOfGaussians.Octave, coordinate: SIMD3<Int>) -> Bool {
-        let minX = configuration.imageBorder
-        let maxX = octave.size.width - configuration.imageBorder - 1
-        let minY = configuration.imageBorder
-        let maxY = octave.size.height - configuration.imageBorder - 1
-        let minS = 1
-        let maxS = octave.numberOfScales
-        return coordinate.x < minX || coordinate.x > maxX || coordinate.y < minY || coordinate.y > maxY || coordinate.z < minS || coordinate.z > maxS
-    }
-    
-    private func interpolationStep(
-        images: [Image<Float>],
-        coordinate: SIMD3<Int>
-    ) -> SIMD3<Float> {
-        
-        let H = hessian3D(i: images, c: coordinate)
-        precondition(H.determinant != 0)
-        let Hi = -H.inverse.transpose
-        
-        let dD = derivatives3D(i: images, c: coordinate)
-        
-        let x = Hi * dD
-        
-        return x
-    }
-    
-    ///
-    /// Computes the 3D Hessian matrix.
-    ///
-    ///```
-    ///  ⎡ Ixx Ixy Ixs ⎤
-    ///
-    ///    Ixy Iyy Iys
-    ///
-    ///  ⎣ Ixs Iys Iss ⎦
-    /// ```
-    ///
-    private func hessian3D(i: [Image<Float>], c: SIMD3<Int>) -> matrix_float3x3 {
-        let v = i[c.z][c.x, c.y]
-        
-        let dxx = i[c.z][c.x + 1, c.y] + i[c.z][c.x - 1, c.y] - 2 * v
-        let dyy = i[c.z][c.x, c.y + 1] + i[c.z][c.x, c.y - 1] - 2 * v
-        let dss = i[c.z + 1][c.x, c.y] + i[c.z - 1][c.x, c.y] - 2 * v
-
-        let dxy = (i[c.z][c.x + 1, c.y + 1] - i[c.z][c.x - 1, c.y + 1] - i[c.z][c.x + 1, c.y - 1] + i[c.z][c.x - 1, c.y - 1]) * 0.25
-        let dxs = (i[c.z + 1][c.x + 1, c.y] - i[c.z + 1][c.x - 1, c.y] - i[c.z - 1][c.x + 1, c.y] + i[c.z - 1][c.x - 1, c.y]) * 0.25
-        let dys = (i[c.z + 1][c.x, c.y + 1] - i[c.z + 1][c.x, c.y - 1] - i[c.z - 1][c.x, c.y + 1] + i[c.z - 1][c.x, c.y - 1]) * 0.25
-        
-        return matrix_float3x3(
-            rows: [
-                SIMD3<Float>(dxx, dxy, dxs),
-                SIMD3<Float>(dxy, dyy, dys),
-                SIMD3<Float>(dxs, dys, dss),
-            ]
-        )
-    }
-    
-    ///
-    /// Computes interpolated contrast. Based on Eqn. (3) in Lowe's paper.
-    ///
-    func interpolateContrast(i: [Image<Float>], c: SIMD3<Int>, alpha: SIMD3<Float>) -> Float {
-        let dD = derivatives3D(i: i, c: c)
-        let t = dD * alpha
-        let v = i[c.z][c.x, c.y] + t.x * 0.5
-        return v
-    }
-    
-    ///
-    /// Computes the partial derivatives in x, y, and scale of a pixel in the DoG scale space pyramid.
-    ///
-    /// - Returns: Returns the vector of partial derivatives for pixel I { dI/dX, dI/dY, dI/ds }ᵀ
-    ///
-    private func derivatives3D(i: [Image<Float>], c: SIMD3<Int>) -> SIMD3<Float> {
-        return SIMD3<Float>(
-            x: (i[c.z][c.x + 1, c.y] - i[c.z][c.x - 1, c.y]) * 0.5,
-            y: (i[c.z][c.x, c.y + 1] - i[c.z][c.x, c.y - 1]) * 0.5,
-            z: (i[c.z + 1][c.x, c.y] - i[c.z - 1][c.x, c.y]) * 0.5
-        )
-    }
-
-    ///
-    /// Compute Edge response
-    ///
-    /// Determines whether a feature is too edge like to be stable by computing the ratio of principal
-    /// curvatures at that feature.  Based on Section 4.1 of Lowe's paper.
-    ///
-    /// i.e.  Compute the ratio of principal curvatures
-    /// Compute the ratio (hXX + hYY)*(hXX + hYY)/(hXX*hYY - hXY*hXY);
-    ///
-    /// The 2D hessian of the DoG operator is computed via finite difference schemes.
-    ///
-    private func isOnEdge(images: [Image<Float>], coordinate c: SIMD3<Int>) -> Bool {
-        let i = images[c.z]
-        let v = i[c.x, c.y]
-        
-        // Compute the 2d Hessian at pixel (i,j) - i = y, j = x
-        // IPOL implementation uses hxx for y axis, and hyy for x axis
-        let hxx = i[c.x, c.y - 1] + i[c.x, c.y + 1] - 2 * v
-        let hyy = i[c.x + 1, c.y] + i[c.x - 1, c.y] - 2 * v
-        let hxy = ((i[c.x + 1, c.y + 1] - i[c.x - 1, c.y + 1]) - (i[c.x + 1, c.y - 1] - i[c.x - 1, c.y - 1])) * 0.25
-        
-        // Whess
-        let trace = hxx + hyy
-        let determinant = (hxx * hyy) - (hxy * hxy)
-        
-        guard determinant > 0 else {
-            // Negative determinant -> curvatures have different signs
-            return true
-        }
-        
-        let edgeThreshold = configuration.edgeThreshold
-        let threshold = ((edgeThreshold + 1) * (edgeThreshold + 1)) / edgeThreshold
-        let curvature = (trace * trace) / determinant
-        
-        guard curvature < threshold else {
-            // Feature is on an edge
-            return true
-        }
-        
-        // Feature is not on an edge
-        return false
-        
-        // let edgeThreshold = pow(threshold + 1, 2) / configuration.edgeThreshold
-
-        // IPOL
-        // Harris and Stephen Edge response
-        // let edgeResponse = (hxx + hyy) * (hxx + hyy) / (hxx * hyy - hxy * hxy)
-        // return edgeResponse
-    }
-    
-    ///
-    /// Determines whether the keypoint is within the allowed distance from the boundary of the image. A
-    /// keypoint that lies too close to the edge cannot be used to extract a feature descriptor.
-    ///
-//    func isCloseToBoundary(sigma s: Float, coordinate c: SIMD2<Int>, delta: Float) -> Bool {
-//        let size = configuration.inputSize
-//        let s = s / delta
-//        let r = (3 * configuration.lambdaOrientation * s).rounded(.up)
-//        let w = Float(size.width) / delta
-//        let h = Float(size.height) / delta
-//        let p = SIMD2<Float>(
-//            x: Float(c.x) / delta,
-//            y: Float(c.y) / delta
-//        )
-//        let minX = r
-//        let minY = r
-//        let maxX = w - r - 1
-//        let maxY = h - r - 1
-//        return (p.x < minX) || (p.x > maxX) || (p.y < minY) || (p.y > maxY)
-//    }
     
     // MARK: Descriptora
     
-    func getDescriptors(keypoints: [SIFTKeypoint]) -> [SIFTDescriptor] {
+    func getDescriptors(keypointOctaves: [[SIFTKeypoint]]) -> [SIFTDescriptor] {
         var output = [SIFTDescriptor]()
-        for i in 0 ..< keypoints.count {
-            let keypoint = keypoints[i]
-            let descriptors = makeDescriptors(keypoint: keypoint)
-            output.append(contentsOf: descriptors)
+        let orientationOctaves = getPrincipalOrientations(keypointOctaves: keypointOctaves)
+        for o in 0 ..< keypointOctaves.count {
+            let keypoints = keypointOctaves[o]
+            let keypointOrientations = orientationOctaves[o]
+            precondition(keypointOrientations.count == keypoints.count)
+            for k in 0 ..< keypoints.count {
+                let keypoint = keypoints[k]
+                let orientations = keypointOrientations[k]
+                for theta in orientations {
+                    if let descriptor = makeDescriptor(keypoint: keypoint, theta: theta) {
+                        output.append(descriptor)
+                    }
+                }
+            }
         }
-//        if let keypoint = keypoints.first {
-//            let descriptor = makeDescriptors(keypoint: keypoint)
-//            output.append(contentsOf: descriptor)
-//        }
         return output
     }
     
-    private func makeDescriptors(keypoint: SIFTKeypoint) -> [SIFTDescriptor] {
-        var descriptors = [SIFTDescriptor]()
-        let orientations = getPrincipalOrientations(keypoint: keypoint)
-        for orientation in orientations {
-            guard let descriptor = makeDescriptor(keypoint: keypoint, theta: orientation) else {
-                continue
-            }
-            descriptors.append(descriptor)
+    private func getPrincipalOrientations(keypointOctaves: [[SIFTKeypoint]]) -> [[[Float]]] {
+        var output = [[[Float]]]()
+        for o in 0 ..< keypointOctaves.count {
+            let keypoints = keypointOctaves[o]
+            let orientations = octaves[o].getKeypointOrientations(
+                commandQueue: commandQueue,
+                keypoints: keypoints
+            )
+            output.append(orientations)
         }
-        return descriptors
+        return output
     }
     
+    /*
     private func getPrincipalOrientations(keypoint: SIFTKeypoint) -> [Float] {
         guard let histogram = getOrientationsHistogram(from: keypoint) else {
             return []
@@ -634,6 +357,7 @@ final class SIFT {
         }
         return orientation
     }
+     */
     
     private func makeDescriptor(keypoint: SIFTKeypoint, theta: Float) -> SIFTDescriptor? {
         let octave = dog.octaves[keypoint.octave]

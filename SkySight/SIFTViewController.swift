@@ -184,7 +184,7 @@ final class SIFTViewController: UIViewController {
         let keypoints = sift.getKeypoints(texture)
         print("Found \(keypoints.count) keypoints")
         print("Finding descriptors")
-        let descriptors = sift.getDescriptors(keypoints: keypoints)
+        let descriptors = sift.getDescriptors(keypointOctaves: keypoints)
         print("Found \(descriptors.count) descriptors")
         let endTime = CFAbsoluteTimeGetCurrent()
         let elapsedTime = endTime - startTime

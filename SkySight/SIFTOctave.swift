@@ -22,11 +22,10 @@ final class SIFTOctave {
     
     let scale: DifferenceOfGaussians.Octave
     
-    let keypointTextures: [MTLTexture]
-    let keypointImages: [Image<SIMD2<Float>>]
+    let keypointTextures: MTLTexture
+    let keypointImages: [Image<Float>]
 
-    let gradientTextures: [MTLTexture]
-    let gradientImages: [Image<SIFTGradient>]
+    let gradientTextures: MTLTexture
 
     private let device: MTLDevice
     private let extremaFunction: SIFTExtremaFunction
@@ -47,82 +46,65 @@ final class SIFTOctave {
         self.gradientFunction = gradientFunction
 
         let keypointTextures = {
-            var textures = [MTLTexture]()
             let textureDescriptor: MTLTextureDescriptor = {
-                let descriptor = MTLTextureDescriptor.texture2DDescriptor(
-                    pixelFormat: .rg32Float,
-                    width: scale.size.width,
-                    height: scale.size.height,
-                    mipmapped: false
-                )
+                let descriptor = MTLTextureDescriptor()
+                descriptor.textureType = .type2DArray
+                descriptor.pixelFormat = .r32Float
+                descriptor.width = scale.size.width
+                descriptor.height = scale.size.height
+                descriptor.arrayLength = scale.numberOfScales
+                descriptor.mipmapLevelCount = 1
                 descriptor.usage = [.shaderRead, .shaderWrite]
                 descriptor.storageMode = .shared
                 return descriptor
             }()
-            for _ in 0 ..< scale.numberOfScales {
-                let texture = device.makeTexture(
-                    descriptor: textureDescriptor
-                )!
-                textures.append(texture)
-            }
-            return textures
+            let texture = device.makeTexture(descriptor: textureDescriptor)!
+            texture.label = "siftKeypointExtremaTexture"
+            return texture
         }()
         self.keypointTextures = keypointTextures
 
         let gradientTextures = {
-            var textures = [MTLTexture]()
             let textureDescriptor: MTLTextureDescriptor = {
-                let descriptor = MTLTextureDescriptor.texture2DDescriptor(
-                    pixelFormat: .rg32Float,
-                    width: scale.size.width,
-                    height: scale.size.height,
-                    mipmapped: false
-                )
+                let descriptor = MTLTextureDescriptor()
+                descriptor.textureType = .type2DArray
+                descriptor.pixelFormat = .rg32Float
+                descriptor.width = scale.size.width
+                descriptor.height = scale.size.height
+                descriptor.arrayLength = scale.gaussianTextures.arrayLength
+                descriptor.mipmapLevelCount = 1
                 descriptor.usage = [.shaderRead, .shaderWrite]
                 descriptor.storageMode = .shared
                 return descriptor
             }()
-            for _ in 0 ..< scale.gaussianTextures.count {
-                let texture = device.makeTexture(
-                    descriptor: textureDescriptor
-                )!
-                textures.append(texture)
-            }
-            return textures
+            let texture = device.makeTexture(descriptor: textureDescriptor)!
+            texture.label = "siftGradientTexture"
+            return texture
         }()
         self.gradientTextures = gradientTextures
         
         
         self.interpolateFunction = SIFTInterpolateKernel(
-            device: device,
-            textureSize: scale.size,
-            numberOfTextures: scale.differenceTextures.count
+            device: device
         )
 
         self.orientationFunction = SIFTOrientationKernel(
-            device: device,
-            textureSize: scale.size,
-            numberOfTextures: gradientTextures.count
+            device: device
         )
 
         self.descriptorFunction = SIFTDescriptorKernel(
-            device: device,
-            textureSize: scale.size,
-            numberOfTextures: gradientTextures.count
+            device: device
         )
 
         self.keypointImages = {
-            var images = [Image<SIMD2<Float>>]()
-            for texture in keypointTextures {
-                let image = Image<SIMD2<Float>>(texture: texture, defaultValue: .zero)
-                images.append(image)
-            }
-            return images
-        }()
-        self.gradientImages = {
-            var images = [Image<SIFTGradient>]()
-            for texture in gradientTextures {
-                let image = Image<SIFTGradient>(texture: texture, defaultValue: .zero)
+            var images = [Image<Float>]()
+            for i in 0 ..< keypointTextures.arrayLength {
+                let image = Image<Float>(
+                    texture: keypointTextures,
+                    label: "siftKeypointExtremaBuffer",
+                    slice: i,
+                    defaultValue: .zero
+                )
                 images.append(image)
             }
             return images
@@ -135,32 +117,23 @@ final class SIFTOctave {
     }
     
     private func encodeExtrema(commandBuffer: MTLCommandBuffer) {
-        for i in 0 ..< keypointTextures.count {
-            extremaFunction.encode(
-                commandBuffer: commandBuffer,
-                inputTexture0: scale.differenceTextures[i + 0],
-                inputTexture1: scale.differenceTextures[i + 1],
-                inputTexture2: scale.differenceTextures[i + 2],
-                outputTexture: keypointTextures[i]
-            )
-        }
+        extremaFunction.encode(
+            commandBuffer: commandBuffer,
+            inputTexture: scale.differenceTextures,
+            outputTexture: keypointTextures
+        )
     }
     
     private func encodeGradients(commandBuffer: MTLCommandBuffer) {
-        for i in 0 ..< gradientTextures.count {
-            gradientFunction.encode(
-                commandBuffer: commandBuffer,
-                inputTexture: scale.gaussianTextures[i],
-                outputTexture: gradientTextures[i]
-            )
-        }
+        gradientFunction.encode(
+            commandBuffer: commandBuffer,
+            inputTexture: scale.gaussianTextures,
+            outputTexture: gradientTextures
+        )
     }
     
     func updateImagesFromTextures() {
         for image in keypointImages {
-            image.updateFromTexture()
-        }
-        for image in gradientImages {
             image.updateFromTexture()
         }
     }
@@ -186,8 +159,7 @@ final class SIFTOctave {
     private func keypointAt(x: Int, y: Int, s: Int) -> SIFTKeypoint? {
         let image = keypointImages[s]
         let output = image[x, y]
-        let extrema = output[0] == 1
-        let value = output[1]
+        let extrema = output == 1
 
         if extrema == false {
             return nil
@@ -206,28 +178,32 @@ final class SIFTOctave {
                 y: Float(y) * scale.delta
             ),
             sigma: scale.sigmas[s + 1],
-            value: value
+            value: 0
         )
         return keypoint
     }
     
     func interpolateKeypoints(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
+        print("interpolateKeypoints")
         let sigmaRatio = scale.sigmas[1] / scale.sigmas[0]
         
-        let inputBuffer = Buffer<SIFTInterpolateKernel.InputKeypoint>(
+        let inputBuffer = Buffer<SIFTInterpolateInputKeypoint>(
             device: device,
+            label: "siftInterpiolationInputBuffer",
             count: keypoints.count
         )
-        let outputBuffer = Buffer<SIFTInterpolateKernel.OutputKeypoint>(
+        let outputBuffer = Buffer<SIFTInterpolateOutputKeypoint>(
             device: device,
+            label: "siftInterpolationOutputBuffer",
             count: keypoints.count
         )
-        let parametersBuffer = Buffer<SIFTInterpolateKernel.Parameters>(
+        let parametersBuffer = Buffer<SIFTInterpolateParameters>(
             device: device,
+            label: "siftInterpolationParametersBuffer",
             count: 1
         )
         
-        parametersBuffer[0] = SIFTInterpolateKernel.Parameters(
+        parametersBuffer[0] = SIFTInterpolateParameters(
             dogThreshold: 0.0133, // configuration.differenceOfGaussiansThreshold,
             maxIterations: 5, // Int32(configuration.maximumInterpolationIterations),
             maxOffset: 0.6,
@@ -241,17 +217,23 @@ final class SIFTOctave {
         // Copy keypoints to metal buffer
         for j in 0 ..< keypoints.count {
             let keypoint = keypoints[j]
-            inputBuffer[j] = SIFTInterpolateKernel.InputKeypoint(
+            inputBuffer[j] = SIFTInterpolateInputKeypoint(
                 x: Int32(keypoint.scaledCoordinate.x),
                 y: Int32(keypoint.scaledCoordinate.y),
-                scale: Int32(keypoint.scale),
-                value: keypoint.value
+                scale: Int32(keypoint.scale)
             )
         }
         
         //
+//        let captureDescriptor = MTLCaptureDescriptor()
+//        captureDescriptor.captureObject = commandQueue
+//        captureDescriptor.destination = .developerTools
+//        let captureManager = MTLCaptureManager.shared()
+//        try! captureManager.startCapture(with: captureDescriptor)
+
         let commandBuffer = commandQueue.makeCommandBuffer()!
-        
+        commandBuffer.label = "siftInterpolationCommandBuffer"
+
         interpolateFunction.encode(
             commandBuffer: commandBuffer,
             parameters: parametersBuffer,
@@ -262,6 +244,8 @@ final class SIFTOctave {
         
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+//        captureManager.stopCapture()
+        
         let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
         print("interpolateKeypoints: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
 
@@ -296,16 +280,20 @@ final class SIFTOctave {
     }
     
     func getKeypointOrientations(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint]) -> [[Float]] {
+        print("getKeypointOrientations")
         let inputBuffer = Buffer<SIFTOrientationKeypoint>(
             device: device,
+            label: "siftOrientationInputBuffer",
             count: keypoints.count
         )
         let outputBuffer = Buffer<SIFTOrientationResult>(
             device: device,
+            label: "siftOrientationOutputBuffer",
             count: keypoints.count
         )
         let parametersBuffer = Buffer<SIFTOrientationParameters>(
             device: device,
+            label: "siftOrientationParametersBuffer",
             count: 1
         )
         
@@ -322,9 +310,8 @@ final class SIFTOctave {
         let maxY = scale.size.height - 2
 
         // Copy keypoints to metal buffer
-        for j in 0 ..< keypoints.count {
-            let keypoint = keypoints[j]
-            #warning("TODO: Discard keypoint if it is too close to the boundary")
+        var i = 0
+        for keypoint in keypoints {
             let x = Int((Float(keypoint.absoluteCoordinate.x) / parameters.delta).rounded())
             let y = Int((Float(keypoint.absoluteCoordinate.y) / parameters.delta).rounded())
             let sigma = keypoint.sigma / parameters.delta
@@ -344,16 +331,25 @@ final class SIFTOctave {
                 continue
             }
 
-            inputBuffer[j] = SIFTOrientationKeypoint(
+            inputBuffer[i] = SIFTOrientationKeypoint(
                 absoluteX: Int32(keypoint.absoluteCoordinate.x),
                 absoluteY: Int32(keypoint.absoluteCoordinate.y),
                 scale: Int32(keypoint.scale),
                 sigma: keypoint.sigma
             )
+            
+            i += 1
         }
         
         //
+//        let captureDescriptor = MTLCaptureDescriptor()
+//        captureDescriptor.captureObject = commandQueue
+//        captureDescriptor.destination = .developerTools
+//        let captureManager = MTLCaptureManager.shared()
+//        try! captureManager.startCapture(with: captureDescriptor)
+        
         let commandBuffer = commandQueue.makeCommandBuffer()!
+        commandBuffer.label = "siftOrientationCommandBuffer"
         
         orientationFunction.encode(
             commandBuffer: commandBuffer,
@@ -365,6 +361,8 @@ final class SIFTOctave {
         
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+//        captureManager.stopCapture()
+        
         let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
         print("getKeypointOrientations: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
 
@@ -396,14 +394,17 @@ final class SIFTOctave {
         
         let inputBuffer = Buffer<SIFTDescriptorInput>(
             device: device,
+            label: "siftDescriptorsInputBuffer",
             count: descriptorCount
         )
         let outputBuffer = Buffer<SIFTDescriptorResult>(
             device: device,
+            label: "siftDescriptorsOutputBuffer",
             count: descriptorCount
         )
         let parametersBuffer = Buffer<SIFTDescriptorParameters>(
             device: device,
+            label: "siftDescriptorsParametersBuffer",
             count: 1
         )
         
@@ -458,18 +459,26 @@ final class SIFTOctave {
         }
         
         //
+//        let captureDescriptor = MTLCaptureDescriptor()
+//        captureDescriptor.captureObject = commandQueue
+//        captureDescriptor.destination = .developerTools
+//        let captureManager = MTLCaptureManager.shared()
+//        try! captureManager.startCapture(with: captureDescriptor)
+
         let commandBuffer = commandQueue.makeCommandBuffer()!
+        commandBuffer.label = "siftDescriptorsCommandBuffer"
         
         descriptorFunction.encode(
             commandBuffer: commandBuffer,
             parameters: parametersBuffer,
             gradientTextures: gradientTextures,
             inputKeypoints: inputBuffer,
-            outputKeypoints: outputBuffer
+            outputDescriptors: outputBuffer
         )
         
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+//        captureManager.stopCapture()
         let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
         print("getDescriptors: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
 

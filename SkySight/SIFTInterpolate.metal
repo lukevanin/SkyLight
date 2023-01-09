@@ -9,6 +9,8 @@
 
 #include "Common.h"
 
+#include "SIFTInterpolate.h"
+
 using namespace metal;
 
 
@@ -188,58 +190,25 @@ bool outOfBounds(int x, int y, int scale, int width, int height, int scales) {
 }
 
 
-struct InterpolateParameters {
-    float dogThreshold;
-    int maxIterations;
-    float maxOffset;
-    int width;
-    int height;
-    float octaveDelta;
-    float edgeThreshold;
-    int numberOfScales;
-};
-
-
-struct InputKeypoint {
-    int x;
-    int y;
-    int scale;
-    float value;
-};
-
-
-struct OutputKeypoint {
-    int converged;
-    int scale;
-    float subScale;
-    int relativeX;
-    int relativeY;
-    float absoluteX;
-    float absoluteY;
-    float value;
-    float alphaX;
-    float alphaY;
-    float alphaZ;
-};
-
-
 kernel void siftInterpolate(
-    device OutputKeypoint * outputKeypoints [[buffer(0)]],
-    device InputKeypoint * inputKeypoints [[buffer(1)]],
-    device InterpolateParameters & parameters [[buffer(2)]],
+    device SIFTInterpolateOutputKeypoint * outputKeypoints [[buffer(0)]],
+    device SIFTInterpolateInputKeypoint * inputKeypoints [[buffer(1)]],
+    device SIFTInterpolateParameters & parameters [[buffer(2)]],
     texture2d_array<float, access::read> dogTextures [[texture(0)]],
     ushort gid [[thread_position_in_grid]]
 ) {
-    InputKeypoint input = inputKeypoints[gid];
-    OutputKeypoint output;
+    SIFTInterpolateInputKeypoint input = inputKeypoints[gid];
+    SIFTInterpolateOutputKeypoint output;
     output.converged = 0;
     outputKeypoints[gid] = output;
     
+    float value = dogTextures.read(ushort2(input.x, input.y), input.scale).r;
+        
     // Discard keypoint that is way below the brightness threshold
-    if (abs(input.value) <= parameters.dogThreshold * 0.8) {
+    if (abs(value) <= parameters.dogThreshold * 0.8) {
         return;
     }
-        
+
     const int maxIterations = parameters.maxIterations;
     const float maxOffset = parameters.maxOffset;
     const int width = parameters.width;
@@ -304,9 +273,9 @@ kernel void siftInterpolate(
         return;
     }
 
-    float newValue = interpolateContrast(dogTextures, x, y, scale, alpha);
+    value = interpolateContrast(dogTextures, x, y, scale, alpha);
         
-    if (abs(newValue) <= parameters.dogThreshold) {
+    if (abs(value) <= parameters.dogThreshold) {
         return;
     }
         
@@ -314,9 +283,6 @@ kernel void siftInterpolate(
     if (isOnEdge(dogTextures, x, y, scale, parameters.edgeThreshold)) {
         return;
     }
-        
-//    float sigma = parameters.baseSigma * pow(parameters.sigmaRatio, alpha.z);
-
 
     // Return keypoint
     output.converged = 1;
@@ -326,19 +292,9 @@ kernel void siftInterpolate(
     output.relativeY = y;
     output.absoluteX = ((float)x + alpha.x) * delta;
     output.absoluteY = ((float)y + alpha.y) * delta;
-    output.value = newValue;
+    output.value = value;
     output.alphaX = alpha.x;
     output.alphaY = alpha.y;
     output.alphaZ = alpha.z;
     outputKeypoints[gid] = output;
-    
-//    output.converged = 1;
-//    output.scale = scale;
-//    output.subScale = 0;
-//    output.relativeX = coordinate.x;
-//    output.relativeY = coordinate.y;
-//    output.absoluteX = coordinate.x * delta;
-//    output.absoluteY = coordinate.y * delta;
-//    output.value = gradientTextures.read(ushort2(coordinate.x, coordinate.y), scale).r;
-//    outputKeypoints[gid] = output;
 }

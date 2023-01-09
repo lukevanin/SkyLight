@@ -234,11 +234,4 @@ kernel void siftDescriptors(
     result.theta = input.theta;
     
     results[gid] = result;
-
-//    return SIFTDescriptor(
-//        keypoint: keypoint,
-//        theta: theta,
-//        rawFeatures: f2,
-//        features: f3
-//    )
 }

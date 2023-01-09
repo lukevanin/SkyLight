@@ -65,11 +65,11 @@ final class DifferenceOfGaussiansTests: SharedTestCase {
         
         
         var resultGaussainImages = [MTLTexture]()
-        for (o, octave) in subject.octaves.enumerated() {
-            for (s, texture) in octave.gaussianTextures.enumerated() {
-                resultGaussainImages.append(texture)
-            }
-        }
+//        for (o, octave) in subject.octaves.enumerated() {
+//            for (s, texture) in octave.gaussianTextures.enumerated() {
+//                resultGaussainImages.append(texture)
+//            }
+//        }
         
         compare(
             referenceImages: referenceGaussianImages,

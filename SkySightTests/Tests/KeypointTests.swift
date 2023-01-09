@@ -62,26 +62,26 @@ final class KeypointTests: SharedTestCase {
             )
         )
 
-        for (scale, octave) in subject.octaves.enumerated() {
-
-            for (index, texture) in octave.keypointTextures.enumerated() {
-                
-                attachImage(
-                    name: "keypoints(\(scale), \(index))",
-                    uiImage: ciContext.makeUIImage(
-                        ciImage: CIImage(
-                            mtlTexture: texture,
-                            options: [
-                                .colorSpace: CGColorSpace(name: CGColorSpace.genericGrayGamma2_2)!
-                            ]
-                        )!
-                            .oriented(.downMirrored)
-                            .smearColor()
-                    )
-                )
-            }
-
-        }
+//        for (scale, octave) in subject.octaves.enumerated() {
+//
+//            for (index, texture) in octave.keypointTextures.enumerated() {
+//                
+//                attachImage(
+//                    name: "keypoints(\(scale), \(index))",
+//                    uiImage: ciContext.makeUIImage(
+//                        ciImage: CIImage(
+//                            mtlTexture: texture,
+//                            options: [
+//                                .colorSpace: CGColorSpace(name: CGColorSpace.genericGrayGamma2_2)!
+//                            ]
+//                        )!
+//                            .oriented(.downMirrored)
+//                            .smearColor()
+//                    )
+//                )
+//            }
+//
+//        }
         
     }
     

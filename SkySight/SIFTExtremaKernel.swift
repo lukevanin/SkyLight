@@ -17,6 +17,7 @@ final class SIFTExtremaFunction {
         let library = device.makeDefaultLibrary()!
 
         let function = library.makeFunction(name: "siftExtrema")!
+        function.label = "siftExtremaFunction"
 
         self.computePipelineState = try! device.makeComputePipelineState(
             function: function
@@ -25,47 +26,38 @@ final class SIFTExtremaFunction {
     
     func encode(
         commandBuffer: MTLCommandBuffer,
-        inputTexture0: MTLTexture,
-        inputTexture1: MTLTexture,
-        inputTexture2: MTLTexture,
+        inputTexture: MTLTexture,
         outputTexture: MTLTexture
     ) {
-        precondition(inputTexture0.width == outputTexture.width)
-        precondition(inputTexture0.height == outputTexture.height)
-        precondition(inputTexture1.width == outputTexture.width)
-        precondition(inputTexture1.height == outputTexture.height)
-        precondition(inputTexture2.width == outputTexture.width)
-        precondition(inputTexture2.height == outputTexture.height)
-        precondition(inputTexture0.pixelFormat == .r32Float)
-        precondition(inputTexture1.pixelFormat == .r32Float)
-        precondition(inputTexture2.pixelFormat == .r32Float)
-        precondition(outputTexture.pixelFormat == .rg32Float)
-
+        precondition(inputTexture.width == outputTexture.width)
+        precondition(inputTexture.height == outputTexture.height)
+        precondition(inputTexture.arrayLength == outputTexture.arrayLength + 2)
+        precondition(inputTexture.textureType == .type2DArray)
+        precondition(inputTexture.pixelFormat == .r32Float)
+        precondition(outputTexture.textureType == .type2DArray)
+        precondition(outputTexture.pixelFormat == .r32Float)
+        
         let encoder = commandBuffer.makeComputeCommandEncoder()!
+        encoder.label = "siftExtremaFunctionComputeEncoder"
         encoder.setComputePipelineState(computePipelineState)
         encoder.setTexture(outputTexture, index: 0)
-        encoder.setTexture(inputTexture0, index: 1)
-        encoder.setTexture(inputTexture1, index: 2)
-        encoder.setTexture(inputTexture2, index: 3)
+        encoder.setTexture(inputTexture, index: 1)
 
-        // Set the compute kernel's threadgroup size of 16x16
-        // TODO: Ger threadgroup size from command buffer.
-        let threadgroupSize = MTLSize(
-            width: 16,
-            height: 16,
-            depth: 1
+        let total = computePipelineState.maxTotalThreadsPerThreadgroup
+        let threadsPerThreadgroup = MTLSize(
+            width: 8,
+            height: 8,
+            depth: 8
         )
-        // Calculate the number of rows and columns of threadgroups given the width of the input image
-        // Ensure that you cover the entire image (or more) so you process every pixel
-        // Since we're only dealing with a 2D data set, set depth to 1
-        let threadgroupCount = MTLSize(
-            width: (outputTexture.width + threadgroupSize.width - 1) / threadgroupSize.width,
-            height: (outputTexture.height + threadgroupSize.height - 1) / threadgroupSize.height,
-            depth: 1
+        let threadsPerGrid = MTLSize(
+            width: outputTexture.width - 2,
+            height: outputTexture.height - 2,
+            depth: outputTexture.arrayLength
         )
-        encoder.dispatchThreadgroups(
-            threadgroupCount,
-            threadsPerThreadgroup: threadgroupSize
+                
+        encoder.dispatchThreads(
+            threadsPerGrid,
+            threadsPerThreadgroup: threadsPerThreadgroup
         )
         encoder.endEncoding()
     }

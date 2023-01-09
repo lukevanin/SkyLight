@@ -14,11 +14,14 @@ final class Image<T> {
     let size: IntegralSize
     
     private let texture: MTLTexture
+    private let slice: Int
     private let buffer: UnsafeMutableBufferPointer<T>
     
-    init(texture: MTLTexture, defaultValue: T) {
+    init(texture: MTLTexture, label: String, slice: Int, defaultValue: T) {
         self.size = IntegralSize(width: texture.width, height: texture.height)
+        self.slice = slice
         self.texture = texture
+        self.texture.label = label
         self.buffer = {
             let capacity = texture.width * texture.height
             let buffer = UnsafeMutableBufferPointer<T>.allocate(
@@ -48,12 +51,15 @@ final class Image<T> {
         )
         let bytesPerComponent = MemoryLayout<T>.stride
         let bytesPerRow = bytesPerComponent * texture.width
+        let bytesPerImage = bytesPerRow * texture.height
         let pointer = UnsafeMutableRawPointer(buffer.baseAddress)!
         texture.getBytes(
             pointer,
             bytesPerRow: bytesPerRow,
+            bytesPerImage: bytesPerImage,
             from: region,
-            mipmapLevel: 0
+            mipmapLevel: 0,
+            slice: slice
         )
     }
     

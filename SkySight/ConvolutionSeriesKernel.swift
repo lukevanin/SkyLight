@@ -9,52 +9,71 @@ import Foundation
 import MetalPerformanceShaders
 
 
-final class NearestNeighborDownScaleKernel {
+final class ConvolutionSeriesKernel {
+    
+    enum Axis {
+        case x
+        case y
+    }
     
     private let computePipelineState: MTLComputePipelineState
     private let parametersBuffer: MTLBuffer
  
-    init(device: MTLDevice) {
+    init(device: MTLDevice, axis: Axis, inputDepth: Int, outputDepth: Int, weights: [Float]) {
         let library = device.makeDefaultLibrary()!
 
-        let function = library.makeFunction(name: "nearestNeighborDownScale")!
+        let function: MTLFunction
+        
+        switch axis {
+        case .x:
+            function = library.makeFunction(name: "convolutionSeriesX")!
+            function.label = "convolutionSeriesXFunction"
+        case .y:
+            function = library.makeFunction(name: "convolutionSeriesY")!
+            function.label = "convolutionSeriesYFunction"
+        }
 
         self.computePipelineState = try! device.makeComputePipelineState(
             function: function
         )
+        
+        var weights = weights
+        var parameters = ConvolutionParameters()
+        parameters.inputDepth = Int32(inputDepth)
+        parameters.outputDepth = Int32(outputDepth)
+        parameters.count = Int32(weights.count)
+        withUnsafeMutablePointer(to: &parameters.weights) { p in
+            let p = UnsafeMutableRawPointer(p).assumingMemoryBound(to: Float.self)
+            p.assign(from: &weights, count: weights.count)
+        }
         self.parametersBuffer = device.makeBuffer(
-            length: MemoryLayout<NearestNeighborScaleParameters>.stride
+            bytes: &parameters,
+            length: MemoryLayout<ConvolutionParameters>.stride
         )!
     }
     
     func encode(
         commandBuffer: MTLCommandBuffer,
         inputTexture: MTLTexture,
-        inputSlice: Int,
-        outputTexture: MTLTexture,
-        outputSlice: Int
+        outputTexture: MTLTexture
     ) {
-        precondition((inputTexture.width / 2) == outputTexture.width)
-        precondition((inputTexture.height / 2) == outputTexture.height)
+        precondition(inputTexture.width == outputTexture.width)
+        precondition(inputTexture.height == outputTexture.height)
+        // precondition(inputTexture.arrayLength == outputTexture.arrayLength)
         precondition(inputTexture.textureType == .type2DArray)
         precondition(inputTexture.pixelFormat == .r32Float)
         precondition(outputTexture.textureType == .type2DArray)
         precondition(outputTexture.pixelFormat == .r32Float)
-        
-        let p = parametersBuffer.contents().assumingMemoryBound(to: NearestNeighborScaleParameters.self)
-        p[0] = NearestNeighborScaleParameters(
-            inputSlice: Int32(inputSlice),
-            outputSlice: Int32(outputSlice)
-        )
 
         let encoder = commandBuffer.makeComputeCommandEncoder()!
+        encoder.label = "convolutionSeriesComputeEncoder"
         encoder.setComputePipelineState(computePipelineState)
         encoder.setTexture(outputTexture, index: 0)
         encoder.setTexture(inputTexture, index: 1)
         encoder.setBuffer(parametersBuffer, offset: 0, index: 0)
 
         // Set the compute kernel's threadgroup size of 16x16
-        // TODO: Ger threadgroup size from command buffer.
+        // TODO: Get threadgroup size from command buffer.
         let threadgroupSize = MTLSize(
             width: 16,
             height: 16,
@@ -72,6 +91,7 @@ final class NearestNeighborDownScaleKernel {
             threadgroupCount,
             threadsPerThreadgroup: threadgroupSize
         )
+//        encoder.dispatchThreads(<#T##threadsPerGrid: MTLSize##MTLSize#>, threadsPerThreadgroup: <#T##MTLSize#>)
         encoder.endEncoding()
     }
 }

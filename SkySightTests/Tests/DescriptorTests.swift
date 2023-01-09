@@ -31,8 +31,6 @@ final class DescriptorTests: SharedTestCase {
         print("loading reference desriptors")
         let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
         
-//        matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
-
         print("rendering image")
         let referenceImage: CGImage = {
             let originalImage = CIImage(

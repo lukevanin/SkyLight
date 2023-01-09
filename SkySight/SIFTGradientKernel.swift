@@ -32,7 +32,10 @@ final class SIFTGradientKernel {
     ) {
         precondition(inputTexture.width == outputTexture.width)
         precondition(inputTexture.height == outputTexture.height)
+        precondition(inputTexture.arrayLength == outputTexture.arrayLength)
+        precondition(inputTexture.textureType == .type2DArray)
         precondition(inputTexture.pixelFormat == .r32Float)
+        precondition(outputTexture.textureType == .type2DArray)
         precondition(outputTexture.pixelFormat == .rg32Float)
 
         let encoder = commandBuffer.makeComputeCommandEncoder()!
@@ -43,9 +46,9 @@ final class SIFTGradientKernel {
         // Set the compute kernel's threadgroup size of 16x16
         // TODO: Get threadgroup size from command buffer.
         let threadgroupSize = MTLSize(
-            width: 16,
-            height: 16,
-            depth: 1
+            width: 8,
+            height: 8,
+            depth: 8
         )
         // Calculate the number of rows and columns of threadgroups given the width of the input image
         // Ensure that you cover the entire image (or more) so you process every pixel
@@ -53,7 +56,7 @@ final class SIFTGradientKernel {
         let threadgroupCount = MTLSize(
             width: (outputTexture.width + threadgroupSize.width - 1) / threadgroupSize.width,
             height: (outputTexture.height + threadgroupSize.height - 1) / threadgroupSize.height,
-            depth: 1
+            depth: (outputTexture.arrayLength + threadgroupSize.depth - 1) / threadgroupSize.depth
         )
         encoder.dispatchThreadgroups(
             threadgroupCount,

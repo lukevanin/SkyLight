@@ -42,34 +42,24 @@ constant int3 neighborOffsets[] = {
 
 
 kernel void siftExtrema(
-    texture2d<float, access::write> outputTexture [[texture(0)]],
-    texture2d<float, access::read> inputTexture0 [[texture(1)]],
-    texture2d<float, access::read> inputTexture1 [[texture(2)]],
-    texture2d<float, access::read> inputTexture2 [[texture(3)]],
-    ushort2 gid [[thread_position_in_grid]]
+    texture2d_array<float, access::write> outputTexture [[texture(0)]],
+    texture2d_array<float, access::read> inputTexture [[texture(1)]],
+    ushort3 gid [[thread_position_in_grid]]
 ) {
-    const texture2d<float, access::read> w[] = {
-        inputTexture0,
-        inputTexture1,
-        inputTexture2,
-    };
+    // Thread group runs [0...output.width - 2][0...output.height - 2]
     
-    int s = 1;
-//    int m = gid.x;
-//    int n = gid.y;
-    const float value = w[s].read(gid).r;
-    const int2 center = int2(gid);
+    const float value = inputTexture.read(gid.xy + 1, gid.z + 1).r;
+    const int2 center = int2(gid.xy);
     
-    float minValue = 10000;
+    float minValue = +1000;
     float maxValue = -1000;
 
     for (int i = 0; i < 26; i++) {
         int3 neighborOffset = neighborOffsets[i];
-        ushort textureIndex = neighborOffset.x;
-        texture2d<float, access::read> texture = w[textureIndex];
+        ushort textureIndex = gid.z + neighborOffset.x;
         int2 neighborDelta = int2(neighborOffset.yz);
         ushort2 coordinate = ushort2(center + neighborDelta);
-        float neighborValue = texture.read(coordinate).r;
+        float neighborValue = inputTexture.read(coordinate + 1, textureIndex).r;
 
         minValue = min(minValue, neighborValue);
         maxValue = max(maxValue, neighborValue);
@@ -81,6 +71,6 @@ kernel void siftExtrema(
         result = 1;
     }
 
-    outputTexture.write(float4(result, value, 0, 1), gid);
+    outputTexture.write(float4(result, 0, 0, 1), gid.xy + 1, gid.z);
 }
 

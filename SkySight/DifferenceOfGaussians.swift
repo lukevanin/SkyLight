@@ -55,14 +55,11 @@ final class DifferenceOfGaussians {
         let sigmas: [Float]
         let size: IntegralSize
         
-        let gaussianTextures: [MTLTexture]
-        let differenceTextures: [MTLTexture]
-        
-        let gaussianImages: [Image<Float>]
-        let differenceImages: [Image<Float>]
+        let gaussianTextures: MTLTexture
+        let differenceTextures: MTLTexture
         
         private let scaleFunction: NearestNeighborDownScaleKernel
-        private let gaussianBlurFunctions: [GaussianKernel]
+        private let gaussianBlurFunctions: GaussianSeriesKernel
         private let subtractFunction: SubtractKernel
         
         init(
@@ -78,18 +75,6 @@ final class DifferenceOfGaussians {
 
             let numberOfGaussians = numberOfScales + 3
             let numberOfDifferences = numberOfScales + 2
-            
-            let textureDescriptor: MTLTextureDescriptor = {
-                let descriptor = MTLTextureDescriptor.texture2DDescriptor(
-                    pixelFormat: .r32Float,
-                    width: size.width,
-                    height: size.height,
-                    mipmapped: false
-                )
-                descriptor.usage = [.shaderRead, .shaderWrite]
-                descriptor.storageMode = .shared
-                return descriptor
-            }()
 
             self.o = o
             self.delta = delta
@@ -100,7 +85,7 @@ final class DifferenceOfGaussians {
             self.subtractFunction = subtractFunction
 
             self.gaussianBlurFunctions = {
-                var functions = [GaussianKernel]()
+                var output = [Float]()
                 for s in 1 ..< numberOfGaussians {
                     let sa = sigmas[s - 1]
                     let sb = sigmas[s]
@@ -109,61 +94,61 @@ final class DifferenceOfGaussians {
                     print(
                         "𝜌[\(s - 1) → \(s)]", "=", rho
                     )
-                    let function = GaussianKernel(device: device, sigma: rho)
-                    functions.append(function)
+                    output.append(rho)
                 }
-                return functions
+                let function = GaussianSeriesKernel(
+                    device: device,
+                    sigmas: output,
+                    textureSize: size,
+                    arrayLength: numberOfGaussians
+                )
+                return function
             }()
             
             let gaussianTextures = {
-                var textures = [MTLTexture]()
-                for _ in 0 ..< numberOfGaussians {
-                    let texture = device.makeTexture(descriptor: textureDescriptor)!
-                    textures.append(texture)
-                }
-                return textures
+                let textureDescriptor: MTLTextureDescriptor = {
+                    let descriptor = MTLTextureDescriptor()
+                    descriptor.textureType = .type2DArray
+                    descriptor.pixelFormat = .r32Float
+                    descriptor.width = size.width
+                    descriptor.height = size.height
+                    descriptor.arrayLength = numberOfGaussians
+                    descriptor.usage = [.shaderRead, .shaderWrite]
+                    descriptor.storageMode = .shared
+                    return descriptor
+                }()
+                let texture = device.makeTexture(descriptor: textureDescriptor)!
+                texture.label = "gaussianTexture\(size.width)x\(size.height)"
+                return texture
             }()
             self.gaussianTextures = gaussianTextures
 
             let differenceTextures = {
-                var textures = [MTLTexture]()
-                for _ in 0 ..< numberOfDifferences {
-                    let texture = device.makeTexture(descriptor: textureDescriptor)!
-                    textures.append(texture)
-                }
-                return textures
+                let textureDescriptor: MTLTextureDescriptor = {
+                    let descriptor = MTLTextureDescriptor()
+                    descriptor.textureType = .type2DArray
+                    descriptor.pixelFormat = .r32Float
+                    descriptor.width = size.width
+                    descriptor.height = size.height
+                    descriptor.arrayLength = numberOfDifferences
+                    descriptor.usage = [.shaderRead, .shaderWrite]
+                    descriptor.storageMode = .shared
+                    return descriptor
+                }()
+                let texture = device.makeTexture(descriptor: textureDescriptor)!
+                texture.label = "differenceTexture\(size.width)x\(size.height)"
+                return texture
             }()
             self.differenceTextures = differenceTextures
-            
-            self.differenceImages = {
-                var images = [Image<Float>]()
-                for i in 0 ..< differenceTextures.count {
-                    let texture = differenceTextures[i]
-                    let image = Image<Float>(texture: texture, defaultValue: 0)
-                    images.append(image)
-                }
-                return images
-            }()
-            
-            self.gaussianImages = {
-                var images = [Image<Float>]()
-                for i in 0 ..< gaussianTextures.count {
-                    let texture = gaussianTextures[i]
-                    let image = Image<Float>(texture: texture, defaultValue: 0)
-                    images.append(image)
-                }
-                return images
-            }()
         }
         
         func encode(commandBuffer: MTLCommandBuffer, inputTexture: MTLTexture) {
+            precondition(inputTexture.pixelFormat == .r32Float)
             encodeFirstGaussianTexture(
                 commandBuffer: commandBuffer,
                 inputTexture: inputTexture
             )
-            
             encodeOtherGaussianTextures(commandBuffer: commandBuffer)
-
             encodeDifferenceTextures(commandBuffer: commandBuffer)
         }
         
@@ -178,56 +163,54 @@ final class DifferenceOfGaussians {
                 height: inputTexture.height
             )
             let targetSize = IntegralSize(
-                width: gaussianTextures[0].width,
-                height: gaussianTextures[0].height
+                width: gaussianTextures.width,
+                height: gaussianTextures.height
             )
             if sourceSize.width == targetSize.width && sourceSize.height == targetSize.height {
                 logger.debug("Copy input texture from \(sourceSize.width)x\(sourceSize.height) to \(targetSize.width)x\(targetSize.height)")
+                precondition(inputTexture.textureType == .type2D)
                 let blitEncoder = commandBuffer.makeBlitCommandEncoder()!
-                blitEncoder.copy(from: inputTexture, to: gaussianTextures[0])
+//                blitEncoder.copy(from: inputTexture, to: gaussianTextures[0])
+                blitEncoder.copy(
+                    from: inputTexture,
+                    sourceSlice: 0,
+                    sourceLevel: 0,
+                    to: gaussianTextures,
+                    destinationSlice: 0,
+                    destinationLevel: 0,
+                    sliceCount: 1,
+                    levelCount: 1
+                )
                 blitEncoder.endEncoding()
             }
             else {
                 logger.debug("Scale input texture from \(sourceSize.width)x\(sourceSize.height) to \(targetSize.width)x\(targetSize.height)")
+                precondition(inputTexture.textureType == .type2DArray)
                 scaleFunction.encode(
                     commandBuffer: commandBuffer,
                     inputTexture: inputTexture,
-                    outputTexture: gaussianTextures[0]
+                    inputSlice: numberOfScales,
+                    outputTexture: gaussianTextures,
+                    outputSlice: 0
                 )
             }
         }
         
         private func encodeOtherGaussianTextures(commandBuffer: MTLCommandBuffer) {
-            for s in 1 ..< gaussianTextures.count {
-                logger.info("Encoding gaussian v(\(self.o), \(s)) = G𝜌[\(s - 1) → \(s)] v(\(self.o), \(s - 1))")
-                gaussianBlurFunctions[s - 1].encode(
-                    commandBuffer: commandBuffer,
-                    inputTexture: gaussianTextures[s - 1],
-                    outputTexture: gaussianTextures[s]
-                )
-            }
+            // logger.info("Encoding gaussian v(\(self.o), \(s)) = G𝜌[\(s - 1) → \(s)] v(\(self.o), \(s - 1))")
+            gaussianBlurFunctions.encode(
+                commandBuffer: commandBuffer,
+                texture: gaussianTextures
+            )
         }
         
         private func encodeDifferenceTextures(commandBuffer: MTLCommandBuffer) {
-            for i in 0 ..< differenceTextures.count {
-                logger.info("Encoding difference w(\(self.o), \(i))")
-                subtractFunction.encode(
-                    commandBuffer: commandBuffer,
-                    inputTexture0: gaussianTextures[i + 1],
-                    inputTexture1: gaussianTextures[i],
-                    outputTexture: differenceTextures[i]
-                )
-            }
-        }
-        
-        func updateImagesFromTextures() {
-            for image in differenceImages {
-                image.updateFromTexture()
-            }
-            
-            for image in gaussianImages {
-                image.updateFromTexture()
-            }
+//                logger.info("Encoding difference w(\(self.o), \(i))")
+            subtractFunction.encode(
+                commandBuffer: commandBuffer,
+                inputTexture: gaussianTextures,
+                outputTexture: differenceTextures
+            )
         }
     }
     
@@ -412,7 +395,8 @@ final class DifferenceOfGaussians {
             logger.debug("Encode octave \(i)")
             octaves[i].encode(
                 commandBuffer: commandBuffer,
-                inputTexture: octaves[i - 1].gaussianTextures[configuration.numberOfScalesPerOctave]
+//                inputTexture: octaves[i - 1].gaussianTextures[configuration.numberOfScalesPerOctave]
+                inputTexture: octaves[i - 1].gaussianTextures
             )
         }
     }

@@ -182,7 +182,7 @@ final class SIFTViewController: UIViewController {
         let startTime = CFAbsoluteTimeGetCurrent()
         print("Finding keypoints")
         let keypoints = sift.getKeypoints(texture)
-        print("Found \(keypoints.count) keypoints")
+        print("Found \(keypoints.joined().count) keypoints")
         print("Finding descriptors")
         let descriptors = sift.getDescriptors(keypointOctaves: keypoints)
         print("Found \(descriptors.count) descriptors")

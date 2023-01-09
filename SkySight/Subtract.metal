@@ -10,15 +10,14 @@ using namespace metal;
 
 
 kernel void subtract(
-    texture2d<float, access::write> outputTexture [[texture(0)]],
-    texture2d<float, access::read> inputTexture0 [[texture(1)]],
-    texture2d<float, access::read> inputTexture1 [[texture(2)]],
-    ushort2 gid [[thread_position_in_grid]]
+    texture2d_array<float, access::write> outputTexture [[texture(0)]],
+    texture2d_array<float, access::read> inputTexture [[texture(1)]],
+    ushort3 gid [[thread_position_in_grid]]
 ) {
-    float4 a = inputTexture0.read(gid);
-    float4 b = inputTexture1.read(gid);
+    float4 a = inputTexture.read(gid.xy, gid.z + 1);
+    float4 b = inputTexture.read(gid.xy, gid.z);
     float4 c = a - b;
-    outputTexture.write(c, gid);
+    outputTexture.write(c, gid.xy, gid.z);
 }
 
 

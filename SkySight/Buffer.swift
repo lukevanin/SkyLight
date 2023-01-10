@@ -11,22 +11,31 @@ import Metal
 
 final class Buffer<T> {
 
+    private(set) var count: Int
     let data: MTLBuffer
     let pointer: UnsafeMutablePointer<T>
-    let numberOfBytes: Int
-    let count: Int
+    let capacity: Int
 
-    init(device: MTLDevice, label: String, count: Int) {
-        self.count = count
-        self.numberOfBytes = MemoryLayout<T>.stride * count
-        self.data = device.makeBuffer(length: numberOfBytes, options: [.hazardTrackingModeTracked, .storageModeShared])!
+    init(device: MTLDevice, label: String, capacity: Int) {
+        self.capacity = capacity
+        let numberOfBytes = MemoryLayout<T>.stride * capacity
+        self.data = device.makeBuffer(
+            length: numberOfBytes,
+            options: [.hazardTrackingModeTracked, .storageModeShared]
+        )!
         self.data.label = label
-        self.pointer = data.contents().bindMemory(to: T.self, capacity: count)
+        self.pointer = data.contents().bindMemory(to: T.self, capacity: capacity)
+        self.count = 0
     }
     
-//    deinit {
-//        data.setPurgeableState(.empty)
-//    }
+    deinit {
+        data.setPurgeableState(.empty)
+    }
+    
+    func allocate(_ count: Int) {
+        precondition(count >= 0 && count <= capacity)
+        self.count = count
+    }
     
     subscript(i: Int) -> T {
         get {

@@ -32,6 +32,7 @@
 		FC831D00296B540400C978BA /* ConvolutionSeries.metal in Sources */ = {isa = PBXBuildFile; fileRef = FC831CFF296B540400C978BA /* ConvolutionSeries.metal */; };
 		FC831D05296DBAC500C978BA /* SIFTKeypointOrientations.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */; };
 		FC831D07296DE8FB00C978BA /* MetalExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D06296DE8FB00C978BA /* MetalExtensions.swift */; };
+		FC831D09296DFA4F00C978BA /* Performance.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D08296DFA4F00C978BA /* Performance.swift */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
@@ -175,6 +176,7 @@
 		FC831D03296C70D600C978BA /* SIFTInterpolate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SIFTInterpolate.h; sourceTree = "<group>"; };
 		FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTKeypointOrientations.swift; sourceTree = "<group>"; };
 		FC831D06296DE8FB00C978BA /* MetalExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalExtensions.swift; sourceTree = "<group>"; };
+		FC831D08296DFA4F00C978BA /* Performance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Performance.swift; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
@@ -513,6 +515,7 @@
 				FCEE19FE294DB8E600FEC893 /* Quad.swift */,
 				FCEBCDB2294E7D96002BB8EF /* Math.swift */,
 				FC831D06296DE8FB00C978BA /* MetalExtensions.swift */,
+				FC831D08296DFA4F00C978BA /* Performance.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -718,6 +721,7 @@
 				FC831D00296B540400C978BA /* ConvolutionSeries.metal in Sources */,
 				FC831CED2969C33300C978BA /* Convolution.metal in Sources */,
 				FC831CE52969C2BC00C978BA /* NearestNeighborDownScale.metal in Sources */,
+				FC831D09296DFA4F00C978BA /* Performance.swift in Sources */,
 				FC831CE12969C29100C978BA /* ConvertSRGBToGrayscale.metal in Sources */,
 				FCB0DB80296377F20047FC1C /* SIFTInterpolateKernel.swift in Sources */,
 				FCEBCDBB294E8669002BB8EF /* SIFT.swift in Sources */,

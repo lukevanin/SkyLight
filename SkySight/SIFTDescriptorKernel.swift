@@ -35,7 +35,6 @@ final class SIFTDescriptorKernel {
         precondition(gradientTextures.textureType == .type2DArray)
         precondition(gradientTextures.pixelFormat == .rg32Float)
 
-        
         let encoder = commandBuffer.makeComputeCommandEncoder()!
         encoder.setComputePipelineState(computePipelineState)
         encoder.setBuffer(outputDescriptors.data, offset: 0, index: 0)

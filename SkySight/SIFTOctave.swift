@@ -18,6 +18,11 @@ struct SIFTGradient {
 }
 
 
+private let maximumNumberOfKeypoints = 2048
+
+private let maximumNumberOfDescriptors = 2048
+
+
 final class SIFTOctave {
     
     let scale: DifferenceOfGaussians.Octave
@@ -33,6 +38,18 @@ final class SIFTOctave {
     private let interpolateFunction: SIFTInterpolateKernel
     private let orientationFunction: SIFTOrientationKernel
     private let descriptorFunction: SIFTDescriptorKernel
+
+    private let orientationInputBuffer: Buffer<SIFTOrientationKeypoint>
+    private let orientationOutputBuffer: Buffer<SIFTOrientationResult>
+    private let orientationParametersBuffer: Buffer<SIFTOrientationParameters>
+    
+    private let descriptorInputBuffer: Buffer<SIFTDescriptorInput>
+    private let descriptorOutputBuffer: Buffer<SIFTDescriptorResult>
+    private let descriptorParametersBuffer: Buffer<SIFTDescriptorParameters>
+
+    private let interpolateInputBuffer: Buffer<SIFTInterpolateInputKeypoint>
+    private let interpolateOutputBuffer: Buffer<SIFTInterpolateOutputKeypoint>
+    private let interpolateParametersBuffer: Buffer<SIFTInterpolateParameters>
 
     init(
         device: MTLDevice,
@@ -83,7 +100,6 @@ final class SIFTOctave {
         }()
         self.gradientTextures = gradientTextures
         
-        
         self.interpolateFunction = SIFTInterpolateKernel(
             device: device
         )
@@ -94,6 +110,54 @@ final class SIFTOctave {
 
         self.descriptorFunction = SIFTDescriptorKernel(
             device: device
+        )
+        
+        self.interpolateInputBuffer = Buffer<SIFTInterpolateInputKeypoint>(
+            device: device,
+            label: "siftInterpiolationInputBuffer",
+            capacity: maximumNumberOfKeypoints
+        )
+        self.interpolateOutputBuffer = Buffer<SIFTInterpolateOutputKeypoint>(
+            device: device,
+            label: "siftInterpolationOutputBuffer",
+            capacity: maximumNumberOfKeypoints
+        )
+        self.interpolateParametersBuffer = Buffer<SIFTInterpolateParameters>(
+            device: device,
+            label: "siftInterpolationParametersBuffer",
+            capacity: 1
+        )
+
+        self.orientationInputBuffer = Buffer<SIFTOrientationKeypoint>(
+            device: device,
+            label: "siftOrientationInputBuffer",
+            capacity: maximumNumberOfKeypoints
+        )
+        self.orientationOutputBuffer = Buffer<SIFTOrientationResult>(
+            device: device,
+            label: "siftOrientationOutputBuffer",
+            capacity: maximumNumberOfKeypoints
+        )
+        self.orientationParametersBuffer = Buffer<SIFTOrientationParameters>(
+            device: device,
+            label: "siftOrientationParametersBuffer",
+            capacity: 1
+        )
+
+        self.descriptorInputBuffer = Buffer<SIFTDescriptorInput>(
+            device: device,
+            label: "siftDescriptorsInputBuffer",
+            capacity: maximumNumberOfDescriptors
+        )
+        self.descriptorOutputBuffer = Buffer<SIFTDescriptorResult>(
+            device: device,
+            label: "siftDescriptorsOutputBuffer",
+            capacity: maximumNumberOfDescriptors
+        )
+        self.descriptorParametersBuffer = Buffer<SIFTDescriptorParameters>(
+            device: device,
+            label: "siftDescriptorsParametersBuffer",
+            capacity: 1
         )
 
         self.keypointImages = {
@@ -187,23 +251,11 @@ final class SIFTOctave {
         print("interpolateKeypoints")
         let sigmaRatio = scale.sigmas[1] / scale.sigmas[0]
         
-        let inputBuffer = Buffer<SIFTInterpolateInputKeypoint>(
-            device: device,
-            label: "siftInterpiolationInputBuffer",
-            count: keypoints.count
-        )
-        let outputBuffer = Buffer<SIFTInterpolateOutputKeypoint>(
-            device: device,
-            label: "siftInterpolationOutputBuffer",
-            count: keypoints.count
-        )
-        let parametersBuffer = Buffer<SIFTInterpolateParameters>(
-            device: device,
-            label: "siftInterpolationParametersBuffer",
-            count: 1
-        )
+        interpolateInputBuffer.allocate(keypoints.count)
+        interpolateOutputBuffer.allocate(keypoints.count)
+        interpolateParametersBuffer.allocate(1)
         
-        parametersBuffer[0] = SIFTInterpolateParameters(
+        interpolateParametersBuffer[0] = SIFTInterpolateParameters(
             dogThreshold: 0.0133, // configuration.differenceOfGaussiansThreshold,
             maxIterations: 5, // Int32(configuration.maximumInterpolationIterations),
             maxOffset: 0.6,
@@ -217,7 +269,7 @@ final class SIFTOctave {
         // Copy keypoints to metal buffer
         for j in 0 ..< keypoints.count {
             let keypoint = keypoints[j]
-            inputBuffer[j] = SIFTInterpolateInputKeypoint(
+            interpolateInputBuffer[j] = SIFTInterpolateInputKeypoint(
                 x: Int32(keypoint.scaledCoordinate.x),
                 y: Int32(keypoint.scaledCoordinate.y),
                 scale: Int32(keypoint.scale)
@@ -236,10 +288,10 @@ final class SIFTOctave {
 
         interpolateFunction.encode(
             commandBuffer: commandBuffer,
-            parameters: parametersBuffer,
+            parameters: interpolateParametersBuffer,
             differenceTextures: scale.differenceTextures,
-            inputKeypoints: inputBuffer,
-            outputKeypoints: outputBuffer
+            inputKeypoints: interpolateInputBuffer,
+            outputKeypoints: interpolateOutputBuffer
         )
         
         commandBuffer.commit()
@@ -251,8 +303,8 @@ final class SIFTOctave {
 
         //
         var output = [SIFTKeypoint]()
-        for k in 0 ..< outputBuffer.count {
-            let p = outputBuffer[k]
+        for k in 0 ..< interpolateOutputBuffer.count {
+            let p = interpolateOutputBuffer[k]
             guard p.converged != 0 else {
 //                print("octave \(scale.o) keypoint \(k) not converged \(p.alphaX) \(p.alphaY) \(p.alphaZ)")
                 continue
@@ -281,28 +333,17 @@ final class SIFTOctave {
     
     func getKeypointOrientations(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint]) -> [SIFTKeypointOrientations] {
         print("getKeypointOrientations")
-        let inputBuffer = Buffer<SIFTOrientationKeypoint>(
-            device: device,
-            label: "siftOrientationInputBuffer",
-            count: keypoints.count
-        )
-        let outputBuffer = Buffer<SIFTOrientationResult>(
-            device: device,
-            label: "siftOrientationOutputBuffer",
-            count: keypoints.count
-        )
-        let parametersBuffer = Buffer<SIFTOrientationParameters>(
-            device: device,
-            label: "siftOrientationParametersBuffer",
-            count: 1
-        )
         
+        orientationInputBuffer.allocate(keypoints.count)
+        orientationOutputBuffer.allocate(keypoints.count)
+        orientationParametersBuffer.allocate(1)
+
         let parameters = SIFTOrientationParameters(
             delta: scale.delta,
             lambda: 1.5,
             orientationThreshold: 0.8
         )
-        parametersBuffer[0] = parameters
+        orientationParametersBuffer[0] = parameters
 
         let minX = Float(1)
         let minY = Float(1)
@@ -332,7 +373,7 @@ final class SIFTOctave {
                 continue
             }
 
-            inputBuffer[i] = SIFTOrientationKeypoint(
+            orientationInputBuffer[i] = SIFTOrientationKeypoint(
                 index: Int32(k),
                 absoluteX: Int32(keypoint.absoluteCoordinate.x),
                 absoluteY: Int32(keypoint.absoluteCoordinate.y),
@@ -350,10 +391,10 @@ final class SIFTOctave {
             
             orientationFunction.encode(
                 commandBuffer: commandBuffer,
-                parameters: parametersBuffer,
+                parameters: orientationParametersBuffer,
                 gradientTextures: gradientTextures,
-                inputKeypoints: inputBuffer,
-                outputKeypoints: outputBuffer
+                inputKeypoints: orientationInputBuffer,
+                outputKeypoints: orientationOutputBuffer
             )
             
             commandBuffer.commit()
@@ -365,7 +406,7 @@ final class SIFTOctave {
         //
         var output = [SIFTKeypointOrientations]()
         for k in 0 ..< totalKeypoints {
-            var result = outputBuffer[k]
+            var result = orientationOutputBuffer[k]
             let count = Int(result.count)
             var orientations = Array<Float>(repeating: 0, count: count)
             withUnsafePointer(to: &result.orientations) { p in
@@ -393,21 +434,9 @@ final class SIFTOctave {
             return []
         }
         
-        let inputBuffer = Buffer<SIFTDescriptorInput>(
-            device: device,
-            label: "siftDescriptorsInputBuffer",
-            count: descriptorCount
-        )
-        let outputBuffer = Buffer<SIFTDescriptorResult>(
-            device: device,
-            label: "siftDescriptorsOutputBuffer",
-            count: descriptorCount
-        )
-        let parametersBuffer = Buffer<SIFTDescriptorParameters>(
-            device: device,
-            label: "siftDescriptorsParametersBuffer",
-            count: 1
-        )
+        descriptorInputBuffer.allocate(descriptorCount)
+        descriptorOutputBuffer.allocate(descriptorCount)
+        descriptorParametersBuffer.allocate(1)
         
         let parameters = SIFTDescriptorParameters(
             delta: scale.delta,
@@ -415,7 +444,7 @@ final class SIFTOctave {
             width: Int32(scale.size.width),
             height: Int32(scale.size.height)
         )
-        parametersBuffer[0] = parameters
+        descriptorParametersBuffer[0] = parameters
 
 //        let minX = 1
 //        let minY = 1
@@ -428,7 +457,7 @@ final class SIFTOctave {
             let item = orientationOctave[k]
             let keypoint = item.keypoint
             for orientation in item.orientations {
-                inputBuffer[i] = SIFTDescriptorInput(
+                descriptorInputBuffer[i] = SIFTDescriptorInput(
                     keypoint: Int32(k),
                     absoluteX: Int32(keypoint.absoluteCoordinate.x),
                     absoluteY: Int32(keypoint.absoluteCoordinate.y),
@@ -471,10 +500,10 @@ final class SIFTOctave {
         
         descriptorFunction.encode(
             commandBuffer: commandBuffer,
-            parameters: parametersBuffer,
+            parameters: descriptorParametersBuffer,
             gradientTextures: gradientTextures,
-            inputKeypoints: inputBuffer,
-            outputDescriptors: outputBuffer
+            inputKeypoints: descriptorInputBuffer,
+            outputDescriptors: descriptorOutputBuffer
         )
         
         commandBuffer.commit()
@@ -487,7 +516,7 @@ final class SIFTOctave {
         let numberOfFeatures = 128
         var output = [SIFTDescriptor]()
         for k in 0 ..< descriptorCount {
-            var result = outputBuffer[k]
+            var result = descriptorOutputBuffer[k]
             let keypoint = orientationOctave[Int(result.keypoint)].keypoint
             let theta = result.theta
             var features = Array<Int>(repeating: 0, count: numberOfFeatures)

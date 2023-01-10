@@ -123,59 +123,49 @@ final class SIFT {
     }
     
     private func findKeypoints(inputTexture: MTLTexture) {
-        logger.info("findKeypoints")
-
-//        let captureDescriptor = MTLCaptureDescriptor()
-//        captureDescriptor.captureObject = commandQueue
-//        captureDescriptor.destination = .developerTools
-//        let captureManager = MTLCaptureManager.shared()
-//        try! captureManager.startCapture(with: captureDescriptor)
-
-        let commandBuffer = commandQueue.makeCommandBuffer()!
-        commandBuffer.label = "siftKeypointsCommandBuffer"
-        
-        dog.encode(
-            commandBuffer: commandBuffer,
-            originalTexture: inputTexture
-        )
-        
-        for octave in octaves {
-            octave.encode(
-                commandBuffer: commandBuffer
+        measure(name: "findKeypoints") {
+            let commandBuffer = commandQueue.makeCommandBuffer()!
+            commandBuffer.label = "siftKeypointsCommandBuffer"
+            
+            dog.encode(
+                commandBuffer: commandBuffer,
+                originalTexture: inputTexture
             )
+            
+            for octave in octaves {
+                octave.encode(
+                    commandBuffer: commandBuffer
+                )
+            }
+            
+            commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
         }
-        
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
-        
-//        captureManager.stopCapture()
-        
-        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
-        logger.info("findKeypoints: Command buffer \(String(format: "%0.3f", elapsedTime)) seconds")
     }
     
     private func getKeypointsFromOctaves() -> [[SIFTKeypoint]] {
-        // TODO: Sort keypoints by octave
         var output = [[SIFTKeypoint]]()
-        var count = 0
-        for octave in octaves {
-            octave.updateImagesFromTextures()
-            let keypoints = octave.getKeypoints()
-            output.append(keypoints)
-            count += keypoints.count
+        measure(name: "getKeypointsFromOctaves") {
+            for octave in octaves {
+                octave.updateImagesFromTextures()
+                let keypoints = octave.getKeypoints()
+                output.append(keypoints)
+            }
         }
-        logger.info("getKeypointsFromOctaves: Found \(count) keypoints")
+        logger.info("getKeypointsFromOctaves: Found \(output.joined().count) keypoints")
         return output
     }
     
     private func interpolateKeypoints(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTKeypoint]] {
         var output = [[SIFTKeypoint]]()
-        for o in 0 ..< keypointOctaves.count {
-            let keypoints = keypointOctaves[o]
-            output.append(octaves[o].interpolateKeypoints(
-                commandQueue: commandQueue,
-                keypoints: keypoints
-            ))
+        measure(name: "interpolateKeypoints") {
+            for o in 0 ..< keypointOctaves.count {
+                let keypoints = keypointOctaves[o]
+                output.append(octaves[o].interpolateKeypoints(
+                    commandQueue: commandQueue,
+                    keypoints: keypoints
+                ))
+            }
         }
         return output
     }
@@ -185,22 +175,31 @@ final class SIFT {
     
     func getDescriptors(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTDescriptor]] {
         precondition(keypointOctaves.count == octaves.count)
-        let orientationOctaves = zip(octaves, keypointOctaves).map { octave, keypoints in
-            return octave.getKeypointOrientations(
-                commandQueue: commandQueue,
-                keypoints: keypoints
-            )
+        
+        var orientationOctaves = [[SIFTKeypointOrientations]]()
+        measure(name: "getDescriptors(orientations)") {
+            for i in 0 ..< octaves.count {
+                let octave = octaves[i]
+                let keypoints = keypointOctaves[i]
+                let orientationOctave = octave.getKeypointOrientations(
+                    commandQueue: commandQueue,
+                    keypoints: keypoints
+                )
+                orientationOctaves.append(orientationOctave)
+            }
         }
         
         var output: [[SIFTDescriptor]] = []
-        for i in 0 ..< octaves.count {
-            let octave = octaves[i]
-            let orientationOctave = orientationOctaves[i]
-            let descriptors = octave.getDescriptors(
-                commandQueue: commandQueue,
-                orientationOctave: orientationOctave
-            )
-            output.append(descriptors)
+        measure(name: "getDescriptors(descriptors)") {
+            for i in 0 ..< octaves.count {
+                let octave = octaves[i]
+                let orientationOctave = orientationOctaves[i]
+                let descriptors = octave.getDescriptors(
+                    commandQueue: commandQueue,
+                    orientationOctave: orientationOctave
+                )
+                output.append(descriptors)
+            }
         }
 //        orientationOctaves.map { orientations in
 //            var output = [SIFTDescriptor]()

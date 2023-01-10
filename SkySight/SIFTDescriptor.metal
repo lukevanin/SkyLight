@@ -205,7 +205,7 @@ kernel void siftDescriptors(
             while (orientation < 0) {
                 orientation += tau;
             }
-            while (orientation > tau) {
+            while (orientation >= tau) {
                 orientation -= tau;
             }
 

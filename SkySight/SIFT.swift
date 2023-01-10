@@ -185,17 +185,40 @@ final class SIFT {
     
     func getDescriptors(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTDescriptor]] {
         precondition(keypointOctaves.count == octaves.count)
-        let output = zip(octaves, keypointOctaves).map { octave, keypoints in
-            let orientations = octave.getKeypointOrientations(
+        let orientationOctaves = zip(octaves, keypointOctaves).map { octave, keypoints in
+            return octave.getKeypointOrientations(
                 commandQueue: commandQueue,
                 keypoints: keypoints
             )
-            return octave.getDescriptors(
-                commandQueue: commandQueue,
-                keypoints: keypoints,
-                orientations: orientations
-            )
         }
+        
+        var output: [[SIFTDescriptor]] = []
+        for i in 0 ..< octaves.count {
+            let octave = octaves[i]
+            let orientationOctave = orientationOctaves[i]
+            let descriptors = octave.getDescriptors(
+                commandQueue: commandQueue,
+                orientationOctave: orientationOctave
+            )
+            output.append(descriptors)
+        }
+//        orientationOctaves.map { orientations in
+//            var output = [SIFTDescriptor]()
+//            for i in 0 ..< orientations.count {
+//                let orientation = orientations[i]
+//                for theta in orientation.orientations {
+//                    #warning("TODO: Use real descriptor")
+//                    let descriptor = SIFTDescriptor(
+//                        keypoint: orientation.keypoint,
+//                        theta: theta,
+//                        rawFeatures: [],
+//                        features: Array<Int>(repeating: 0, count: 128)
+//                    )
+//                    output.append(descriptor)
+//                }
+//            }
+//            return output
+//        }
         return output
     }
 }

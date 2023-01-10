@@ -18,11 +18,11 @@ float orientationFromBin(float bin) {
     float t = bin / (float)n;
     float tau = 2 * M_PI_F;
     float orientation = t * tau;
-    if (orientation > tau) {
-        orientation -= tau;
-    }
     if (orientation < 0) {
         orientation += tau;
+    }
+    if (orientation >= tau) {
+        orientation -= tau;
     }
     return orientation;
 }
@@ -121,13 +121,13 @@ void getOrientationsHistogram(
             // Add to histogram
             float t = orientation / (2 * M_PI_F);
             int bin = round(t * (float)bins);
-            if (bin >= bins) {
-                bin -= bins;
-            }
             if (bin < 0) {
                 bin += bins;
             }
-            
+            if (bin >= bins) {
+                bin -= bins;
+            }
+
             float m = w * magnitude;
             
             histogram[bin] += m;
@@ -144,9 +144,16 @@ kernel void siftOrientation(
     texture2d_array<float, access::read> gradientTextures [[texture(0)]],
     ushort gid [[thread_position_in_grid]]
 ) {
-    SIFTOrientationResult result;
+    const int bins = SIFT_ORIENTATION_HISTOGRAM_BINS;
     const SIFTOrientationKeypoint keypoint = keypoints[gid];
-    float histogram[SIFT_ORIENTATION_HISTOGRAM_BINS];
+    SIFTOrientationResult result;
+    result.keypoint = keypoint.index;
+    
+    float histogram[bins];
+    for (int i = 0; i < bins; i++) {
+        histogram[i] = 0;
+    }
+    
     getOrientationsHistogram(
         gradientTextures,
         keypoint.absoluteX,

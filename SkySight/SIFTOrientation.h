@@ -19,6 +19,7 @@ struct SIFTOrientationParameters {
 
 
 struct SIFTOrientationKeypoint {
+    int32_t index;
     int32_t absoluteX;
     int32_t absoluteY;
     int32_t scale;
@@ -27,6 +28,7 @@ struct SIFTOrientationKeypoint {
 
 
 struct SIFTOrientationResult {
+    int32_t keypoint;
     int32_t count;
     float orientations[SIFT_ORIENTATION_HISTOGRAM_BINS];
 };

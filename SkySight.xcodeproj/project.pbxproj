@@ -30,6 +30,8 @@
 		FC831CFC296B522600C978BA /* GaussianSeriesKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831CFB296B522500C978BA /* GaussianSeriesKernel.swift */; };
 		FC831CFE296B524400C978BA /* ConvolutionSeriesKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831CFD296B524400C978BA /* ConvolutionSeriesKernel.swift */; };
 		FC831D00296B540400C978BA /* ConvolutionSeries.metal in Sources */ = {isa = PBXBuildFile; fileRef = FC831CFF296B540400C978BA /* ConvolutionSeries.metal */; };
+		FC831D05296DBAC500C978BA /* SIFTKeypointOrientations.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */; };
+		FC831D07296DE8FB00C978BA /* MetalExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D06296DE8FB00C978BA /* MetalExtensions.swift */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
@@ -171,6 +173,8 @@
 		FC831D01296B541F00C978BA /* ConvolutionSeries.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConvolutionSeries.h; sourceTree = "<group>"; };
 		FC831D02296B5D9200C978BA /* NearestNeighbor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NearestNeighbor.h; sourceTree = "<group>"; };
 		FC831D03296C70D600C978BA /* SIFTInterpolate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SIFTInterpolate.h; sourceTree = "<group>"; };
+		FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTKeypointOrientations.swift; sourceTree = "<group>"; };
+		FC831D06296DE8FB00C978BA /* MetalExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalExtensions.swift; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
@@ -474,6 +478,7 @@
 				FCB0DB79296365110047FC1C /* SIFTDescriptor.swift */,
 				FCB0DB7B296365220047FC1C /* SIFTCorrespondence.swift */,
 				FCB0DB7D296365330047FC1C /* SIFTKeypoint.swift */,
+				FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */,
 				FCD244732962E0ED00459437 /* SIFTPatch.swift */,
 				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
 				FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */,
@@ -507,6 +512,7 @@
 				FCEBCDB4294E7E39002BB8EF /* ImageConversion.swift */,
 				FCEE19FE294DB8E600FEC893 /* Quad.swift */,
 				FCEBCDB2294E7D96002BB8EF /* Math.swift */,
+				FC831D06296DE8FB00C978BA /* MetalExtensions.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -678,6 +684,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FCEE19FD294DB8AE00FEC893 /* LucasKanade.swift in Sources */,
+				FC831D05296DBAC500C978BA /* SIFTKeypointOrientations.swift in Sources */,
 				FC831CEB2969C2F700C978BA /* SIFTGradient.metal in Sources */,
 				FC831CF12969C55400C978BA /* SIFTOrientation.metal in Sources */,
 				FC831CEF2969C35200C978BA /* SIFTExtrema.metal in Sources */,
@@ -727,6 +734,7 @@
 				FCD244742962E0ED00459437 /* SIFTPatch.swift in Sources */,
 				FC831CDC2969C22500C978BA /* SIFTInterpolate.metal in Sources */,
 				FCEBCDC9295247C2002BB8EF /* SIFTExtremaKernel.swift in Sources */,
+				FC831D07296DE8FB00C978BA /* MetalExtensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

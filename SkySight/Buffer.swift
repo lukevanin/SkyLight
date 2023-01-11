@@ -33,17 +33,20 @@ final class Buffer<T> {
     }
     
     func allocate(_ count: Int) {
-        precondition(count >= 0 && count <= capacity)
+        precondition(count >= 0)
+        precondition(count <= capacity)
         self.count = count
     }
     
     subscript(i: Int) -> T {
         get {
-            precondition(i >= 0 && i < count)
+            precondition(i >= 0)
+            precondition(i < count)
             return pointer[i]
         }
         set {
-            precondition(i >= 0 && i < count)
+            precondition(i >= 0)
+            precondition(i < count)
             pointer[i] = newValue
         }
     }

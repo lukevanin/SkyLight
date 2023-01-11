@@ -9,40 +9,46 @@ import Foundation
 import MetalPerformanceShaders
 
 
-final class SIFTExtremaFunction {
+final class SIFTExtremaListFunction {
     
     private let computePipelineState: MTLComputePipelineState
- 
+    
+    let indexBuffer: Buffer<Int32>
+    
     init(device: MTLDevice) {
         let library = device.makeDefaultLibrary()!
 
-        let function = library.makeFunction(name: "siftExtrema")!
-        function.label = "siftExtremaFunction"
+        let function = library.makeFunction(name: "siftExtremaList")!
+        function.label = "siftExtremaListFunction"
 
         self.computePipelineState = try! device.makeComputePipelineState(
             function: function
         )
+        self.indexBuffer = Buffer<Int32>(
+            device: device,
+            label: "siftExtremaListIndex",
+            capacity: 1
+        )
+        self.indexBuffer.allocate(1)
     }
     
     func encode(
         commandBuffer: MTLCommandBuffer,
         inputTexture: MTLTexture,
-        outputTexture: MTLTexture
+        outputBuffer: Buffer<SIFTExtremaResult>
     ) {
-        precondition(inputTexture.width == outputTexture.width)
-        precondition(inputTexture.height == outputTexture.height)
-        precondition(inputTexture.arrayLength == outputTexture.arrayLength + 2)
         precondition(inputTexture.textureType == .type2DArray)
         precondition(inputTexture.pixelFormat == .r32Float)
-        precondition(outputTexture.textureType == .type2DArray)
-        precondition(outputTexture.pixelFormat == .rg32Float)
+        
+        indexBuffer[0] = 0
         
         let encoder = commandBuffer.makeComputeCommandEncoder()!
-        encoder.label = "siftExtremaFunctionComputeEncoder"
+        encoder.label = "siftExtremaListFunctionComputeEncoder"
         encoder.setComputePipelineState(computePipelineState)
-        encoder.setTexture(outputTexture, index: 0)
-        encoder.setTexture(inputTexture, index: 1)
-
+        encoder.setBuffer(outputBuffer.data, offset: 0, index: 0)
+        encoder.setBuffer(indexBuffer.data, offset: 0, index: 1)
+        encoder.setTexture(inputTexture, index: 0)
+        
         let threadsPerDimension = Int(cbrt(Float(computePipelineState.maxTotalThreadsPerThreadgroup)))
         let threadsPerThreadgroup = MTLSize(
             width: threadsPerDimension,
@@ -50,9 +56,9 @@ final class SIFTExtremaFunction {
             depth: threadsPerDimension
         )
         let threadsPerGrid = MTLSize(
-            width: outputTexture.width - 2,
-            height: outputTexture.height - 2,
-            depth: outputTexture.arrayLength
+            width: inputTexture.width - 2,
+            height: inputTexture.height - 2,
+            depth: inputTexture.arrayLength - 2
         )
                 
         encoder.dispatchThreads(

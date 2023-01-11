@@ -33,6 +33,7 @@
 		FC831D05296DBAC500C978BA /* SIFTKeypointOrientations.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */; };
 		FC831D07296DE8FB00C978BA /* MetalExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D06296DE8FB00C978BA /* MetalExtensions.swift */; };
 		FC831D09296DFA4F00C978BA /* Performance.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D08296DFA4F00C978BA /* Performance.swift */; };
+		FC831D0B296E022F00C978BA /* SIFTExtremaListKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC831D0A296E022F00C978BA /* SIFTExtremaListKernel.swift */; };
 		FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */; };
 		FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */; };
 		FC9DF9ED293B6380008E8D79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC9DF9EC293B6380008E8D79 /* Assets.xcassets */; };
@@ -177,6 +178,8 @@
 		FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTKeypointOrientations.swift; sourceTree = "<group>"; };
 		FC831D06296DE8FB00C978BA /* MetalExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalExtensions.swift; sourceTree = "<group>"; };
 		FC831D08296DFA4F00C978BA /* Performance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Performance.swift; sourceTree = "<group>"; };
+		FC831D0A296E022F00C978BA /* SIFTExtremaListKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTExtremaListKernel.swift; sourceTree = "<group>"; };
+		FC831D0C296E044700C978BA /* SIFTExtrema.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SIFTExtrema.h; sourceTree = "<group>"; };
 		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
@@ -334,6 +337,7 @@
 				FC831CF3296AC0AB00C978BA /* SkySight-Bridging-Header.h */,
 				FC831CDF2969C26B00C978BA /* Common.h */,
 				FCE936792944E86E00E2D486 /* Shaders.metal */,
+				FC831D0C296E044700C978BA /* SIFTExtrema.h */,
 				FC831CEE2969C35200C978BA /* SIFTExtrema.metal */,
 				FC831CEA2969C2F700C978BA /* SIFTGradient.metal */,
 				FC831D03296C70D600C978BA /* SIFTInterpolate.h */,
@@ -483,6 +487,7 @@
 				FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */,
 				FCD244732962E0ED00459437 /* SIFTPatch.swift */,
 				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
+				FC831D0A296E022F00C978BA /* SIFTExtremaListKernel.swift */,
 				FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */,
 				FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */,
 				FC831CD92969C14A00C978BA /* SIFTOrientationKernel.swift */,
@@ -715,6 +720,7 @@
 				FC5C0C03295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift in Sources */,
 				FC9DF9E8293B637F008E8D79 /* LucasKanadeViewController.swift in Sources */,
 				FCB0DB7C296365220047FC1C /* SIFTCorrespondence.swift in Sources */,
+				FC831D0B296E022F00C978BA /* SIFTExtremaListKernel.swift in Sources */,
 				FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */,
 				FC831CFC296B522600C978BA /* GaussianSeriesKernel.swift in Sources */,
 				FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */,

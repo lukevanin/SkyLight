@@ -91,7 +91,7 @@ final class SIFT {
             )
         )
         let octaves: [SIFTOctave] = {
-            let extremaFunction = SIFTExtremaFunction(device: device)
+            let extremaFunction = SIFTExtremaListFunction(device: device)
             let gradientFunction = SIFTGradientKernel(device: device)
 
             var octaves = [SIFTOctave]()
@@ -124,39 +124,41 @@ final class SIFT {
     
     private func findKeypoints(inputTexture: MTLTexture) {
         measure(name: "findKeypoints") {
-            let commandBuffer = commandQueue.makeCommandBuffer()!
-            commandBuffer.label = "siftKeypointsCommandBuffer"
-            
-            dog.encode(
-                commandBuffer: commandBuffer,
-                originalTexture: inputTexture
-            )
-            
-            for octave in octaves {
-                octave.encode(
-                    commandBuffer: commandBuffer
+            capture(commandQueue: commandQueue, capture: false) {
+                let commandBuffer = commandQueue.makeCommandBuffer()!
+                commandBuffer.label = "siftKeypointsCommandBuffer"
+                
+                dog.encode(
+                    commandBuffer: commandBuffer,
+                    originalTexture: inputTexture
                 )
+                
+                for octave in octaves {
+                    octave.encode(
+                        commandBuffer: commandBuffer
+                    )
+                }
+                
+                commandBuffer.commit()
+                commandBuffer.waitUntilCompleted()
             }
-            
-            commandBuffer.commit()
-            commandBuffer.waitUntilCompleted()
         }
     }
     
-    private func getKeypointsFromOctaves() -> [[SIFTKeypoint]] {
-        var output = [[SIFTKeypoint]]()
+    private func getKeypointsFromOctaves() -> [Buffer<SIFTExtremaResult>] {
+        var output = [Buffer<SIFTExtremaResult>]()
         measure(name: "getKeypointsFromOctaves") {
             for octave in octaves {
-                octave.updateImagesFromTextures()
                 let keypoints = octave.getKeypoints()
                 output.append(keypoints)
             }
         }
-        logger.info("getKeypointsFromOctaves: Found \(output.joined().count) keypoints")
+        let totalKeypoints = output.reduce(into: 0) { $0 += $1.count }
+        logger.info("getKeypointsFromOctaves: Found \(totalKeypoints) keypoints")
         return output
     }
     
-    private func interpolateKeypoints(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTKeypoint]] {
+    private func interpolateKeypoints(keypointOctaves: [Buffer<SIFTExtremaResult>]) -> [[SIFTKeypoint]] {
         var output = [[SIFTKeypoint]]()
         measure(name: "interpolateKeypoints") {
             for o in 0 ..< keypointOctaves.count {

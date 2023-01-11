@@ -23,6 +23,7 @@ struct SIFTInterpolateParameters {
 };
 
 
+// This should match SIFTExtremaResult
 struct SIFTInterpolateInputKeypoint {
     int32_t x;
     int32_t y;

@@ -8,18 +8,17 @@
 import Foundation
 import Metal
 
-extension MTLCaptureManager {
-    func perform(commandQueue: MTLCommandQueue, capture: Bool = true, worker: () -> Void) {
-        guard capture else {
-            worker()
-            return
-        }
-        let captureDescriptor = MTLCaptureDescriptor()
-        captureDescriptor.captureObject = commandQueue
-        captureDescriptor.destination = .developerTools
-        try! startCapture(with: captureDescriptor)
+func capture(commandQueue: MTLCommandQueue, capture: Bool = true, worker: () -> Void) {
+    guard capture else {
         worker()
-        stopCapture()
+        return
     }
+    let captureManager = MTLCaptureManager.shared()
+    let captureDescriptor = MTLCaptureDescriptor()
+    captureDescriptor.captureObject = commandQueue
+    captureDescriptor.destination = .developerTools
+    try! captureManager.startCapture(with: captureDescriptor)
+    worker()
+    captureManager.stopCapture()
 }
 

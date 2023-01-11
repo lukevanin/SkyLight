@@ -17,8 +17,9 @@ struct SIFTGradient {
     let magnitude: Float
 }
 
+private let maximumNumberOfExtrema = 4096
 
-private let maximumNumberOfKeypoints = 2048
+private let maximumNumberOfKeypoints = 4096
 
 private let maximumNumberOfDescriptors = 2048
 
@@ -27,17 +28,19 @@ final class SIFTOctave {
     
     let scale: DifferenceOfGaussians.Octave
     
-    let keypointTextures: MTLTexture
-    let keypointImages: [Image<Float>]
+//    let keypointTextures: MTLTexture
+//    let keypointImages: [Image<Float>]
 
     let gradientTextures: MTLTexture
 
     private let device: MTLDevice
-    private let extremaFunction: SIFTExtremaFunction
+    private let extremaFunction: SIFTExtremaListFunction
     private let gradientFunction: SIFTGradientKernel
     private let interpolateFunction: SIFTInterpolateKernel
     private let orientationFunction: SIFTOrientationKernel
     private let descriptorFunction: SIFTDescriptorKernel
+    
+    private let extremaOutputBuffer: Buffer<SIFTExtremaResult>
 
     private let orientationInputBuffer: Buffer<SIFTOrientationKeypoint>
     private let orientationOutputBuffer: Buffer<SIFTOrientationResult>
@@ -54,7 +57,7 @@ final class SIFTOctave {
     init(
         device: MTLDevice,
         scale: DifferenceOfGaussians.Octave,
-        extremaFunction: SIFTExtremaFunction,
+        extremaFunction: SIFTExtremaListFunction,
         gradientFunction: SIFTGradientKernel
     ) {
         self.device = device
@@ -62,24 +65,24 @@ final class SIFTOctave {
         self.extremaFunction = extremaFunction
         self.gradientFunction = gradientFunction
 
-        let keypointTextures = {
-            let textureDescriptor: MTLTextureDescriptor = {
-                let descriptor = MTLTextureDescriptor()
-                descriptor.textureType = .type2DArray
-                descriptor.pixelFormat = .r32Float
-                descriptor.width = scale.size.width
-                descriptor.height = scale.size.height
-                descriptor.arrayLength = scale.numberOfScales
-                descriptor.mipmapLevelCount = 1
-                descriptor.usage = [.shaderRead, .shaderWrite]
-                descriptor.storageMode = .shared
-                return descriptor
-            }()
-            let texture = device.makeTexture(descriptor: textureDescriptor)!
-            texture.label = "siftKeypointExtremaTexture"
-            return texture
-        }()
-        self.keypointTextures = keypointTextures
+//        let keypointTextures = {
+//            let textureDescriptor: MTLTextureDescriptor = {
+//                let descriptor = MTLTextureDescriptor()
+//                descriptor.textureType = .type2DArray
+//                descriptor.pixelFormat = .r32Float
+//                descriptor.width = scale.size.width
+//                descriptor.height = scale.size.height
+//                descriptor.arrayLength = scale.numberOfScales
+//                descriptor.mipmapLevelCount = 1
+//                descriptor.usage = [.shaderRead, .shaderWrite]
+//                descriptor.storageMode = .shared
+//                return descriptor
+//            }()
+//            let texture = device.makeTexture(descriptor: textureDescriptor)!
+//            texture.label = "siftKeypointExtremaTexture"
+//            return texture
+//        }()
+//        self.keypointTextures = keypointTextures
 
         let gradientTextures = {
             let textureDescriptor: MTLTextureDescriptor = {
@@ -110,6 +113,12 @@ final class SIFTOctave {
 
         self.descriptorFunction = SIFTDescriptorKernel(
             device: device
+        )
+        
+        self.extremaOutputBuffer = Buffer<SIFTExtremaResult>(
+            device: device,
+            label: "siftExtremaOutputBuffer",
+            capacity: maximumNumberOfExtrema
         )
         
         self.interpolateInputBuffer = Buffer<SIFTInterpolateInputKeypoint>(
@@ -160,19 +169,19 @@ final class SIFTOctave {
             capacity: 1
         )
 
-        self.keypointImages = {
-            var images = [Image<Float>]()
-            for i in 0 ..< keypointTextures.arrayLength {
-                let image = Image<Float>(
-                    texture: keypointTextures,
-                    label: "siftKeypointExtremaBuffer",
-                    slice: i,
-                    defaultValue: .zero
-                )
-                images.append(image)
-            }
-            return images
-        }()
+//        self.keypointImages = {
+//            var images = [Image<Float>]()
+//            for i in 0 ..< keypointTextures.arrayLength {
+//                let image = Image<Float>(
+//                    texture: keypointTextures,
+//                    label: "siftKeypointExtremaBuffer",
+//                    slice: i,
+//                    defaultValue: .zero
+//                )
+//                images.append(image)
+//            }
+//            return images
+//        }()
     }
     
     func encode(commandBuffer: MTLCommandBuffer) {
@@ -181,10 +190,15 @@ final class SIFTOctave {
     }
     
     private func encodeExtrema(commandBuffer: MTLCommandBuffer) {
+//        extremaFunction.encode(
+//            commandBuffer: commandBuffer,
+//            inputTexture: scale.differenceTextures,
+//            outputTexture: keypointTextures
+//        )
         extremaFunction.encode(
             commandBuffer: commandBuffer,
             inputTexture: scale.differenceTextures,
-            outputTexture: keypointTextures
+            outputBuffer: extremaOutputBuffer
         )
     }
     
@@ -196,58 +210,65 @@ final class SIFTOctave {
         )
     }
     
-    func updateImagesFromTextures() {
-        for image in keypointImages {
-            image.updateFromTexture()
-        }
+//    func updateImagesFromTextures() {
+//        measure(name: "updateImagesFromTextures") {
+//            for image in keypointImages {
+//                image.updateFromTexture()
+//            }
+//        }
+//    }
+
+    func getKeypoints() -> Buffer<SIFTExtremaResult> {
+//        return getKeypointsFromImages()
+        let numberOfKeypoints = extremaFunction.indexBuffer[0]
+        extremaOutputBuffer.allocate(Int(numberOfKeypoints))
+        return extremaOutputBuffer
     }
 
-    func getKeypoints() -> [SIFTKeypoint] {
-        return getKeypointsFromImages()
-    }
-
-    private func getKeypointsFromImages() -> [SIFTKeypoint] {
-        var keypoints = [SIFTKeypoint]()
-        for s in 0 ..< keypointImages.count {
-            for y in 0 ..< scale.size.height {
-                for x in 0 ..< scale.size.width  {
-                    if let keypoint = keypointAt(x: x, y: y, s: s) {
-                        keypoints.append(keypoint)
-                    }
-                }
-            }
-        }
-        return keypoints
-    }
+//    private func getKeypointsFromImages() -> [SIFTKeypoint] {
+//        var keypoints = [SIFTKeypoint]()
+//        measure(name: "getKeypointsFromImages") {
+//            for s in 0 ..< keypointImages.count {
+//                for y in 0 ..< scale.size.height {
+//                    for x in 0 ..< scale.size.width  {
+//                        if let keypoint = keypointAt(x: x, y: y, s: s) {
+//                            keypoints.append(keypoint)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return keypoints
+//    }
     
-    private func keypointAt(x: Int, y: Int, s: Int) -> SIFTKeypoint? {
-        let image = keypointImages[s]
-        let output = image[x, y]
-        let extrema = output == 1
-
-        if extrema == false {
-            return nil
-        }
-
-        let keypoint = SIFTKeypoint(
-            octave: scale.o,
-            scale: s + 1,
-            subScale: 0,
-            scaledCoordinate: SIMD2<Int>(
-                x: x,
-                y: y
-            ),
-            absoluteCoordinate: SIMD2<Float>(
-                x: Float(x) * scale.delta,
-                y: Float(y) * scale.delta
-            ),
-            sigma: scale.sigmas[s + 1],
-            value: 0
-        )
-        return keypoint
-    }
+//    private func keypointAt(x: Int, y: Int, s: Int) -> SIFTKeypoint? {
+//        let image = keypointImages[s]
+//        let output = image[x, y]
+//        let extrema = output == 1
+//
+//        if extrema == false {
+//            return nil
+//        }
+//
+//        let keypoint = SIFTKeypoint(
+//            octave: scale.o,
+//            scale: s + 1,
+//            subScale: 0,
+//            scaledCoordinate: SIMD2<Int>(
+//                x: x,
+//                y: y
+//            ),
+//            absoluteCoordinate: SIMD2<Float>(
+//                x: Float(x) * scale.delta,
+//                y: Float(y) * scale.delta
+//            ),
+//            sigma: scale.sigmas[s + 1],
+//            value: 0
+//        )
+//        return keypoint
+//    }
     
-    func interpolateKeypoints(commandQueue: MTLCommandQueue, keypoints: [SIFTKeypoint]) -> [SIFTKeypoint] {
+    func interpolateKeypoints(commandQueue: MTLCommandQueue, keypoints: Buffer<SIFTExtremaResult>) -> [SIFTKeypoint] {
         print("interpolateKeypoints")
         let sigmaRatio = scale.sigmas[1] / scale.sigmas[0]
         
@@ -267,22 +288,17 @@ final class SIFTOctave {
         )
 
         // Copy keypoints to metal buffer
+        #warning("TODO: Copy buffer memory")
         for j in 0 ..< keypoints.count {
             let keypoint = keypoints[j]
             interpolateInputBuffer[j] = SIFTInterpolateInputKeypoint(
-                x: Int32(keypoint.scaledCoordinate.x),
-                y: Int32(keypoint.scaledCoordinate.y),
+                x: Int32(keypoint.x),
+                y: Int32(keypoint.y),
                 scale: Int32(keypoint.scale)
             )
         }
         
         //
-//        let captureDescriptor = MTLCaptureDescriptor()
-//        captureDescriptor.captureObject = commandQueue
-//        captureDescriptor.destination = .developerTools
-//        let captureManager = MTLCaptureManager.shared()
-//        try! captureManager.startCapture(with: captureDescriptor)
-
         let commandBuffer = commandQueue.makeCommandBuffer()!
         commandBuffer.label = "siftInterpolationCommandBuffer"
 
@@ -296,7 +312,6 @@ final class SIFTOctave {
         
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-//        captureManager.stopCapture()
         
         let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
         print("interpolateKeypoints: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
@@ -382,10 +397,14 @@ final class SIFTOctave {
             )
             i += 1
         }
-        let totalKeypoints = i - 1
+        let totalKeypoints = i
+        
+        guard totalKeypoints > 0 else {
+            return []
+        }
         
         //
-        MTLCaptureManager.shared().perform(commandQueue: commandQueue, capture: false) {
+        capture(commandQueue: commandQueue, capture: false) {
             let commandBuffer = commandQueue.makeCommandBuffer()!
             commandBuffer.label = "siftOrientationCommandBuffer"
             

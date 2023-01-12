@@ -30,22 +30,38 @@
             endingLineNumber = "36"
             landmarkName = "Image"
             landmarkType = "3">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "D5ECDEC7-557A-48D2-91DE-ACA56655BD9D"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "SkySight/SIFTOctave.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "403"
-            endingLineNumber = "403"
-            landmarkName = "getKeypointOrientations(commandQueue:keypoints:)"
-            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "5B6BC0E3-763A-4A69-A642-6470980106EE - 24112c37f80366e1"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "SkySight.Image.deinit"
+                  moduleName = "SkySight"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/lukevanin/Developer/Me/SkySight/SkySight/Image.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "36"
+                  endingLineNumber = "36"
+                  offsetFromSymbolStart = "12">
+               </Location>
+               <Location
+                  uuid = "5B6BC0E3-763A-4A69-A642-6470980106EE - bdd0527112a0155c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "SkySight.Image.__deallocating_deinit"
+                  moduleName = "SkySight"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/lukevanin/Developer/Me/SkySight/SkySight/Image.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "36"
+                  endingLineNumber = "36"
+                  offsetFromSymbolStart = "12">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

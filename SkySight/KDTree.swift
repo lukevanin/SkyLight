@@ -40,7 +40,7 @@ final class KDTree: Equatable {
     let k: Int
     
     /// Depth (depth of the node within the tree).
-    let d: Int
+    private(set) var d: Int
     
     /// Identifier of the node used for the pivot.
     let id: Int
@@ -49,10 +49,18 @@ final class KDTree: Equatable {
     let location: Vector
     
     /// Children on the left of the pivot
-    let leftChild: KDTree?
+    var leftChild: KDTree? {
+        didSet {
+            leftChild?.d = d + 1
+        }
+    }
     
     /// Children on the right of the pivot
-    let rightChild: KDTree?
+    var rightChild: KDTree? {
+        didSet {
+            rightChild?.d = d + 1
+        }
+    }
 
     convenience init?<C>(nodes: C, d: Int = 0) where C: Collection, C.Element == Node {
         guard nodes.count > 0 else {
@@ -68,19 +76,26 @@ final class KDTree: Equatable {
         self.init(
             id: medianElement.id,
             location: medianElement.coordinate,
-            k: k,
             d: d,
             leftChild: KDTree(nodes: leftElements, d: d + 1),
             rightChild: KDTree(nodes: rightElements, d: d + 1)
         )
     }
     
-    init(id: Int, location: Vector, k: Int, d: Int, leftChild: KDTree?, rightChild: KDTree?) {
+    init(id: Int, location: Vector, d: Int = 0, leftChild: KDTree? = nil, rightChild: KDTree? = nil) {
+        if let leftChild {
+            precondition(leftChild.d == d + 1)
+            precondition(leftChild.k == location.count)
+        }
+        if let rightChild {
+            precondition(rightChild.d == d + 1)
+            precondition(rightChild.k == location.count)
+        }
         self.id = id
         self.location = location
         self.leftChild = leftChild
         self.rightChild = rightChild
-        self.k = k
+        self.k = location.count
         self.d = d
     }
     

@@ -8,15 +8,42 @@
 import Foundation
 
 
+struct Vector: Equatable {
+    let count: Int
+    let components: [Float]
+    
+    init(_ components: [Float]) {
+        self.components = components
+        self.count = components.count
+    }
+    
+    func distanceSquared(to other: Vector) -> Float {
+        zip(components, other.components).reduce(into: 0) {
+            $0 += (($1.1 - $1.0) * ($1.1 - $1.0))
+        }
+    }
+    
+    func distance(to other: Vector) -> Float {
+        sqrt(distanceSquared(to: other))
+    }
+}
+
+
 final class KDTree: Equatable {
     
-    typealias Vector = [Float]
+    struct Node: Identifiable, Equatable {
+        let id: Int
+        let coordinate: Vector
+    }
     
     /// Dimensionality (number of components in the value vector).
     let k: Int
     
     /// Depth (depth of the node within the tree).
     let d: Int
+    
+    /// Identifier of the node used for the pivot.
+    let id: Int
     
     /// "Location" of the pivot point which this node indicates.
     let location: Vector
@@ -27,25 +54,29 @@ final class KDTree: Equatable {
     /// Children on the right of the pivot
     let rightChild: KDTree?
 
-    convenience init?<C>(elements: C, k: Int, d: Int = 0) where C: Collection, C.Element == Vector {
-        guard elements.count > 0 else {
+    convenience init?<C>(nodes: C, d: Int = 0) where C: Collection, C.Element == Node {
+        guard nodes.count > 0 else {
             return nil
         }
+        let k = nodes.first!.coordinate.count
         let axis = d % k
-        let sorted = elements.sorted { $0[axis] < $1[axis] }
+        let sorted = nodes.sorted { $0.coordinate.components[axis] < $1.coordinate.components[axis] }
         let medianIndex = sorted.count / 2
+        let medianElement = sorted[medianIndex]
         let leftElements = sorted.prefix(upTo: medianIndex)
         let rightElements = sorted.suffix(from: medianIndex + 1)
         self.init(
-            location: sorted[medianIndex],
-            leftChild: KDTree(elements: leftElements, k: k, d: d + 1),
-            rightChild: KDTree(elements: rightElements, k: k, d: d + 1),
+            id: medianElement.id,
+            location: medianElement.coordinate,
             k: k,
-            d: d
+            d: d,
+            leftChild: KDTree(nodes: leftElements, d: d + 1),
+            rightChild: KDTree(nodes: rightElements, d: d + 1)
         )
     }
     
-    init(location: Vector, leftChild: KDTree?, rightChild: KDTree?, k: Int, d: Int) {
+    init(id: Int, location: Vector, k: Int, d: Int, leftChild: KDTree?, rightChild: KDTree?) {
+        self.id = id
         self.location = location
         self.leftChild = leftChild
         self.rightChild = rightChild
@@ -53,7 +84,23 @@ final class KDTree: Equatable {
         self.d = d
     }
     
+    func find(query: Vector, d: Int = 0) -> Node? {
+        if query == location {
+            return Node(id: id, coordinate: location)
+        }
+        let axis = d % k
+        let queryComponent = query.components[axis]
+        let checkComponent = location.components[axis]
+        if queryComponent < checkComponent {
+            return leftChild?.find(query: query, d: d + 1)
+        }
+        else {
+            return rightChild?.find(query: query, d: d + 1)
+        }
+    }
+    
     static func == (lhs: KDTree, rhs: KDTree) -> Bool {
+        lhs.id == rhs.id &&
         lhs.k == rhs.k &&
         lhs.d == rhs.d &&
         lhs.location == rhs.location &&

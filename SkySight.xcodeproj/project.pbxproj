@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FC154F022975D29D001127AC /* KDTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F012975D29D001127AC /* KDTree.swift */; };
+		FC154F042975D304001127AC /* KDTreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F032975D304001127AC /* KDTreeTests.swift */; };
 		FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */; };
 		FC5C0C03295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */; };
 		FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */; };
@@ -145,6 +147,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FC154F012975D29D001127AC /* KDTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDTree.swift; sourceTree = "<group>"; };
+		FC154F032975D304001127AC /* KDTreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDTreeTests.swift; sourceTree = "<group>"; };
 		FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GaussianKernel.swift; sourceTree = "<group>"; };
 		FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NearestNeighborUpScaleKernel.swift; sourceTree = "<group>"; };
 		FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convolution1DKernel.swift; sourceTree = "<group>"; };
@@ -369,6 +373,7 @@
 				FCEBCDF729598663002BB8EF /* KeypointTests.swift */,
 				FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */,
 				FCEBCDF9295986BC002BB8EF /* SharedTestCase.swift */,
+				FC154F032975D304001127AC /* KDTreeTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -503,6 +508,7 @@
 				FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */,
 				FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */,
 				FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */,
+				FC154F012975D29D001127AC /* KDTree.swift */,
 			);
 			name = Algorithms;
 			sourceTree = "<group>";
@@ -704,6 +710,7 @@
 				FCB0DB872968B6850047FC1C /* Buffer.swift in Sources */,
 				FCEE1A01294DB8F700FEC893 /* CoreGraphicsExtensions.swift in Sources */,
 				FC5C0C09295B161000759433 /* BilinearUpScaleKernel.swift in Sources */,
+				FC154F022975D29D001127AC /* KDTree.swift in Sources */,
 				FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */,
 				FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */,
 				FCEE1A03294DB90B00FEC893 /* CoreImageExtensions.swift in Sources */,
@@ -756,6 +763,7 @@
 				FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */,
 				FCEBCDF829598663002BB8EF /* KeypointTests.swift in Sources */,
 				FCEBCDE129572E9F002BB8EF /* DifferenceOfGaussiansTests.swift in Sources */,
+				FC154F042975D304001127AC /* KDTreeTests.swift in Sources */,
 				FCB2DBD2296194FD00F19CEB /* DescriptorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

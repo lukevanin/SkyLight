@@ -84,7 +84,7 @@ kernel void siftExtremaList(
     for (int i = 1; i < 26; i++) {
         float neighborValue = fetch(inputTexture, g, s, i);
         minimum = min(minimum, neighborValue);
-        maximum = min(maximum, neighborValue);
+        maximum = max(maximum, neighborValue);
     }
 
     if ((value < minimum) && (value > maximum)) {
@@ -101,7 +101,7 @@ kernel void siftExtremaList(
     // Copy local results to output
     threadgroup_barrier(mem_flags::mem_none);
     if (tid == 0) {
-        const int count = atomic_fetch_add_explicit(&localCount, 0, memory_order_relaxed);
+        const int count = atomic_load_explicit(&localCount, memory_order_relaxed);
         if (count > 0) {
             const int b = atomic_fetch_add_explicit(outputCount, count, memory_order_relaxed);
             for (int i = 0; i < count; i++) {

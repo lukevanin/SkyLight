@@ -17,6 +17,10 @@ struct Vector: Equatable {
         self.count = components.count
     }
     
+    subscript(index: Int) -> Float {
+        components[index]
+    }
+    
     func distanceSquared(to other: Vector) -> Float {
         zip(components, other.components).reduce(into: 0) {
             $0 += (($1.1 - $1.0) * ($1.1 - $1.0))
@@ -99,24 +103,95 @@ final class KDTree: Equatable {
         self.d = d
     }
     
-    func find(query: Vector, d: Int = 0) -> Node? {
+    func findExact(query: Vector, d: Int = 0) -> Node? {
         if query == location {
+            // Found exact match. Return matching node.
             return Node(id: id, coordinate: location)
         }
         let axis = d % k
-        let queryComponent = query.components[axis]
-        let checkComponent = location.components[axis]
+        let queryComponent = query[axis]
+        let checkComponent = location[axis]
         if queryComponent < checkComponent {
-            return leftChild?.find(query: query, d: d + 1)
+            return leftChild?.findExact(query: query, d: d + 1)
         }
         else {
-            return rightChild?.find(query: query, d: d + 1)
+            return rightChild?.findExact(query: query, d: d + 1)
         }
     }
     
+    struct Match: Equatable {
+        var id: Int
+        var coordinate: Vector
+        var distance: Float
+    }
+    
+    func findNearest(query: Vector, d: Int = 0) -> Match {
+        if query == location {
+            // Exact match.
+            return Match(
+                id: id,
+                coordinate: location,
+                distance: 0
+            )
+        }
+
+        // Find best match
+        let axis = d % k
+        let queryComponent = query[axis]
+        let checkComponent = location[axis]
+        let first: KDTree?
+        let second: KDTree?
+        if queryComponent < checkComponent {
+            first = leftChild
+            second = rightChild
+        }
+        else {
+            first = rightChild
+            second = leftChild
+        }
+        guard let first else {
+            // No first choice.
+            guard let second else {
+                // No second choice. Use current node as best match.
+                return Match(
+                    id: id,
+                    coordinate: location,
+                    distance: query.distance(to: location)
+                )
+            }
+            // Second
+            let secondChoiceMatch = second.findNearest(query: query, d: d + 1)
+            return secondChoiceMatch
+        }
+
+        // Get best match from first child node.
+        let firstChoiceMatch = first.findNearest(query: query, d: d + 1)
+        
+        // If second node is closer than the best match, then find best match
+        // from the second node, otherwise return the current best match.
+        guard let second else {
+            return firstChoiceMatch
+        }
+        let distanceToSecondChoice = abs(queryComponent - second.location[axis])
+        if distanceToSecondChoice > firstChoiceMatch.distance {
+            // Second choice is same distance or further than our current match.
+            // Use the current match
+            return firstChoiceMatch
+        }
+        // Second choice is closer than our first choice. Look at match from
+        // second choice.
+        let secondChoiceMatch = second.findNearest(query: query, d: d + 1)
+        if secondChoiceMatch.distance > firstChoiceMatch.distance {
+            // First choice is still closer. Return the first choice.
+            return firstChoiceMatch
+        }
+        // Second choice is closer than first choice. Return the second
+        // choice.
+        return secondChoiceMatch
+    }
+
     static func == (lhs: KDTree, rhs: KDTree) -> Bool {
         lhs.id == rhs.id &&
-        lhs.k == rhs.k &&
         lhs.d == rhs.d &&
         lhs.location == rhs.location &&
         lhs.leftChild == rhs.leftChild &&

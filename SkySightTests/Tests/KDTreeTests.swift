@@ -255,7 +255,7 @@ final class KDTreeTests: XCTestCase {
                 KDTree.Node(id: 5, coordinate: Vector([35, 45])),
             ]
         )
-        let result = subject?.find(query: Vector([50, 30]))
+        let result = subject?.findExact(query: Vector([50, 30]))
         let expected = KDTree.Node(id: 4, coordinate: Vector([50, 30]))
         XCTAssertEqual(result, expected)
     }
@@ -269,7 +269,66 @@ final class KDTreeTests: XCTestCase {
                 KDTree.Node(id: 3, coordinate: Vector([1, 7]))
             ]
         )
-        let result = subject?.find(query: Vector([4, 5]))
+        let result = subject?.findExact(query: Vector([4, 5]))
         XCTAssertNil(result)
+    }
+    
+    func testNearest_withExactMatch_shouldReturnNode() {
+        let subject = KDTree(
+            nodes: [
+                KDTree.Node(id: 0, coordinate: Vector([1, 1])),
+                KDTree.Node(id: 1, coordinate: Vector([2, 2])),
+                KDTree.Node(id: 2, coordinate: Vector([3, 3])),
+                KDTree.Node(id: 3, coordinate: Vector([4, 4]))
+            ]
+        )
+        let expected = KDTree.Match(
+            id: 1,
+            coordinate: Vector([2, 2]),
+            distance: 0
+        )
+        let result = subject?.findNearest(query: Vector([2, 2]))
+        XCTAssertEqual(result, expected)
+    }
+    
+    func testNearest_withInexactMatch_shouldReturnNearestNode() {
+        let scenarios = [
+            (
+                query: Vector([4, 5]),
+                result: KDTree.Match(
+                    id: 0,
+                    coordinate: Vector([1, 1]),
+                    distance: 5 // sqrt(3 * 3 + 4 * 4) = sqrt(25)
+                )
+            ),
+            (
+                query: Vector([-2, -3]),
+                result: KDTree.Match(
+                    id: 0,
+                    coordinate: Vector([1, 1]),
+                    distance: 5
+                )
+            ),
+            (
+                query: Vector([60, 70]),
+                result: KDTree.Match(
+                    id: 3,
+                    coordinate: Vector([30, 30]),
+                    distance: 50 // sqrt(30 * 30 + 40 * 40) = sqrt(50)
+                )
+            ),
+        ]
+        let subject = KDTree(
+            nodes: [
+                KDTree.Node(id: 0, coordinate: Vector([1, 1])),
+                KDTree.Node(id: 1, coordinate: Vector([10, 10])),
+                KDTree.Node(id: 2, coordinate: Vector([20, 20])),
+                KDTree.Node(id: 3, coordinate: Vector([30, 30]))
+            ]
+        )
+        for scenario in scenarios {
+            let result = subject?.findNearest(query: scenario.query)
+            XCTAssertEqual(result, scenario.result)
+        }
     }
 }

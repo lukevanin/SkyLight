@@ -331,4 +331,143 @@ final class KDTreeTests: XCTestCase {
             XCTAssertEqual(result, scenario.result)
         }
     }
+    
+    func testApproximateNearest_withInexactMatch_shouldReturnBestNearest() {
+        let scenarios = [
+            (
+                query: Vector([4, 5]),
+                result: KDTree.Match(
+                    id: 0,
+                    coordinate: Vector([1, 1]),
+                    distance: 5 // sqrt(3 * 3 + 4 * 4) = sqrt(25)
+                )
+            ),
+            (
+                query: Vector([-2, -3]),
+                result: KDTree.Match(
+                    id: 0,
+                    coordinate: Vector([1, 1]),
+                    distance: 5
+                )
+            ),
+            (
+                query: Vector([60, 70]),
+                result: KDTree.Match(
+                    id: 3,
+                    coordinate: Vector([30, 30]),
+                    distance: 50 // sqrt(30 * 30 + 40 * 40) = sqrt(50)
+                )
+            ),
+        ]
+        let subject = KDTree(
+            nodes: [
+                KDTree.Node(id: 0, coordinate: Vector([1, 1])),
+                KDTree.Node(id: 1, coordinate: Vector([10, 10])),
+                KDTree.Node(id: 2, coordinate: Vector([20, 20])),
+                KDTree.Node(id: 3, coordinate: Vector([30, 30]))
+            ]
+        )
+        for scenario in scenarios {
+            let result = subject!.findApproximateNearest(query: scenario.query)
+            XCTAssertEqual(result, scenario.result)
+        }
+    }
+    
+    func testApproximateNearest_withLargeDataset() {
+        struct Neighbor: CustomStringConvertible {
+            let id: Int
+            let distance: Float
+            
+            var description: String {
+                "<Neighbor #\(id) @\(String(format: "%0.3f", distance))>"
+            }
+        }
+        
+        let n = 1000
+        let m = 1000
+        let d = 10
+        var nodes: [KDTree.Node] = []
+        var queries: [Vector] = []
+        var nearestNeighbors: [Neighbor] = []
+        
+        // Generate sample data
+        for i in 0 ..< n {
+            var vector: [Float] = Array(repeating: 0, count: d)
+            for j in 0 ..< d {
+                vector[j] = .random(in: 0...1)
+            }
+            let node = KDTree.Node(id: i, coordinate: Vector(vector))
+            nodes.append(node)
+        }
+//        print("nodes", nodes)
+        
+        // Generate queries.
+        for _ in 0 ..< m {
+            var vector: [Float] = Array(repeating: 0, count: d)
+            for j in 0 ..< d {
+                vector[j] = .random(in: 0...1)
+            }
+            queries.append(Vector(vector))
+        }
+
+        // Compute actual nearest neighbor for each node using brute force.
+        for i in 0 ..< m {
+            let query = queries[i]
+            var nearestDistance: Float = .greatestFiniteMagnitude
+            var nearestNeighbor: Neighbor!
+            for j in 0 ..< n {
+                let currentNode = nodes[j]
+                let distance = currentNode.coordinate.distance(to: query)
+                guard distance < nearestDistance else {
+                    continue
+                }
+                nearestDistance = distance
+                nearestNeighbor = Neighbor(id: j, distance: distance)
+            }
+            nearestNeighbors.append(nearestNeighbor)
+        }
+//        print("nearest neighbors", nearestNeighbors)
+        
+        // Compute approximate nearest neighbor.
+        var totalError: Float = 0
+        var totalCorrect: Int = 0
+        var totalQueries: Int = 0
+        var totalNodes: Int = 0
+        let subject = KDTree(nodes: nodes)!
+//        measure {
+            for i in 0 ..< m {
+//        let i = 0
+                let query = queries[i]
+                let foundNeighbor = subject.findApproximateNearest(query: query)
+//                let foundNeighbor = subject.findNearest(query: query)
+                totalNodes += subject.searchCountMetric
+                let foundDistance = foundNeighbor.coordinate.distance(to: query)
+                let exactNeighbor = nearestNeighbors[i]
+                let exactDistance = exactNeighbor.distance
+                let delta = exactDistance - foundDistance
+                let error = delta * delta
+                totalError += error
+                let correct = error == 0
+                totalCorrect += correct ? 1 : 0
+                totalQueries += 1
+                //            var symbol: String = correct ? "✅" : "❌"
+                //            print(
+                //                "#\(i)",
+                //                symbol,
+                //                "found=\(String(format: "%0.3f", foundDistance))",
+                //                "exact=\(String(format: "%0.3f", exactDistance))",
+                //                "error=\(String(format: "%0.3f", error))"
+                //            )
+            }
+//        }
+        let meanSquaredError = totalError / Float(totalQueries)
+        let percentCorrect = Float(totalCorrect) / Float(totalQueries)
+        let averageNodesPerQuery = Float(totalNodes) / Float(totalQueries)
+        print("Total queries: \(totalQueries)")
+        print("Mean squared error: \(String(format: "%0.3f", meanSquaredError))")
+        print("Correct: \(totalCorrect) out of \(totalQueries) = \(String(format: "%0.3f", percentCorrect))")
+        print("Total nodes: \(totalNodes)")
+        print("Average nodes per query: \(String(format: "%0.3f", averageNodesPerQuery))")
+    }
+
 }

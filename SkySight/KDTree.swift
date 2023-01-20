@@ -8,9 +8,16 @@
 import Foundation
 
 
-struct Vector: Equatable {
+struct Vector: Equatable, CustomStringConvertible {
     let count: Int
     let components: [Float]
+    
+    var description: String {
+        let components = components
+            .map({ String(format: "%0.3f", $0) })
+            .joined(separator: ", ")
+        return "<Vector [\(count)] \(components)>"
+    }
     
     init(_ components: [Float]) {
         self.components = components
@@ -22,9 +29,13 @@ struct Vector: Equatable {
     }
     
     func distanceSquared(to other: Vector) -> Float {
-        zip(components, other.components).reduce(into: 0) {
-            $0 += (($1.1 - $1.0) * ($1.1 - $1.0))
+        precondition(count == other.count)
+        var k: Float = 0
+        for i in 0 ..< count {
+            let d = other[i] - self[i]
+            k += d * d
         }
+        return k
     }
     
     func distance(to other: Vector) -> Float {
@@ -35,9 +46,13 @@ struct Vector: Equatable {
 
 final class KDTree: Equatable {
     
-    struct Node: Identifiable, Equatable {
+    struct Node: Identifiable, Equatable, CustomStringConvertible {
         let id: Int
         let coordinate: Vector
+        
+        var description: String {
+            "<Node #\(id) @\(coordinate)>"
+        }
     }
     
     /// Dimensionality (number of components in the value vector).
@@ -51,6 +66,15 @@ final class KDTree: Equatable {
     
     /// "Location" of the pivot point which this node indicates.
     let location: Vector
+    
+    /// Pivot value (location[axis])
+    let pivot: Float
+    
+    /// Axis
+    let axis: Int
+    
+    /// Count
+    var searchCountMetric: Int = 0
     
     /// Children on the left of the pivot
     var leftChild: KDTree? {
@@ -72,11 +96,21 @@ final class KDTree: Equatable {
         }
         let k = nodes.first!.coordinate.count
         let axis = d % k
-        let sorted = nodes.sorted { $0.coordinate.components[axis] < $1.coordinate.components[axis] }
+        let sorted = nodes.sorted { $0.coordinate[axis] < $1.coordinate[axis] }
         let medianIndex = sorted.count / 2
-        let medianElement = sorted[medianIndex]
-        let leftElements = sorted.prefix(upTo: medianIndex)
-        let rightElements = sorted.suffix(from: medianIndex + 1)
+        let median = sorted[medianIndex].coordinate[axis]
+        let splitIndex = (sorted.firstIndex { $0.coordinate[axis] > median } ?? sorted.count) - 1
+        let medianElement = sorted[splitIndex]
+        // Points on left are less than or equal to the pivot.
+        let leftElements = sorted.prefix(upTo: splitIndex)
+        // Points on right are strictly greater than the pivot.
+        let rightElements = sorted.suffix(from: splitIndex + 1)
+        for leftElement in leftElements {
+            precondition(leftElement.coordinate[axis] <= medianElement.coordinate[axis])
+        }
+        for rightElement in rightElements {
+            precondition(rightElement.coordinate[axis] > medianElement.coordinate[axis])
+        }
         self.init(
             id: medianElement.id,
             location: medianElement.coordinate,
@@ -101,6 +135,8 @@ final class KDTree: Equatable {
         self.rightChild = rightChild
         self.k = location.count
         self.d = d
+        self.axis = d % k
+        self.pivot = location[axis]
     }
     
     func findExact(query: Vector, d: Int = 0) -> Node? {
@@ -124,73 +160,197 @@ final class KDTree: Equatable {
         var coordinate: Vector
         var distance: Float
     }
-    
-    func findNearest(query: Vector, d: Int = 0) -> Match {
-        if query == location {
-            // Exact match.
-            return Match(
+
+    func findNearest(query: Vector) -> Match {
+        searchCountMetric = 0
+        let bestMatch = Match(
+            id: id,
+            coordinate: location,
+            distance: .greatestFiniteMagnitude
+        )
+        return findNearest(query: query, currentBestMatch: bestMatch, count: &searchCountMetric)
+    }
+
+    private func findNearest(
+        query: Vector,
+        currentBestMatch: Match,
+        count: inout Int
+    ) -> Match {
+        
+        count += 1
+        var bestMatch = currentBestMatch
+
+        // Use this node as the best match if it is nearer than the current best.
+        let distance = query.distance(to: location)
+        if distance < bestMatch.distance {
+            bestMatch = Match(
                 id: id,
                 coordinate: location,
-                distance: 0
+                distance: distance
             )
         }
 
-        // Find best match
-        let axis = d % k
-        let queryComponent = query[axis]
-        let checkComponent = location[axis]
-        let first: KDTree?
-        let second: KDTree?
-        if queryComponent < checkComponent {
-            first = leftChild
-            second = rightChild
+        // Visit leaf nodes.
+        let value = query[axis]
+        if value <= pivot {
+            // Left first
+            if let leftChild, value - bestMatch.distance <= pivot {
+                bestMatch = leftChild.findNearest(query: query, currentBestMatch: bestMatch, count: &count)
+            }
+            if let rightChild, value + bestMatch.distance > pivot {
+                bestMatch = rightChild.findNearest(query: query, currentBestMatch: bestMatch, count: &count)
+            }
         }
         else {
-            first = rightChild
-            second = leftChild
+            // Right first
+            if let rightChild, value + bestMatch.distance > pivot {
+                bestMatch = rightChild.findNearest(query: query, currentBestMatch: bestMatch, count: &count)
+            }
+            if let leftChild, value - bestMatch.distance <= pivot {
+                bestMatch = leftChild.findNearest(query: query, currentBestMatch: bestMatch, count: &count)
+            }
         }
-        guard let first else {
-            // No first choice.
-            guard let second else {
-                // No second choice. Use current node as best match.
-                return Match(
-                    id: id,
-                    coordinate: location,
-                    distance: query.distance(to: location)
+
+        return bestMatch
+    }
+    
+    private class PriorityQueue {
+        
+        struct Entry {
+            enum Side {
+                case left
+                case right
+            }
+            let value: Float
+            let pivot: Float
+            let distance: Float
+            let tree: KDTree
+            let side: Side
+        }
+        
+        var isEmpty: Bool {
+            entries.isEmpty
+        }
+        
+        private var entries = [Entry]()
+        
+        func insert(_ entry: Entry) {
+            entries.append(entry)
+            #warning("TODO: Use binary heap for priority queue")
+            entries.sort { $0.distance < $1.distance }
+        }
+        
+        func removeFirst() -> Entry {
+            entries.removeFirst()
+        }
+    }
+    
+    func findApproximateNearest(query: Vector) -> Match {
+        searchCountMetric = 0
+        let queue = PriorityQueue()
+        var bestMatch = Match(id: id, coordinate: location, distance: .greatestFiniteMagnitude)
+        bestMatch = findApproximateNearestLeaf(
+            query: query,
+            queue: queue,
+            bestMatch: bestMatch,
+            count: &searchCountMetric
+        )
+        while queue.isEmpty == false {
+            let current = queue.removeFirst()
+            let child = current.tree
+            let pivot = current.pivot
+            let value = current.value
+            switch current.side {
+            case .left:
+                if value + bestMatch.distance <= pivot {
+                    continue
+                }
+            case .right:
+                if value - bestMatch.distance > pivot {
+                    continue
+                }
+            }
+            let nextMatch = current.tree.findApproximateNearestLeaf(
+                query: query,
+                queue: queue,
+                bestMatch: bestMatch,
+                count: &searchCountMetric
+            )
+            if nextMatch.distance < bestMatch.distance {
+                bestMatch = nextMatch
+            }
+        }
+//        print("node visited=\(searchCountMetric)")
+        return bestMatch
+    }
+    
+    private func findApproximateNearestLeaf(
+        query: Vector,
+        queue: PriorityQueue,
+        bestMatch: Match,
+        count: inout Int
+    ) -> Match {
+
+        count += 1
+        var bestMatch: Match = bestMatch
+        
+        // Use this node as the best match if it is nearer than the current best.
+        let distance = query.distance(to: location)
+        if distance < bestMatch.distance {
+            bestMatch = Match(id: id, coordinate: location, distance: distance)
+        }
+                        
+        // Visit leaf nodes.
+        let value = query[axis]
+        if value <= pivot {
+            // Left first
+            if let rightChild {
+                let entry = PriorityQueue.Entry(
+                    value: value,
+                    pivot: pivot,
+                    distance: abs(value - pivot),
+                    tree: rightChild,
+                    side: .left
+                )
+                queue.insert(entry)
+            }
+
+            if let leftChild, value - bestMatch.distance <= pivot {
+                bestMatch = leftChild.findApproximateNearestLeaf(
+                    query: query,
+                    queue: queue,
+                    bestMatch: bestMatch,
+                    count: &count
                 )
             }
-            // Second
-            let secondChoiceMatch = second.findNearest(query: query, d: d + 1)
-            return secondChoiceMatch
+        }
+        else {
+            // Right first
+            if let leftChild {
+                let entry = PriorityQueue.Entry(
+                    value: value,
+                    pivot: pivot,
+                    distance: abs(value - pivot),
+                    tree: leftChild,
+                    side: .right
+                )
+                queue.insert(entry)
+            }
+
+            if let rightChild, value + bestMatch.distance > pivot {
+                bestMatch = rightChild.findApproximateNearestLeaf(
+                    query: query,
+                    queue: queue,
+                    bestMatch: bestMatch,
+                    count: &count
+                )
+            }
         }
 
-        // Get best match from first child node.
-        let firstChoiceMatch = first.findNearest(query: query, d: d + 1)
-        
-        // If second node is closer than the best match, then find best match
-        // from the second node, otherwise return the current best match.
-        guard let second else {
-            return firstChoiceMatch
-        }
-        let distanceToSecondChoice = abs(queryComponent - second.location[axis])
-        if distanceToSecondChoice > firstChoiceMatch.distance {
-            // Second choice is same distance or further than our current match.
-            // Use the current match
-            return firstChoiceMatch
-        }
-        // Second choice is closer than our first choice. Look at match from
-        // second choice.
-        let secondChoiceMatch = second.findNearest(query: query, d: d + 1)
-        if secondChoiceMatch.distance > firstChoiceMatch.distance {
-            // First choice is still closer. Return the first choice.
-            return firstChoiceMatch
-        }
-        // Second choice is closer than first choice. Return the second
-        // choice.
-        return secondChoiceMatch
+        return bestMatch
     }
-
-    static func == (lhs: KDTree, rhs: KDTree) -> Bool {
+    
+    static func ==(lhs: KDTree, rhs: KDTree) -> Bool {
         lhs.id == rhs.id &&
         lhs.d == rhs.d &&
         lhs.location == rhs.location &&

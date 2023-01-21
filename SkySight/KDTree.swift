@@ -8,43 +8,9 @@
 import Foundation
 
 
-struct Vector: Equatable, CustomStringConvertible {
-    let count: Int
-    let components: [Float]
-    
-    var description: String {
-        let components = components
-            .map({ String(format: "%0.3f", $0) })
-            .joined(separator: ", ")
-        return "<Vector [\(count)] \(components)>"
-    }
-    
-    init(_ components: [Float]) {
-        self.components = components
-        self.count = components.count
-    }
-    
-    subscript(index: Int) -> Float {
-        components[index]
-    }
-    
-    func distanceSquared(to other: Vector) -> Float {
-        precondition(count == other.count)
-        var k: Float = 0
-        for i in 0 ..< count {
-            let d = other[i] - self[i]
-            k += d * d
-        }
-        return k
-    }
-    
-    func distance(to other: Vector) -> Float {
-        sqrt(distanceSquared(to: other))
-    }
-}
-
-
 final class KDTree: Equatable {
+    
+    typealias Vector = FloatVector
     
     struct Node: Identifiable, Equatable, CustomStringConvertible {
         let id: Int

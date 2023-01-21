@@ -10,6 +10,8 @@ import XCTest
 @testable import SkySight
 
 final class KDTreeTests: XCTestCase {
+    
+    typealias Vector = FloatVector
 
     func testInit_withEmptyList_shouldCreateEmptyTree() {
         let subject = KDTree(nodes: [])

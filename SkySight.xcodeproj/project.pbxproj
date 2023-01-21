@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		FC154F022975D29D001127AC /* KDTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F012975D29D001127AC /* KDTree.swift */; };
 		FC154F042975D304001127AC /* KDTreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F032975D304001127AC /* KDTreeTests.swift */; };
+		FC154F06297A9CFC001127AC /* Trie.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F05297A9CFC001127AC /* Trie.swift */; };
+		FC154F08297A9D21001127AC /* TrieTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F07297A9D21001127AC /* TrieTests.swift */; };
+		FC154F0A297A9D60001127AC /* Vector.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC154F09297A9D60001127AC /* Vector.swift */; };
 		FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */; };
 		FC5C0C03295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */; };
 		FC5C0C05295AF9DD00759433 /* Convolution1DKernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */; };
@@ -149,6 +152,9 @@
 /* Begin PBXFileReference section */
 		FC154F012975D29D001127AC /* KDTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDTree.swift; sourceTree = "<group>"; };
 		FC154F032975D304001127AC /* KDTreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDTreeTests.swift; sourceTree = "<group>"; };
+		FC154F05297A9CFC001127AC /* Trie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trie.swift; sourceTree = "<group>"; };
+		FC154F07297A9D21001127AC /* TrieTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrieTests.swift; sourceTree = "<group>"; };
+		FC154F09297A9D60001127AC /* Vector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vector.swift; sourceTree = "<group>"; };
 		FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GaussianKernel.swift; sourceTree = "<group>"; };
 		FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NearestNeighborUpScaleKernel.swift; sourceTree = "<group>"; };
 		FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convolution1DKernel.swift; sourceTree = "<group>"; };
@@ -374,6 +380,7 @@
 				FCB2DBD1296194FD00F19CEB /* DescriptorTests.swift */,
 				FCEBCDF9295986BC002BB8EF /* SharedTestCase.swift */,
 				FC154F032975D304001127AC /* KDTreeTests.swift */,
+				FC154F07297A9D21001127AC /* TrieTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -509,6 +516,8 @@
 				FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */,
 				FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */,
 				FC154F012975D29D001127AC /* KDTree.swift */,
+				FC154F09297A9D60001127AC /* Vector.swift */,
+				FC154F05297A9CFC001127AC /* Trie.swift */,
 			);
 			name = Algorithms;
 			sourceTree = "<group>";
@@ -714,6 +723,7 @@
 				FCEBCDAF294E7C32002BB8EF /* VideoFileReader.swift in Sources */,
 				FC5C0BE9295A3C7F00759433 /* GaussianKernel.swift in Sources */,
 				FCEE1A03294DB90B00FEC893 /* CoreImageExtensions.swift in Sources */,
+				FC154F06297A9CFC001127AC /* Trie.swift in Sources */,
 				FC831CF9296ACF6C00C978BA /* SIFTDescriptor.metal in Sources */,
 				FC831CE72969C2CD00C978BA /* NearestNeighborUpScale.metal in Sources */,
 				FCB0DB822964BFA80047FC1C /* SIFTGradientKernel.swift in Sources */,
@@ -730,6 +740,7 @@
 				FC831D0B296E022F00C978BA /* SIFTExtremaListKernel.swift in Sources */,
 				FC9DF9E4293B637F008E8D79 /* AppDelegate.swift in Sources */,
 				FC831CFC296B522600C978BA /* GaussianSeriesKernel.swift in Sources */,
+				FC154F0A297A9D60001127AC /* Vector.swift in Sources */,
 				FC5C0C07295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift in Sources */,
 				FC831D00296B540400C978BA /* ConvolutionSeries.metal in Sources */,
 				FC831CED2969C33300C978BA /* Convolution.metal in Sources */,
@@ -761,6 +772,7 @@
 			files = (
 				FCEBCDFA295986BC002BB8EF /* SharedTestCase.swift in Sources */,
 				FCD28C922959E50B0018A2AA /* GaussianDifferenceTests.swift in Sources */,
+				FC154F08297A9D21001127AC /* TrieTests.swift in Sources */,
 				FCEBCDF829598663002BB8EF /* KeypointTests.swift in Sources */,
 				FCEBCDE129572E9F002BB8EF /* DifferenceOfGaussiansTests.swift in Sources */,
 				FC154F042975D304001127AC /* KDTreeTests.swift in Sources */,
@@ -829,7 +841,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -847,7 +859,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = Debug;
 		};
@@ -915,7 +927,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DBK476475Y;
-				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_OPTIMIZATION_LEVEL = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SkySight/Info.plist;
 				INFOPLIST_KEY_MetalCaptureEnabled = YES;
@@ -936,7 +948,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "SkySight/SkySight-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_OPTIMIZATION_LEVEL = "$(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -951,6 +963,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DBK476475Y;
+				GCC_OPTIMIZATION_LEVEL = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SkySight/Info.plist;
 				INFOPLIST_KEY_MetalCaptureEnabled = YES;
@@ -971,6 +984,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "SkySight/SkySight-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "$(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -985,7 +999,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DBK476475Y;
-				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_OPTIMIZATION_LEVEL = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -998,7 +1012,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "SkySightTests/SkySightTests-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_OPTIMIZATION_LEVEL = "$(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkySight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkySight";
@@ -1014,6 +1028,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DBK476475Y;
+				GCC_OPTIMIZATION_LEVEL = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1026,6 +1041,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "SkySightTests/SkySightTests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "$(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkySight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkySight";

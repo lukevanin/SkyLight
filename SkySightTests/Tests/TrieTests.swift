@@ -131,7 +131,7 @@ final class TrieTests: XCTestCase {
         
         // Create the trie.
         print("create trie")
-        let subject = Trie(numberOfBins: 4, values: values)
+        let subject = Trie(numberOfBins: 4)
         for i in 0 ..< n {
             let value = values[i]
             subject.insert(value)

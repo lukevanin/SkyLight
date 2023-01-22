@@ -76,7 +76,7 @@ kernel void siftExtremaList(
     
     const int2 g = (int2)gid.xy + 1;
     const int s = (int)gid.z + 1;
-    const float value = inputTexture.read((ushort2)g, s).r;
+    const float value = inputTexture.read((ushort2)g, (ushort)s).r;
     
     float minimum = +1000;
     float maximum = -1000;
@@ -87,15 +87,13 @@ kernel void siftExtremaList(
         maximum = max(maximum, neighborValue);
     }
 
-    if ((value < minimum) && (value > maximum)) {
-        //    if ((value < minValue) || (value > maxValue)) {
+    if ((value < minimum) || (value > maximum)) {
         const int i = atomic_fetch_add_explicit(&localCount, 1, memory_order_relaxed);
         SIFTExtremaResult result;
         result.x = g.x;
         result.y = g.y;
         result.scale = s;
         localResults[i] = result;
-        //    }
     }
     
     // Copy local results to output

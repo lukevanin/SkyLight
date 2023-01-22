@@ -12,7 +12,7 @@ import XCTest
 final class TrieTests: XCTestCase {
     
     func testInsert_shouldMatchStructure() {
-        let expected = Trie(
+        let expected = Trie<FloatVector>(
             Trie(
                 nil,
                 Trie(
@@ -29,46 +29,46 @@ final class TrieTests: XCTestCase {
             nil,
             nil
         )
-        let trie = Trie(numberOfBins: 3)
-        trie.insert(FloatVector([0.0, 0.5, 1.0]))
+        let trie = Trie<FloatVector>(numberOfBins: 3)
+        trie.insert(key: FloatVector([0.0, 0.5, 1.0]), value: FloatVector([0.0, 0.5, 1.0]))
         XCTAssertEqual(trie, expected)
     }
     
     func testContains_shouldReturnFalse_whenTrieDoesNotContainExactMatch() {
-        let trie = Trie(numberOfBins: 3)
-        trie.insert(FloatVector([1.0, 1.0, 1.0]))
+        let trie = Trie<FloatVector>(numberOfBins: 3)
+        trie.insert(key: FloatVector([1.0, 1.0, 1.0]), value: FloatVector([1.0, 1.0, 1.0]))
         let result = trie.contains(FloatVector([0.0, 0.0, 0.0]))
         XCTAssertFalse(result)
     }
 
     func testContains_shouldReturnTrue_whenTrieContainsExactMatch() {
-        let trie = Trie(numberOfBins: 3)
-        trie.insert(FloatVector([0.1, 0.2, 0.3]))
+        let trie = Trie<FloatVector>(numberOfBins: 3)
+        trie.insert(key: FloatVector([0.1, 0.2, 0.3]), value: FloatVector([0.1, 0.2, 0.3]))
         let result = trie.contains(FloatVector([0.1, 0.2, 0.3]))
         XCTAssertTrue(result)
     }
 
     func testContains_shouldReturnTrue_whenTrieContainsPartialMatch() {
-        let trie = Trie(numberOfBins: 3)
-        trie.insert(FloatVector([0.1, 0.2, 0.3]))
+        let trie = Trie<FloatVector>(numberOfBins: 3)
+        trie.insert(key: FloatVector([0.1, 0.2, 0.3]), value: FloatVector([0.1, 0.2, 0.3]))
         let result = trie.contains(FloatVector([0.1, 0.2]))
         XCTAssertTrue(result)
     }
     
     func testContains_shouldReturnTrue_whenTrieContainsSimilarValues() {
-        let trie = Trie(numberOfBins: 3)
-        trie.insert(FloatVector([0, 0.5, 1.0])) // bins: 0, 1, 2
+        let trie = Trie<FloatVector>(numberOfBins: 3)
+        trie.insert(key: FloatVector([0, 0.5, 1.0]), value: FloatVector([0, 0.5, 1.0])) // bins: 0, 1, 2
         XCTAssertTrue(trie.contains(FloatVector([0.1, 0.5, 1.0])))
         XCTAssertTrue(trie.contains(FloatVector([0.1, 0.6, 1.0])))
         XCTAssertTrue(trie.contains(FloatVector([0.1, 0.6, 0.9])))
     }
     
     func testNearest_shouldReturnNearestValue_whenTrieContainsSimilarValues() {
-        let trie = Trie(numberOfBins: 3)
-        trie.insert(FloatVector([0, 0.5, 1.0]))
-        let result = trie.nearest(FloatVector([0.1, 0.6, 0.9]))
+        let trie = Trie<FloatVector>(numberOfBins: 3)
+        trie.insert(key: FloatVector([0, 0.5, 1.0]), value: FloatVector([0, 0.5, 1.0]))
+        let results = trie.nearest(key: FloatVector([0.1, 0.6, 0.9]), query: FloatVector([0.1, 0.6, 0.9]), radius: 0, k: 1)
         let expected = FloatVector([0, 0.5, 1.0])
-        XCTAssertEqual(result?.value, expected)
+        XCTAssertEqual(results[0].value, expected)
     }
 
     func testNearestAccuracy() {
@@ -131,10 +131,10 @@ final class TrieTests: XCTestCase {
         
         // Create the trie.
         print("create trie")
-        let subject = Trie(numberOfBins: 4)
+        let subject = Trie<FloatVector>(numberOfBins: 4)
         for i in 0 ..< n {
             let value = values[i]
-            subject.insert(value)
+            subject.insert(key: value, value: value)
         }
         print("capacity", subject.capacity())
 
@@ -149,12 +149,12 @@ final class TrieTests: XCTestCase {
             XCTAssertTrue(result)
         }
 
-        // Sanity check: nearest should always return exact match
+        // Sanity check: nearest() with existing key/value should always return exact match
         print("check exact nearest")
         for i in 0 ..< n {
             let query = values[i]
-            let match = subject.nearest(query)
-            XCTAssertEqual(match?.value, query)
+            let matches = subject.nearest(key: query, query: query, radius: 0, k: 1)
+            XCTAssertEqual(matches[0].value, query)
         }
         
         // Compute approximate nearest neighbor.
@@ -168,7 +168,8 @@ final class TrieTests: XCTestCase {
             for i in 0 ..< m {
                 totalQueries += 1
                 let query = queries[i]
-                guard let foundNeighbor = subject.nearest(query, radius: 10) else {
+                let foundNeighbors = subject.nearest(key: query, query: query, radius: 10, k: 1)
+                guard let foundNeighbor = foundNeighbors.first else {
                     continue
                 }
                 totalFound += 1

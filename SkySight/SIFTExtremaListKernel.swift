@@ -30,6 +30,7 @@ final class SIFTExtremaListFunction {
             capacity: 1
         )
         self.indexBuffer.allocate(1)
+        indexBuffer[0] = 0
     }
     
     func encode(
@@ -39,9 +40,7 @@ final class SIFTExtremaListFunction {
     ) {
         precondition(inputTexture.textureType == .type2DArray)
         precondition(inputTexture.pixelFormat == .r32Float)
-        
-        indexBuffer[0] = 0
-        
+                
         let encoder = commandBuffer.makeComputeCommandEncoder()!
         encoder.label = "siftExtremaListFunctionComputeEncoder"
         encoder.setComputePipelineState(computePipelineState)

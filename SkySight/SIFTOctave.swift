@@ -57,12 +57,10 @@ final class SIFTOctave {
     init(
         device: MTLDevice,
         scale: DifferenceOfGaussians.Octave,
-        extremaFunction: SIFTExtremaListFunction,
         gradientFunction: SIFTGradientKernel
     ) {
         self.device = device
         self.scale = scale
-        self.extremaFunction = extremaFunction
         self.gradientFunction = gradientFunction
 
 //        let keypointTextures = {
@@ -102,6 +100,10 @@ final class SIFTOctave {
             return texture
         }()
         self.gradientTextures = gradientTextures
+        
+        self.extremaFunction = SIFTExtremaListFunction(
+            device: device
+        )
         
         self.interpolateFunction = SIFTInterpolateKernel(
             device: device
@@ -193,12 +195,13 @@ final class SIFTOctave {
     
     func getKeypoints() -> Buffer<SIFTExtremaResult> {
         let numberOfKeypoints = extremaFunction.indexBuffer[0]
+        extremaFunction.indexBuffer[0] = 0
         extremaOutputBuffer.allocate(Int(numberOfKeypoints))
+        print("getKeypoints: \(numberOfKeypoints)")
         return extremaOutputBuffer
     }
     
     func interpolateKeypoints(commandQueue: MTLCommandQueue, keypoints: Buffer<SIFTExtremaResult>) -> [SIFTKeypoint] {
-        print("interpolateKeypoints")
         let sigmaRatio = scale.sigmas[1] / scale.sigmas[0]
         
         interpolateInputBuffer.allocate(keypoints.count)
@@ -217,7 +220,7 @@ final class SIFTOctave {
         )
 
         // Copy keypoints to metal buffer
-        #warning("TODO: Copy buffer memory")
+        #warning("TODO: Copy buffer memory from extrema results, or just pass buffer directly")
         for j in 0 ..< keypoints.count {
             let keypoint = keypoints[j]
             interpolateInputBuffer[j] = SIFTInterpolateInputKeypoint(
@@ -228,22 +231,21 @@ final class SIFTOctave {
         }
         
         //
-        let commandBuffer = commandQueue.makeCommandBuffer()!
-        commandBuffer.label = "siftInterpolationCommandBuffer"
-
-        interpolateFunction.encode(
-            commandBuffer: commandBuffer,
-            parameters: interpolateParametersBuffer,
-            differenceTextures: scale.differenceTextures,
-            inputKeypoints: interpolateInputBuffer,
-            outputKeypoints: interpolateOutputBuffer
-        )
-        
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
-        
-        let elapsedTime = commandBuffer.gpuEndTime - commandBuffer.gpuStartTime
-        print("interpolateKeypoints: Command buffer \(String(format: "%0.4f", elapsedTime)) seconds")
+        measure(name: "interpolateKeypoints") {
+            let commandBuffer = commandQueue.makeCommandBuffer()!
+            commandBuffer.label = "siftInterpolationCommandBuffer"
+            
+            interpolateFunction.encode(
+                commandBuffer: commandBuffer,
+                parameters: interpolateParametersBuffer,
+                differenceTextures: scale.differenceTextures,
+                inputKeypoints: interpolateInputBuffer,
+                outputKeypoints: interpolateOutputBuffer
+            )
+            
+            commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
+        }        
 
         //
         var output = [SIFTKeypoint]()
@@ -477,8 +479,7 @@ final class SIFTOctave {
             let descriptor = SIFTDescriptor(
                 keypoint: keypoint,
                 theta: theta,
-                rawFeatures: [],
-                features: features
+                features: IntVector(features)
             )
             output.append(descriptor)
         }

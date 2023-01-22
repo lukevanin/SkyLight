@@ -83,24 +83,6 @@ final class DescriptorTests: SharedTestCase {
         let rate = Float(matches.count) / Float(detected.count)
         print("found \(matches.count) out of \(detected.count) = \(rate * 100)%")
         XCTAssertGreaterThanOrEqual(rate, 80.0)
-
-//        for match in matches {
-//            let icon: String
-//            if distance < 10.0 {
-//                pass += 1
-//                icon = "✅"
-//            }
-//            else {
-//                fail += 1
-//                icon = "❌"
-//            }
-//            total += 1
-//
-//            print("\(icon) #\(i) @\(a) == \(b) Δ\(bestMatchDistance ) \(c) \(distance)")
-//        }
-        
-//        print("pass: \(pass) \(Float(pass) / Float(total))")
-//        print("fail: \(fail) \(Float(fail) / Float(total))")
     }
     
     func testMatches() throws {
@@ -137,12 +119,28 @@ final class DescriptorTests: SharedTestCase {
         // matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
         
         print("Finding matches")
+        measure {
+            _ = SIFTDescriptor.match(
+                source: foundDescriptors,
+                target: referenceDescriptors,
+                absoluteThreshold: 300,
+                relativeThreshold: 0.6
+            )
+        }
+
         let matches = SIFTDescriptor.match(
-            source: filter(foundDescriptors, every: 10),
-            target: filter(referenceDescriptors, every: 2),
+            source: foundDescriptors,
+            target: referenceDescriptors,
             absoluteThreshold: 300,
             relativeThreshold: 0.6
         )
+
+//        let matches = SIFTDescriptor.match(
+//            source: filter(foundDescriptors, every: 10),
+//            target: filter(referenceDescriptors, every: 2),
+//            absoluteThreshold: 300,
+//            relativeThreshold: 0.6
+//        )
         print("Found \(matches.count) matches")
 
         print("drawing matches")
@@ -194,8 +192,8 @@ final class DescriptorTests: SharedTestCase {
                     value: 0
                 ),
                 theta: theta,
-                rawFeatures: [],
-                features: features
+//                rawFeatures: [],
+                features: IntVector(features)
             )
             descriptors.append(descriptor)
         }

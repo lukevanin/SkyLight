@@ -8,7 +8,7 @@
 import Foundation
 
 
-struct IntVector: Equatable, CustomStringConvertible {
+struct IntVector: Equatable, CustomStringConvertible, IDistanceComparable {
     let count: Int
     let components: [Int]
     
@@ -32,7 +32,7 @@ struct IntVector: Equatable, CustomStringConvertible {
         components[index]
     }
     
-    func distanceSquared(to other: IntVector) -> Int {
+    func distanceSquared(to other: IntVector) -> Float {
         precondition(count == other.count)
         #warning("TODO: Use Accelerate")
         var k: Int = 0
@@ -40,7 +40,7 @@ struct IntVector: Equatable, CustomStringConvertible {
             let d = other[i] - self[i]
             k += d * d
         }
-        return k
+        return Float(k)
     }
     
     func distance(to other: IntVector) -> Float {
@@ -49,7 +49,8 @@ struct IntVector: Equatable, CustomStringConvertible {
     }
 }
 
-struct FloatVector: Equatable, CustomStringConvertible {
+
+struct FloatVector: Equatable, CustomStringConvertible, IDistanceComparable {
     let count: Int
     let components: [Float]
     

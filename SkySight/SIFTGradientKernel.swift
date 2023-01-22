@@ -19,6 +19,7 @@ final class SIFTGradientKernel {
         let library = device.makeDefaultLibrary()!
 
         let function = library.makeFunction(name: "siftGradient")!
+        function.label = "siftGradientFunction"
 
         self.computePipelineState = try! device.makeComputePipelineState(
             function: function
@@ -39,6 +40,7 @@ final class SIFTGradientKernel {
         precondition(outputTexture.pixelFormat == .rg32Float)
 
         let encoder = commandBuffer.makeComputeCommandEncoder()!
+        encoder.label = "siftGradientComputeEncoder"
         encoder.setComputePipelineState(computePipelineState)
         encoder.setTexture(outputTexture, index: 0)
         encoder.setTexture(inputTexture, index: 1)

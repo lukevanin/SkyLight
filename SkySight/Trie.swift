@@ -8,7 +8,19 @@
 import Foundation
 
 
-final class Trie {
+protocol IDistanceComparable {
+    func distance(to other: Self) -> Float
+    func distanceSquared(to other: Self) -> Float
+}
+
+extension IDistanceComparable {
+    func distance(to other: Self) -> Float {
+        sqrt(distanceSquared(to: other))
+    }
+}
+
+
+final class Trie<Value> where Value: IDistanceComparable {
     
     private(set) var nodeCountMetric = 0
     private(set) var comparisonCountMetric = 0
@@ -17,10 +29,11 @@ final class Trie {
     let numberOfBins: Int
     
     // Nodes
+    private var hasNodes = false
     private var nodes: [Trie?]
     
     // Values
-    private var values: [FloatVector] = []
+    private var values: [Value] = []
     
     private var rightNode: Trie!
     private var leftNode: Trie!
@@ -56,17 +69,24 @@ final class Trie {
             thisNode.rightNode = nextNode
             nextNode.leftNode = thisNode
         }
-        
-        for node in nodes {
-            precondition(node.leftNode != nil)
-            precondition(node.rightNode != nil)
+        check()
+    }
+    
+    private func check() {
+        if !hasNodes {
+            precondition(leftNode != nil)
+            precondition(rightNode != nil)
         }
-        print("linked", nodes.count, "nodes")
+        else {
+            for node in nodes {
+                node?.check()
+            }
+        }
     }
     
     private func leaves() -> [Trie] {
         var leaves: [Trie] = []
-        if values.isEmpty {
+        if hasNodes {
             // Branch node
             for node in nodes {
                 if let node = node {
@@ -82,11 +102,11 @@ final class Trie {
         return leaves
     }
 
-    func insert(_ key: FloatVector) {
-        insert(key: ArraySlice(key.components), value: key)
+    func insert(key: FloatVector, value: Value) {
+        insert(key: ArraySlice(key.components), value: value)
     }
     
-    private func insert(key: ArraySlice<Float>, value: FloatVector) {
+    private func insert(key: ArraySlice<Float>, value: Value) {
         #warning("TODO: use loop instead of recursion")
         guard key.count > 0 else {
             values.append(value)
@@ -98,24 +118,26 @@ final class Trie {
         if node == nil {
             node = Trie(numberOfBins: numberOfBins)
             nodes[binIndex] = node
+            hasNodes = true
         }
         let suffix = key.suffix(from: key.startIndex + 1)
         node.insert(key: suffix, value: value)
 
-//        let binIndex = binIndex(for: prefix)
-//        let leftBinIndex = self.binIndex(before: binIndex)
-//        let rightBinIndex = self.binIndex(after: binIndex)
-//        let indices = [leftBinIndex, binIndex, rightBinIndex]
+        // Uncomment to insert value into neighbor nodes
+        //        let binIndex = binIndex(for: prefix)
+        //        let leftBinIndex = self.binIndex(before: binIndex)
+        //        let rightBinIndex = self.binIndex(after: binIndex)
+        //        let indices = [leftBinIndex, binIndex, rightBinIndex]
 
-//        for index in indices {
-//            var node: Trie! = nodes[index]
-//            if node == nil {
-//                node = Trie(numberOfBins: numberOfBins)
-//                nodes[index] = node
-//            }
-//            let suffix = key.suffix(from: key.startIndex + 1)
-//            node.insert(key: suffix, value: value)
-//        }
+        //        for index in indices {
+        //            var node: Trie! = nodes[index]
+        //            if node == nil {
+        //                node = Trie(numberOfBins: numberOfBins)
+        //                nodes[index] = node
+        //            }
+        //            let suffix = key.suffix(from: key.startIndex + 1)
+        //            node.insert(key: suffix, value: value)
+        //        }
     }
     
     func contains(_ key: FloatVector) -> Bool {
@@ -139,96 +161,120 @@ final class Trie {
     }
     
     struct Match {
-        var value: FloatVector
+        var value: Value
         var distance: Float
     }
-
-    func nearest(_ query: FloatVector, distance: Float = 0.0, radius: Int = 0) -> Match? {
-        nodeCountMetric = 0
-        comparisonCountMetric = 0
-        guard let bin = nearestNode(query.components) else {
-            return nil
-        }
-        comparisonCountMetric += bin.values.count
-        guard var bestMatch = bin.nearestValue(query) else {
-            return nil
-        }
-        if bestMatch.distance <= distance {
-            // Best match is already within the required threshold
-            return bestMatch
-        }
-        
-        var leftNode = bin
-        var rightNode = bin
-        for _ in 0 ..< radius {
-            leftNode = leftNode.leftNode!
-            rightNode = rightNode.rightNode!
-            
-            comparisonCountMetric += leftNode.values.count
-            if let match = leftNode.nearestValue(query) {
-                if match.distance <= distance {
-                    return match
-                }
-            }
-            
-            comparisonCountMetric += rightNode.values.count
-            if let match = rightNode.nearestValue(query) {
-                if match.distance <= distance {
-                    return match
-                }
-            }
-        }
-        
-        return nil
-    }
     
-    func nearest(_ query: FloatVector, radius: Int = 0) -> Match? {
+    class FiniteQueue<T> {
+        
+        var first: T? {
+            values.first
+        }
+        
+        var count: Int {
+            values.count
+        }
+        
+        let capacity: Int
+        
+        private var values: [T] = []
+        
+        init(capacity: Int) {
+            self.capacity = capacity
+        }
+        
+        subscript(index: Int) -> T {
+            values[index]
+        }
+        
+        func insert(_ value: T) {
+            values.insert(value, at: 0)
+            if values.count > capacity {
+                values.removeLast()
+            }
+        }
+    }
+
+//    func nearest(_ query: FloatVector, distance: Float, radius: Int, k: Int) -> Match? {
+//        nodeCountMetric = 0
+//        comparisonCountMetric = 0
+//        
+//        let matches = FiniteQueue(capacity: k)
+//        guard let bin = nearestNode(query.components) else {
+//            return nil
+//        }
+//        
+//        comparisonCountMetric += bin.values.count
+//        guard var bestMatch = bin.nearestValue(query, matches: matches) else {
+//            return nil
+//        }
+//        if bestMatch.distance <= distance {
+//            // Best match is already within the required threshold
+//            return bestMatch
+//        }
+//        
+//        var leftNode = bin
+//        var rightNode = bin
+//        for _ in 0 ..< radius {
+//            leftNode = leftNode.leftNode!
+//            rightNode = rightNode.rightNode!
+//            
+//            comparisonCountMetric += leftNode.values.count
+//            if let match = leftNode.nearestValue(query) {
+//                if match.distance <= distance {
+//                    return match
+//                }
+//            }
+//            
+//            comparisonCountMetric += rightNode.values.count
+//            if let match = rightNode.nearestValue(query) {
+//                if match.distance <= distance {
+//                    return match
+//                }
+//            }
+//        }
+//        
+//        return nil
+//    }
+    
+    func nearest(key: FloatVector, query: Value, radius: Int, k: Int) -> FiniteQueue<Match> {
         nodeCountMetric = 0
         comparisonCountMetric = 0
-        guard let bin = nearestNode(query.components) else {
-            return nil
-        }
+       
+        let matches = FiniteQueue<Match>(capacity: k)
+        let bin = nearestNode(key.components)
+        
         comparisonCountMetric += bin.values.count
-        guard var bestMatch = bin.nearestValue(query) else {
-            return nil
-        }
+        bin.nearestValue(query, matches: matches)
+        
         var node = bin
         for _ in 0 ..< radius {
             node = node.leftNode!
             comparisonCountMetric += node.values.count
-            guard let match = node.nearestValue(query) else {
-                continue
-            }
-            guard match.distance < bestMatch.distance else {
-                continue
-            }
-            bestMatch = match
+            node.nearestValue(query, matches: matches)
         }
 
         node = bin
         for _ in 0 ..< radius {
             node = node.rightNode!
             comparisonCountMetric += node.values.count
-            guard let match = node.nearestValue(query) else {
-                continue
-            }
-            guard match.distance < bestMatch.distance else {
-                continue
-            }
-            bestMatch = match
+            node.nearestValue(query, matches: matches)
         }
 
-        return bestMatch
+        return matches
     }
     
-    private func nearestNode(_ key: [Float]) -> Trie? {
+    private func nearestNode(_ key: [Float]) -> Trie {
         var current = self
         for i in 0 ..< key.count {
             nodeCountMetric += 1
+            guard current.hasNodes else {
+                return current
+            }
             let value = key[i]
             let binIndex = current.binIndex(for: value)
             guard let node = current.closestNode(to: binIndex) else {
-                return nil
+                return current
             }
             current = node
         }
@@ -254,23 +300,20 @@ final class Trie {
         return bestNode
     }
     
-    private func nearestValue(_ query: FloatVector) -> Match? {
-        var bestDistance: Float = .greatestFiniteMagnitude
-        var bestNeighbor: FloatVector?
+    private func nearestValue(_ query: Value, matches: FiniteQueue<Match>) {
+        let bestMatch = matches.first
+        var bestDistance: Float = bestMatch?.distance ?? .greatestFiniteMagnitude
         for value in values {
             let distance = query.distance(to: value)
             if distance < bestDistance {
                 bestDistance = distance
-                bestNeighbor = value
+                let match = Match(
+                    value: value,
+                    distance: distance
+                )
+                matches.insert(match)
             }
         }
-        guard let bestNeighbor else {
-            return nil
-        }
-        return Match(
-            value: bestNeighbor,
-            distance: bestDistance
-        )
     }
 
     private func binDifference(_ a: Int, _ b: Int) -> Int {

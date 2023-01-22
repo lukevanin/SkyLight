@@ -91,7 +91,6 @@ final class SIFT {
             )
         )
         let octaves: [SIFTOctave] = {
-            let extremaFunction = SIFTExtremaListFunction(device: device)
             let gradientFunction = SIFTGradientKernel(device: device)
 
             var octaves = [SIFTOctave]()
@@ -99,7 +98,6 @@ final class SIFT {
                 let octave = SIFTOctave(
                     device: device,
                     scale: scale,
-                    extremaFunction: extremaFunction,
                     gradientFunction: gradientFunction
                 )
                 octaves.append(octave)

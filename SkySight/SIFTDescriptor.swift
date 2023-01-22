@@ -14,10 +14,30 @@ struct SIFTDescriptor {
     let keypoint: SIFTKeypoint
     // Principal orientation.
     let theta: Float
-    // Raw floating point features
-    let rawFeatures: [Float]
     // Quantized features
-    let features: [Int]
+    let features: IntVector
+
+    func rawFeatures() -> FloatVector {
+        let components = features.components.map { Float($0) / Float(255) }
+        return FloatVector(components)
+    }
+    
+    func makeIndexKey() -> FloatVector {
+        let count = 8
+        let features = rawFeatures()
+        let v = stride(from: 0, to: features.count, by: count)
+            .map { start in
+                let end = min(start + count, features.count)
+                let patch = features.components[start ..< end]
+                let sum = patch.reduce(0) {
+                    $0 + $1
+                }
+                let average = sum / Float(patch.count)
+                return average
+            }
+        precondition(v.count == 16)
+        return FloatVector(v)
+    }
     
     static func distance(_ a: SIFTDescriptor, _ b: SIFTDescriptor) -> Float {
         precondition(a.features.count == 128)
@@ -37,10 +57,18 @@ struct SIFTDescriptor {
         relativeThreshold: Float
     ) -> [SIFTCorrespondence] {
         var output = [SIFTCorrespondence]()
-        for s in source {
+        
+        let trie = Trie<SIFTDescriptor>(numberOfBins: 8)
+        for descriptor in target {
+            let key = descriptor.makeIndexKey()
+            trie.insert(key: key, value: descriptor)
+        }
+        trie.link()
+        
+        for descriptor in source {
             let correspondence = match(
-                source: s,
-                target: target,
+                descriptor: descriptor,
+                target: trie,
                 absoluteThreshold: absoluteThreshold,
                 relativeThreshold: relativeThreshold
             )
@@ -52,43 +80,60 @@ struct SIFTDescriptor {
     }
     
     static func match(
-        source: SIFTDescriptor,
-        target: [SIFTDescriptor],
+        descriptor: SIFTDescriptor,
+        target: Trie<SIFTDescriptor>,
         absoluteThreshold: Float,
         relativeThreshold: Float
     ) -> SIFTCorrespondence? {
-        var bestMatchDistance = Float.greatestFiniteMagnitude
-        var secondBestMatchDistance = Float.greatestFiniteMagnitude
-        var bestMatch: SIFTDescriptor!
+//        var bestMatchDistance = Float.greatestFiniteMagnitude
+//        var secondBestMatchDistance = Float.greatestFiniteMagnitude
+//        var bestMatch: SIFTDescriptor!
 
-        for t in target {
-            let distance = self.distance(source, t)
-            
-            guard distance < absoluteThreshold else {
-                continue
-            }
-            
-            guard distance < bestMatchDistance else {
-                continue
-            }
-            
-            bestMatch = t
-            secondBestMatchDistance = bestMatchDistance
-            bestMatchDistance = distance
-        }
-        
-        guard let bestMatch = bestMatch else {
+//            let distance = self.distance(source, t)
+        let key = descriptor.makeIndexKey()
+        let matches = target.nearest(key: key, query: descriptor, radius: 10, k: 2)
+        guard matches.count == 2 else {
             return nil
         }
         
-        guard bestMatchDistance < (secondBestMatchDistance * relativeThreshold) else {
+        let bestMatch = matches[0]
+        let secondBestMatch = matches[1]
+        
+        guard bestMatch.distance < absoluteThreshold else {
+            return nil
+        }
+        
+//        guard match.distance < bestMatchDistance else {
+//            continue
+//        }
+        
+//        bestMatch = t
+//        secondBestMatchDistance = bestMatchDistance
+//        bestMatchDistance = distance
+        
+//        guard let bestMatch = bestMatch else {
+//            return nil
+//        }
+        
+        guard bestMatch.distance < (secondBestMatch.distance * relativeThreshold) else {
             return nil
         }
         
         return SIFTCorrespondence(
-            source: source,
-            target: bestMatch,
-            featureDistance: bestMatchDistance
+            source: descriptor,
+            target: bestMatch.value,
+            featureDistance: bestMatch.distance
         )
+    }
+}
+
+extension SIFTDescriptor: IDistanceComparable {
+    
+    func distance(to other: SIFTDescriptor) -> Float {
+        features.distance(to: other.features)
+    }
+    
+    func distanceSquared(to other: SIFTDescriptor) -> Float {
+        Float(features.distanceSquared(to: other.features))
     }
 }

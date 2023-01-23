@@ -1,6 +1,6 @@
 //
 //  SIFTDescriptor.swift
-//  SkySight
+//  SkyLight
 //
 //  Created by Luke Van In on 2023/01/02.
 //

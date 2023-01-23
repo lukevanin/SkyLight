@@ -1,6 +1,6 @@
 //
 //  SIFT.swift
-//  SkySight
+//  SkyLight
 //
 //  Created by Luke Van In on 2022/12/18.
 //
@@ -17,14 +17,41 @@ private let logger = Logger(
 )
 
 
-typealias SIFTHistogram = [Float]
-
-
-
 ///
+/// Performs the Scale Invariant Feature Transform (SIFT) on an image.
+///
+/// Extracts a set of robust feature descriptors for identifiable points on an image using the SIFT
+/// algorithm[1]. Uses Metal compute shaders to execute tasks using GPU hardware.
+///
+/// This implementation is mostly based on the "Anatomy of the SIFT method"[2] paper and source code
+/// published by the Image Processing Online (IPOL) Journal. The implementation has come notable
+/// charactaristics not explicitly described in the paper. Their relevance toward the accuracy or correctness of
+/// the implementation is not indicated.
+/// - sRGB images are not converted to linear grayscale space for analysis. The SIFT analysis is performed
+/// on the lograithmic (^2.2) color space.
+/// - RGB colors are converted to grayscale using the ITU BT.709-5 (NTSC) color conversion formula.
+/// - The convolution kernel used for Gaussian blur is centered symmetrically on pixels. This differers to the
+/// positioning used by convolution kernels provided by Metal Performance Shaders. A custom convolution
+/// kernel is used to provide similarity to the IPOL implementation.
+///
+/// Note: A novel method is used for matching SIFT descriptors, which is different to the methods used by
+/// Lowe and IPOL. Our method matches descriptors using a trie structure with leaf nodes forming a linked
+/// list. Construction of the trie takes O(n) time. Queries run in O(1) constant time.
+///
+/// [1]: https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf "Distinctive Image Features from Scale-Invariant Keypoints", Lowe, 2004
+/// [2]: http://www.ipol.im/pub/art/2014/82/article.pdf "Anatomy of the SIFT Method", Rey-Otero & Delbracio, 2014
+///
+/// Additional references:
+/// See: https://www.cs.ubc.ca/~lowe/keypoints/
+/// See: https://en.wikipedia.org/wiki/Scale-invariant_feature_transform
+/// See: https://docs.opencv.org/4.x/da/df5/tutorial_py_sift_intro.html
+/// See: https://www.youtube.com/watch?v=4AvTMVD9ig0&t=232
+/// See: https://www.youtube.com/watch?v=U0wqePj4Mx0
+/// See: https://www.youtube.com/watch?v=ram-jbLJjFg&t=2s
+/// See: https://www.youtube.com/watch?v=NPcMS49V5hg
 /// See: https://github.com/robwhess/opensift/blob/master/src/sift.c
-/// See: http://www.ipol.im/pub/art/2014/82/article.pdf
 /// See: https://medium.com/jun94-devpblog/cv-13-scale-invariant-local-feature-extraction-3-sift-315b5de72d48
+///
 final class SIFT {
     
     struct Configuration {
@@ -176,6 +203,7 @@ final class SIFT {
     func getDescriptors(keypointOctaves: [[SIFTKeypoint]]) -> [[SIFTDescriptor]] {
         precondition(keypointOctaves.count == octaves.count)
         
+        // Get all orientations for all keypoints.
         var orientationOctaves = [[SIFTKeypointOrientations]]()
         measure(name: "getDescriptors(orientations)") {
             for i in 0 ..< octaves.count {
@@ -189,6 +217,7 @@ final class SIFT {
             }
         }
         
+        // Get descriptors for each orientation.
         var output: [[SIFTDescriptor]] = []
         measure(name: "getDescriptors(descriptors)") {
             for i in 0 ..< octaves.count {
@@ -201,23 +230,6 @@ final class SIFT {
                 output.append(descriptors)
             }
         }
-//        orientationOctaves.map { orientations in
-//            var output = [SIFTDescriptor]()
-//            for i in 0 ..< orientations.count {
-//                let orientation = orientations[i]
-//                for theta in orientation.orientations {
-//                    #warning("TODO: Use real descriptor")
-//                    let descriptor = SIFTDescriptor(
-//                        keypoint: orientation.keypoint,
-//                        theta: theta,
-//                        rawFeatures: [],
-//                        features: Array<Int>(repeating: 0, count: 128)
-//                    )
-//                    output.append(descriptor)
-//                }
-//            }
-//            return output
-//        }
         return output
     }
 }

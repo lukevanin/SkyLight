@@ -1,9 +1,10 @@
 //
 //  SIFT.swift
-//  SkySight
+//  SkyLight
 //
 //  Created by Luke Van In on 2022/12/18.
 //
+
 /*
 import Foundation
 import OSLog
@@ -22,9 +23,8 @@ typealias SIFTHistogram = [Float]
 
 
 ///
-/// See: https://github.com/robwhess/opensift/blob/master/src/sift.c
-/// See: http://www.ipol.im/pub/art/2014/82/article.pdf
-/// See: https://medium.com/jun94-devpblog/cv-13-scale-invariant-local-feature-extraction-3-sift-315b5de72d48
+///
+///
 final class SIFT {
     
     struct Configuration {

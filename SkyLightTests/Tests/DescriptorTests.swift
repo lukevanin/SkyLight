@@ -1,6 +1,6 @@
 //
 //  DescriptorTests.swift
-//  SkySightTests
+//  SkyLightTests
 //
 //  Created by Luke Van In on 2022/12/26.
 //
@@ -135,12 +135,6 @@ final class DescriptorTests: SharedTestCase {
             relativeThreshold: 0.6
         )
 
-//        let matches = SIFTDescriptor.match(
-//            source: filter(foundDescriptors, every: 10),
-//            target: filter(referenceDescriptors, every: 2),
-//            absoluteThreshold: 300,
-//            relativeThreshold: 0.6
-//        )
         print("Found \(matches.count) matches")
 
         print("drawing matches")

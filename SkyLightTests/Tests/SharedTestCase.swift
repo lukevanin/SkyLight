@@ -1,6 +1,6 @@
 //
 //  SharedTestCase.swift
-//  SkySightTests
+//  SkyLightTests
 //
 //  Created by Luke Van In on 2022/12/26.
 //

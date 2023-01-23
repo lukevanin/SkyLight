@@ -190,7 +190,7 @@
 		FC831D08296DFA4F00C978BA /* Performance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Performance.swift; sourceTree = "<group>"; };
 		FC831D0A296E022F00C978BA /* SIFTExtremaListKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTExtremaListKernel.swift; sourceTree = "<group>"; };
 		FC831D0C296E044700C978BA /* SIFTExtrema.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SIFTExtrema.h; sourceTree = "<group>"; };
-		FC9DF9E0293B637F008E8D79 /* SkySight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkySight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC9DF9E0293B637F008E8D79 /* SkyLight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyLight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC9DF9E3293B637F008E8D79 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC9DF9E7293B637F008E8D79 /* LucasKanadeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucasKanadeViewController.swift; sourceTree = "<group>"; };
 		FC9DF9EC293B6380008E8D79 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -274,7 +274,7 @@
 		FCEBCDC629510974002BB8EF /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIFTExtremaKernel.swift; sourceTree = "<group>"; };
 		FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifferenceOfGaussians.swift; sourceTree = "<group>"; };
-		FCEBCDD629572E6B002BB8EF /* SkySightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkySightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCEBCDD629572E6B002BB8EF /* SkyLightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyLightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCEBCDDF29572E9E002BB8EF /* SkySightTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SkySightTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		FCEBCDE029572E9F002BB8EF /* DifferenceOfGaussiansTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifferenceOfGaussiansTests.swift; sourceTree = "<group>"; };
 		FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestNeighborDownScaleKernel.swift; sourceTree = "<group>"; };
@@ -331,8 +331,8 @@
 		FC9DF9E1293B637F008E8D79 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FC9DF9E0293B637F008E8D79 /* SkySight.app */,
-				FCEBCDD629572E6B002BB8EF /* SkySightTests.xctest */,
+				FC9DF9E0293B637F008E8D79 /* SkyLight.app */,
+				FCEBCDD629572E6B002BB8EF /* SkyLightTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -543,9 +543,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FC9DF9DF293B637F008E8D79 /* SkySight */ = {
+		FC9DF9DF293B637F008E8D79 /* SkyLight */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FC9DF9F4293B6380008E8D79 /* Build configuration list for PBXNativeTarget "SkySight" */;
+			buildConfigurationList = FC9DF9F4293B6380008E8D79 /* Build configuration list for PBXNativeTarget "SkyLight" */;
 			buildPhases = (
 				FC9DF9DC293B637F008E8D79 /* Sources */,
 				FC9DF9DD293B637F008E8D79 /* Frameworks */,
@@ -555,14 +555,14 @@
 			);
 			dependencies = (
 			);
-			name = SkySight;
+			name = SkyLight;
 			productName = SkySight;
-			productReference = FC9DF9E0293B637F008E8D79 /* SkySight.app */;
+			productReference = FC9DF9E0293B637F008E8D79 /* SkyLight.app */;
 			productType = "com.apple.product-type.application";
 		};
-		FCEBCDD529572E6B002BB8EF /* SkySightTests */ = {
+		FCEBCDD529572E6B002BB8EF /* SkyLightTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FCEBCDDC29572E6B002BB8EF /* Build configuration list for PBXNativeTarget "SkySightTests" */;
+			buildConfigurationList = FCEBCDDC29572E6B002BB8EF /* Build configuration list for PBXNativeTarget "SkyLightTests" */;
 			buildPhases = (
 				FCEBCDD229572E6B002BB8EF /* Sources */,
 				FCEBCDD329572E6B002BB8EF /* Frameworks */,
@@ -573,9 +573,9 @@
 			dependencies = (
 				FCEBCDDB29572E6B002BB8EF /* PBXTargetDependency */,
 			);
-			name = SkySightTests;
+			name = SkyLightTests;
 			productName = SkySightTests;
-			productReference = FCEBCDD629572E6B002BB8EF /* SkySightTests.xctest */;
+			productReference = FCEBCDD629572E6B002BB8EF /* SkyLightTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -599,7 +599,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FC9DF9DB293B637F008E8D79 /* Build configuration list for PBXProject "SkySight" */;
+			buildConfigurationList = FC9DF9DB293B637F008E8D79 /* Build configuration list for PBXProject "SkyLight" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -612,8 +612,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FC9DF9DF293B637F008E8D79 /* SkySight */,
-				FCEBCDD529572E6B002BB8EF /* SkySightTests */,
+				FC9DF9DF293B637F008E8D79 /* SkyLight */,
+				FCEBCDD529572E6B002BB8EF /* SkyLightTests */,
 			);
 		};
 /* End PBXProject section */
@@ -785,7 +785,7 @@
 /* Begin PBXTargetDependency section */
 		FCEBCDDB29572E6B002BB8EF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FC9DF9DF293B637F008E8D79 /* SkySight */;
+			target = FC9DF9DF293B637F008E8D79 /* SkyLight */;
 			targetProxy = FCEBCDDA29572E6B002BB8EF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1015,7 +1015,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "$(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkySight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkySight";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkyLight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkyLight";
 			};
 			name = Debug;
 		};
@@ -1044,14 +1044,14 @@
 				SWIFT_OPTIMIZATION_LEVEL = "$(inherited)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkySight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkySight";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkyLight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkyLight";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FC9DF9DB293B637F008E8D79 /* Build configuration list for PBXProject "SkySight" */ = {
+		FC9DF9DB293B637F008E8D79 /* Build configuration list for PBXProject "SkyLight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FC9DF9F2293B6380008E8D79 /* Debug */,
@@ -1060,7 +1060,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FC9DF9F4293B6380008E8D79 /* Build configuration list for PBXNativeTarget "SkySight" */ = {
+		FC9DF9F4293B6380008E8D79 /* Build configuration list for PBXNativeTarget "SkyLight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FC9DF9F5293B6380008E8D79 /* Debug */,
@@ -1069,7 +1069,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FCEBCDDC29572E6B002BB8EF /* Build configuration list for PBXNativeTarget "SkySightTests" */ = {
+		FCEBCDDC29572E6B002BB8EF /* Build configuration list for PBXNativeTarget "SkyLightTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FCEBCDDD29572E6B002BB8EF /* Debug */,

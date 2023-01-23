@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FC9DF9DF293B637F008E8D79"
-               BuildableName = "SkySight.app"
-               BlueprintName = "SkySight"
-               ReferencedContainer = "container:SkySight.xcodeproj">
+               BuildableName = "SkyLight.app"
+               BlueprintName = "SkyLight"
+               ReferencedContainer = "container:SkyLight.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -34,9 +34,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FCEBCDD529572E6B002BB8EF"
-               BuildableName = "SkySightTests.xctest"
-               BlueprintName = "SkySightTests"
-               ReferencedContainer = "container:SkySight.xcodeproj">
+               BuildableName = "SkyLightTests.xctest"
+               BlueprintName = "SkyLightTests"
+               ReferencedContainer = "container:SkyLight.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -58,9 +58,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FC9DF9DF293B637F008E8D79"
-            BuildableName = "SkySight.app"
-            BlueprintName = "SkySight"
-            ReferencedContainer = "container:SkySight.xcodeproj">
+            BuildableName = "SkyLight.app"
+            BlueprintName = "SkyLight"
+            ReferencedContainer = "container:SkyLight.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -75,9 +75,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FC9DF9DF293B637F008E8D79"
-            BuildableName = "SkySight.app"
-            BlueprintName = "SkySight"
-            ReferencedContainer = "container:SkySight.xcodeproj">
+            BuildableName = "SkyLight.app"
+            BlueprintName = "SkyLight"
+            ReferencedContainer = "container:SkyLight.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

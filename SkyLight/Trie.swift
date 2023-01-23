@@ -19,7 +19,71 @@ extension IDistanceComparable {
     }
 }
 
-
+///
+/// Approximate Nearest Neighbor (ANN) Trie.
+///
+/// A data structure used for finding k approximate nearest neighbors on vectors with a high number of
+/// dimension (e.g. 128 ).
+///
+/// Given a set of n nodes with a key size of m:
+/// - Initial construction is polynomial O(nm) time.
+/// - Search runs in linear O(m) time.
+/// - The trie can updated incrementally in linear O(m) time after creation.
+/// - The key m used to insert values is independent of the value storied in leaf nodes. This allows for
+/// efficient hashing methods to be used to dirive keys that can locate query results more accurately.
+/// - Search complexity remains linear in m for any number of dimensions, that is, it does not fail due to
+/// the "curse of dimensionality" which causes other algorithms to become ineffective when using a high
+/// number of dimensions as a result of quadratic or exponential time complexity.
+///
+/// How it works:
+///
+/// We use a trie structure, also referred to as a prefix tree. A trie is a type of recursive sparse tree structure,
+/// where nodes typically contain a number of child trie nodes. A trie is similar to a binary tree in that it is
+/// constructed from similar nodes, which contain child nodes of the same kind. It is different to a tree in that
+/// the trie nodes contain many child nodes, ranging from several to many thousands of children, depending
+/// on the use case. Tries are commonly used for storing data when a subset of data needs to be fetched, e.g.
+/// find all of the words in a dictionary beginning with the letters "car". We do not use the trie in the typical
+/// fashion.
+///
+/// Each node in the trie contains several child nodes. The number of child nodes is determined when the
+/// trie is constructed, and selected accordinf to the charactaristics of the data set.
+///
+/// We start by constructing the trie by inserting values associated with vector keys. Like a normal trie, nodes
+/// are sparse, meaning that not all of the child nodes are necessarily filled and some child nodes may be
+/// empty. Unlike a normal trie, the trie height is usually constant, and determined by the length of the key
+/// vector.
+///
+/// Also unlike normal tries, leaf nodes can store any number of values, and values are independent
+/// of keys. This allows keys to be tailored to the data, such as using dimensionality reduction methods to
+/// create smaller keys, or by hashing keys so that leaf nodes can be locate d more efficiently.
+///
+/// Values are inserted into leaf nodes. To locate the leaf node, the first component of the key vector is used
+/// to locate a bin in the top level of the trie. The component is allocated to one the child nodes depending on
+/// its value.  If there is no existing child node for the bin corresponding to the component value, then a child
+/// node is created and assigned. After the child node is allocated, the next component of the key vector is
+/// used to locate a bin in the child node. This process continues for each key component. The final
+/// descendant node is used as the leaf node. The value is inserted into the list of values for the leaf node.
+///
+/// After values are inserted, the leaf nodes are linked together to form a bi-directional linked list. In the
+/// current implementation the link step needs to be performed whenever new values are inserted into the trie.
+/// In future it may be possible to link leaf nodes immediatley when values are inserted, or lazily at query time.
+///
+/// After the trie is popuated and linked, we can perform search queries. The search starts using the first
+/// component of the key vector to locate the bin corresponding to the component value. If the bin is empty
+/// then the next nearest bin is used. After the first bin is located, the second component is used to locate the
+/// corresponding bin in the top bin. This procedure is repeated for each component in the key. The resulting
+/// node is used as the initial leaf node.
+///
+/// When the leaf node is located, the values of the leaf node are compared against the key.  If the distance to
+/// any value in the leaf node is smaller than the currently known smallest distance, then the value is added
+/// to a queue of fixed size.
+///
+/// After the initial nearest neighbor is located, nearby leaf nodes in the linked list are compared in the same
+/// manner, up to a fixed number of neighboring leaf nodes.
+///
+/// The queue containing the values with the smallest distance to the key is then returned as the result of the
+/// search.
+///
 final class Trie<Value> where Value: IDistanceComparable {
     
     private(set) var nodeCountMetric = 0

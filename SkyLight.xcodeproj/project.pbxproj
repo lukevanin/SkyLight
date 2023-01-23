@@ -160,6 +160,7 @@
 		FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convolution1DKernel.swift; sourceTree = "<group>"; };
 		FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConvertSRGBToGrayscaleKernel.swift; sourceTree = "<group>"; };
 		FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BilinearUpScaleKernel.swift; sourceTree = "<group>"; };
+		FC829E5B297E8FAC000B441C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FC831CD72969B05A00C978BA /* SIFTCPU.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTCPU.swift; sourceTree = "<group>"; };
 		FC831CD92969C14A00C978BA /* SIFTOrientationKernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SIFTOrientationKernel.swift; sourceTree = "<group>"; };
 		FC831CDB2969C22500C978BA /* SIFTInterpolate.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SIFTInterpolate.metal; sourceTree = "<group>"; };
@@ -463,6 +464,7 @@
 		FC9DF9D7293B637F008E8D79 = {
 			isa = PBXGroup;
 			children = (
+				FC829E5B297E8FAC000B441C /* README.md */,
 				FC9DF9E2293B637F008E8D79 /* SkyLight */,
 				FCEBCDD729572E6B002BB8EF /* SkyLightTests */,
 				FC9DF9E1293B637F008E8D79 /* Products */,

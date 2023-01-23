@@ -11,7 +11,7 @@ import CoreImage.CIFilterBuiltins
 import MetalKit
 import MetalPerformanceShaders
 
-@testable import SkySight
+@testable import SkyLight
 
 
 let bundle = Bundle(for: DifferenceOfGaussiansTests.self)

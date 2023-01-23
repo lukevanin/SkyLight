@@ -7,7 +7,8 @@
 
 import XCTest
 
-@testable import SkySight
+@testable import SkyLight
+
 
 final class KDTreeTests: XCTestCase {
     

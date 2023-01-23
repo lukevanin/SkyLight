@@ -7,7 +7,7 @@
 
 import XCTest
 
-@testable import SkySight
+@testable import SkyLight
 
 
 final class KeypointTests: SharedTestCase {

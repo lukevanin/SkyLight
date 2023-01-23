@@ -8,7 +8,7 @@
 import XCTest
 import simd
 
-@testable import SkySight
+@testable import SkyLight
 
 
 final class DescriptorTests: SharedTestCase {

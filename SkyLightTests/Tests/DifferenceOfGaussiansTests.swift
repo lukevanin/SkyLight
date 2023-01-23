@@ -11,7 +11,7 @@ import CoreImage.CIFilterBuiltins
 
 import MetalPerformanceShaders
 
-@testable import SkySight
+@testable import SkyLight
 
 
 final class DifferenceOfGaussiansTests: SharedTestCase {

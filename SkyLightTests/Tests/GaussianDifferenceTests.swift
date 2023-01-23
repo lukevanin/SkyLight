@@ -9,7 +9,7 @@ import XCTest
 
 import MetalPerformanceShaders
 
-@testable import SkySight
+@testable import SkyLight
 
 final class GaussianDifferenceTests: SharedTestCase {
 

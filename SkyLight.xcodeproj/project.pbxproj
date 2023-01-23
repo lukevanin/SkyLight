@@ -319,6 +319,147 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
+		FC829E4E297E7A25000B441C /* Metal Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				FC831CF3296AC0AB00C978BA /* SkyLight-Bridging-Header.h */,
+				FC831CDF2969C26B00C978BA /* Common.h */,
+				FCE936792944E86E00E2D486 /* Shaders.metal */,
+				FC829E5A297E7BA7000B441C /* SIFT Descriptor */,
+				FC829E4F297E7A98000B441C /* SIFT Extrema */,
+				FC829E50297E7ABA000B441C /* SIFT Gradient */,
+				FC829E51297E7ACB000B441C /* SIFT Interpolate */,
+				FC829E52297E7ADB000B441C /* SIFT Orientation */,
+				FC829E53297E7B0C000B441C /* Convert SRGB to Grayscale */,
+				FC829E54297E7B23000B441C /* Nearest Neighbor */,
+				FC829E57297E7B7D000B441C /* Bilinear Upscale */,
+				FC829E58297E7B8C000B441C /* Subtract */,
+				FC829E55297E7B55000B441C /* Gaussian */,
+				FC829E56297E7B69000B441C /* Separable Convolution */,
+				FC829E59297E7B9D000B441C /* Lucas-Kanade */,
+			);
+			name = "Metal Shaders";
+			sourceTree = "<group>";
+		};
+		FC829E4F297E7A98000B441C /* SIFT Extrema */ = {
+			isa = PBXGroup;
+			children = (
+				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
+				FC831D0A296E022F00C978BA /* SIFTExtremaListKernel.swift */,
+				FC831D0C296E044700C978BA /* SIFTExtrema.h */,
+				FC831CEE2969C35200C978BA /* SIFTExtrema.metal */,
+			);
+			name = "SIFT Extrema";
+			sourceTree = "<group>";
+		};
+		FC829E50297E7ABA000B441C /* SIFT Gradient */ = {
+			isa = PBXGroup;
+			children = (
+				FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */,
+				FC831CEA2969C2F700C978BA /* SIFTGradient.metal */,
+			);
+			name = "SIFT Gradient";
+			sourceTree = "<group>";
+		};
+		FC829E51297E7ACB000B441C /* SIFT Interpolate */ = {
+			isa = PBXGroup;
+			children = (
+				FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */,
+				FC831D03296C70D600C978BA /* SIFTInterpolate.h */,
+				FC831CDB2969C22500C978BA /* SIFTInterpolate.metal */,
+			);
+			name = "SIFT Interpolate";
+			sourceTree = "<group>";
+		};
+		FC829E52297E7ADB000B441C /* SIFT Orientation */ = {
+			isa = PBXGroup;
+			children = (
+				FC831CD92969C14A00C978BA /* SIFTOrientationKernel.swift */,
+				FC831CF2296ABFD200C978BA /* SIFTOrientation.h */,
+				FC831CF02969C55400C978BA /* SIFTOrientation.metal */,
+			);
+			name = "SIFT Orientation";
+			sourceTree = "<group>";
+		};
+		FC829E53297E7B0C000B441C /* Convert SRGB to Grayscale */ = {
+			isa = PBXGroup;
+			children = (
+				FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */,
+				FC831CE02969C29100C978BA /* ConvertSRGBToGrayscale.metal */,
+			);
+			name = "Convert SRGB to Grayscale";
+			sourceTree = "<group>";
+		};
+		FC829E54297E7B23000B441C /* Nearest Neighbor */ = {
+			isa = PBXGroup;
+			children = (
+				FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */,
+				FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */,
+				FC831CE62969C2CD00C978BA /* NearestNeighborUpScale.metal */,
+				FC831D02296B5D9200C978BA /* NearestNeighbor.h */,
+				FC831CE42969C2BC00C978BA /* NearestNeighborDownScale.metal */,
+			);
+			name = "Nearest Neighbor";
+			sourceTree = "<group>";
+		};
+		FC829E55297E7B55000B441C /* Gaussian */ = {
+			isa = PBXGroup;
+			children = (
+				FC831CFB296B522500C978BA /* GaussianSeriesKernel.swift */,
+				FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */,
+			);
+			name = Gaussian;
+			sourceTree = "<group>";
+		};
+		FC829E56297E7B69000B441C /* Separable Convolution */ = {
+			isa = PBXGroup;
+			children = (
+				FC831CFD296B524400C978BA /* ConvolutionSeriesKernel.swift */,
+				FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */,
+				FC831D01296B541F00C978BA /* ConvolutionSeries.h */,
+				FC831CFF296B540400C978BA /* ConvolutionSeries.metal */,
+				FC831CEC2969C33300C978BA /* Convolution.metal */,
+			);
+			name = "Separable Convolution";
+			sourceTree = "<group>";
+		};
+		FC829E57297E7B7D000B441C /* Bilinear Upscale */ = {
+			isa = PBXGroup;
+			children = (
+				FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */,
+				FC831CE82969C2DF00C978BA /* BilinearUpScale.metal */,
+			);
+			name = "Bilinear Upscale";
+			sourceTree = "<group>";
+		};
+		FC829E58297E7B8C000B441C /* Subtract */ = {
+			isa = PBXGroup;
+			children = (
+				FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */,
+				FC831CE22969C2A400C978BA /* Subtract.metal */,
+			);
+			name = Subtract;
+			sourceTree = "<group>";
+		};
+		FC829E59297E7B9D000B441C /* Lucas-Kanade */ = {
+			isa = PBXGroup;
+			children = (
+				FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */,
+				FC831CDD2969C24000C978BA /* LucasKanade.metal */,
+			);
+			name = "Lucas-Kanade";
+			sourceTree = "<group>";
+		};
+		FC829E5A297E7BA7000B441C /* SIFT Descriptor */ = {
+			isa = PBXGroup;
+			children = (
+				FC831CF6296ACF4C00C978BA /* SIFTDescriptorKernel.swift */,
+				FC831CFA296ACF8200C978BA /* SIFTDescriptor.h */,
+				FC831CF8296ACF6C00C978BA /* SIFTDescriptor.metal */,
+			);
+			name = "SIFT Descriptor";
+			sourceTree = "<group>";
+		};
 		FC9DF9D7293B637F008E8D79 = {
 			isa = PBXGroup;
 			children = (
@@ -344,28 +485,7 @@
 				FCEBCDE629575850002BB8EF /* View Controller */,
 				FCEBCDE729575863002BB8EF /* Algorithms */,
 				FCEBCDE82957587A002BB8EF /* Utilities */,
-				FC831CF3296AC0AB00C978BA /* SkyLight-Bridging-Header.h */,
-				FC831CDF2969C26B00C978BA /* Common.h */,
-				FCE936792944E86E00E2D486 /* Shaders.metal */,
-				FC831D0C296E044700C978BA /* SIFTExtrema.h */,
-				FC831CEE2969C35200C978BA /* SIFTExtrema.metal */,
-				FC831CEA2969C2F700C978BA /* SIFTGradient.metal */,
-				FC831D03296C70D600C978BA /* SIFTInterpolate.h */,
-				FC831CDB2969C22500C978BA /* SIFTInterpolate.metal */,
-				FC831CF2296ABFD200C978BA /* SIFTOrientation.h */,
-				FC831CF02969C55400C978BA /* SIFTOrientation.metal */,
-				FC831CFA296ACF8200C978BA /* SIFTDescriptor.h */,
-				FC831CF8296ACF6C00C978BA /* SIFTDescriptor.metal */,
-				FC831D01296B541F00C978BA /* ConvolutionSeries.h */,
-				FC831CFF296B540400C978BA /* ConvolutionSeries.metal */,
-				FC831CEC2969C33300C978BA /* Convolution.metal */,
-				FC831CE82969C2DF00C978BA /* BilinearUpScale.metal */,
-				FC831CE62969C2CD00C978BA /* NearestNeighborUpScale.metal */,
-				FC831D02296B5D9200C978BA /* NearestNeighbor.h */,
-				FC831CE42969C2BC00C978BA /* NearestNeighborDownScale.metal */,
-				FC831CE22969C2A400C978BA /* Subtract.metal */,
-				FC831CE02969C29100C978BA /* ConvertSRGBToGrayscale.metal */,
-				FC831CDD2969C24000C978BA /* LucasKanade.metal */,
+				FC829E4E297E7A25000B441C /* Metal Shaders */,
 				FC5EC4D1294283B200D0F057 /* Resources */,
 			);
 			path = SkyLight;
@@ -498,23 +618,7 @@
 				FCB0DB7D296365330047FC1C /* SIFTKeypoint.swift */,
 				FC831D04296DBAC400C978BA /* SIFTKeypointOrientations.swift */,
 				FCD244732962E0ED00459437 /* SIFTPatch.swift */,
-				FCEBCDC8295247C2002BB8EF /* SIFTExtremaKernel.swift */,
-				FC831D0A296E022F00C978BA /* SIFTExtremaListKernel.swift */,
-				FCB0DB812964BFA80047FC1C /* SIFTGradientKernel.swift */,
-				FCB0DB7F296377F20047FC1C /* SIFTInterpolateKernel.swift */,
-				FC831CD92969C14A00C978BA /* SIFTOrientationKernel.swift */,
-				FC831CF6296ACF4C00C978BA /* SIFTDescriptorKernel.swift */,
 				FCEBCDCE295248AA002BB8EF /* DifferenceOfGaussians.swift */,
-				FC5C0C06295B114700759433 /* ConvertSRGBToGrayscaleKernel.swift */,
-				FCEBCDEC2957B332002BB8EF /* NearestNeighborDownScaleKernel.swift */,
-				FC5C0C02295AE2EB00759433 /* NearestNeighborUpScaleKernel.swift */,
-				FC5C0C08295B161000759433 /* BilinearUpScaleKernel.swift */,
-				FCD28C8F2959DFCA0018A2AA /* SubtractKernel.swift */,
-				FC831CFB296B522500C978BA /* GaussianSeriesKernel.swift */,
-				FC831CFD296B524400C978BA /* ConvolutionSeriesKernel.swift */,
-				FC5C0BE8295A3C7F00759433 /* GaussianKernel.swift */,
-				FC5C0C04295AF9DD00759433 /* Convolution1DKernel.swift */,
-				FCEE19FC294DB8AE00FEC893 /* LucasKanade.swift */,
 				FC154F012975D29D001127AC /* KDTree.swift */,
 				FC154F09297A9D60001127AC /* Vector.swift */,
 				FC154F05297A9CFC001127AC /* Trie.swift */,

@@ -85,11 +85,6 @@ struct SIFTDescriptor {
         absoluteThreshold: Float,
         relativeThreshold: Float
     ) -> SIFTCorrespondence? {
-//        var bestMatchDistance = Float.greatestFiniteMagnitude
-//        var secondBestMatchDistance = Float.greatestFiniteMagnitude
-//        var bestMatch: SIFTDescriptor!
-
-//            let distance = self.distance(source, t)
         let key = descriptor.makeIndexKey()
         let matches = target.nearest(key: key, query: descriptor, radius: 10, k: 2)
         guard matches.count == 2 else {
@@ -102,18 +97,6 @@ struct SIFTDescriptor {
         guard bestMatch.distance < absoluteThreshold else {
             return nil
         }
-        
-//        guard match.distance < bestMatchDistance else {
-//            continue
-//        }
-        
-//        bestMatch = t
-//        secondBestMatchDistance = bestMatchDistance
-//        bestMatchDistance = distance
-        
-//        guard let bestMatch = bestMatch else {
-//            return nil
-//        }
         
         guard bestMatch.distance < (secondBestMatch.distance * relativeThreshold) else {
             return nil

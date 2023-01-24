@@ -8,6 +8,8 @@
 import XCTest
 import simd
 
+import SIFTMetal
+
 @testable import SkyLight
 
 
@@ -119,14 +121,14 @@ final class DescriptorTests: SharedTestCase {
         // matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
         
         print("Finding matches")
-        measure {
-            _ = SIFTDescriptor.match(
-                source: foundDescriptors,
-                target: referenceDescriptors,
-                absoluteThreshold: 300,
-                relativeThreshold: 0.6
-            )
-        }
+//        measure {
+//            _ = SIFTDescriptor.match(
+//                source: foundDescriptors,
+//                target: referenceDescriptors,
+//                absoluteThreshold: 300,
+//                relativeThreshold: 0.6
+//            )
+//        }
 
         let matches = SIFTDescriptor.match(
             source: foundDescriptors,

@@ -1,6 +1,7 @@
 import UIKit
 import AVFoundation
 
+/*
 final class LucasKanadeViewController: UIViewController {
     
     private let newImageView: UIImageView = {
@@ -441,4 +442,6 @@ final class LucasKanadeViewController: UIViewController {
         return image
     }
     }
+ 
+ */
 

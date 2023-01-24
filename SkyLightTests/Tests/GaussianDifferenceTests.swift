@@ -6,8 +6,9 @@
 //
 
 import XCTest
-
 import MetalPerformanceShaders
+
+import SIFTMetal
 
 @testable import SkyLight
 

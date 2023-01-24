@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "siftmetal",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/lukevanin/SIFTMetal.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "529c582ccdfd3df93fd3f4419bba2d8bf58ae384"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -8,6 +8,7 @@
 import XCTest
 
 @testable import SkyLight
+/*
 
 final class TrieTests: XCTestCase {
     
@@ -198,3 +199,4 @@ final class TrieTests: XCTestCase {
         print("Average comparisons per query: \(String(format: "%0.3f", averageNodesPerQuery))")
     }
 }
+*/

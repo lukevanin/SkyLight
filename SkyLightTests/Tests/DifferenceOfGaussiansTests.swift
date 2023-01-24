@@ -8,8 +8,9 @@
 import XCTest
 import CoreImage
 import CoreImage.CIFilterBuiltins
-
 import MetalPerformanceShaders
+
+import SIFTMetal
 
 @testable import SkyLight
 

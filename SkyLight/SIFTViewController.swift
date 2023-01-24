@@ -8,6 +8,8 @@
 import UIKit
 import MetalKit
 
+import SIFTMetal
+
 
 @globalActor actor ProcessActor {
     static let shared = ProcessActor()
@@ -37,8 +39,8 @@ final class SIFTViewController: UIViewController {
     private let imageFileURL: URL
     
     private var videoReader: VideoFileReader!
-    private var cvMetalCache: CoreVideoMetalCache!
-    private var imageConverter: ImageConversion!
+//    private var cvMetalCache: CoreVideoMetalCache!
+//    private var imageConverter: ImageConversion!
     private var device: MTLDevice!
 
     init() {

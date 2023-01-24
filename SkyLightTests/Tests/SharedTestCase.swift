@@ -11,6 +11,8 @@ import CoreImage.CIFilterBuiltins
 import MetalKit
 import MetalPerformanceShaders
 
+import SIFTMetal
+
 @testable import SkyLight
 
 
@@ -384,7 +386,7 @@ class SharedTestCase: XCTestCase {
     var device: MTLDevice!
     var commandQueue: MTLCommandQueue!
     var ciContext: CIContext!
-    var upscaleFunction: NearestNeighborUpScaleKernel!
+//    var upscaleFunction: NearestNeighborUpScaleKernel!
     var subtractFunction: MPSImageSubtract!
     var convertSRGBToLinearGrayscaleFunction: MPSImageConversion!
 //    var convertLinearRGBToLinearGrayscaleFunction: MPSImageConversion!
@@ -392,7 +394,7 @@ class SharedTestCase: XCTestCase {
     override func setUp() {
         device = MTLCreateSystemDefaultDevice()!
         commandQueue = device.makeCommandQueue()!
-        upscaleFunction = NearestNeighborUpScaleKernel(device: device)
+//        upscaleFunction = NearestNeighborUpScaleKernel(device: device)
         subtractFunction = MPSImageSubtract(device: device)
         convertSRGBToLinearGrayscaleFunction = MPSImageConversion(
             device: device,
@@ -414,7 +416,7 @@ class SharedTestCase: XCTestCase {
 
     override func tearDown() {
         ciContext = nil
-        upscaleFunction = nil
+//        upscaleFunction = nil
         subtractFunction = nil
         commandQueue = nil
         device = nil

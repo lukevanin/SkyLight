@@ -7,6 +7,8 @@
 
 import XCTest
 
+import SIFTMetal
+
 @testable import SkyLight
 
 

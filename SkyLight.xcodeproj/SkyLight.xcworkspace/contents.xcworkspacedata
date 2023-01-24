@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:">
+      location = "container:">
+   </FileRef>
+   <FileRef
+      location = "group:../../SIFTMetal">
    </FileRef>
 </Workspace>

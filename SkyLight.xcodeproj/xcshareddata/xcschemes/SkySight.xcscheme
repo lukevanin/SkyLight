@@ -39,6 +39,16 @@
                ReferencedContainer = "container:SkyLight.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "SIFTMetalTests"
+               BuildableName = "SIFTMetalTests"
+               BlueprintName = "SIFTMetalTests"
+               ReferencedContainer = "container:../SIFTMetal">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

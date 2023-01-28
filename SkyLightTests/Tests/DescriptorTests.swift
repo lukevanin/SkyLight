@@ -118,18 +118,6 @@ final class DescriptorTests: SharedTestCase {
         let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
         print("Loaded \(referenceDescriptors.count) reference descriptors")
         
-        // matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
-        
-        print("Finding matches")
-//        measure {
-//            _ = SIFTDescriptor.match(
-//                source: foundDescriptors,
-//                target: referenceDescriptors,
-//                absoluteThreshold: 300,
-//                relativeThreshold: 0.6
-//            )
-//        }
-
         let matches = SIFTDescriptor.match(
             source: foundDescriptors,
             target: referenceDescriptors,
@@ -148,6 +136,36 @@ final class DescriptorTests: SharedTestCase {
                 matches: matches
             )
         )
+    }
+    
+    func testMatchesPerformance() throws {
+        let inputTexture = try device.loadTexture(name: "butterfly", extension: "png", srgb: false)
+        let configuration = SIFT.Configuration(
+            inputSize: IntegralSize(
+                width: inputTexture.width,
+                height: inputTexture.height
+            )
+        )
+        let subject = SIFT(device: device, configuration: configuration)
+        let keypoints = subject.getKeypoints(inputTexture)
+        let descriptorOctaves = subject.getDescriptors(keypointOctaves: keypoints)
+        let foundDescriptors = Array(descriptorOctaves.joined())
+        print("Found", foundDescriptors.count, "descriptors")
+
+        let referenceDescriptors = try loadDescriptors(filename: "butterfly-descriptors")
+        print("Loaded \(referenceDescriptors.count) reference descriptors")
+        
+        // matchDescriptors(detected: foundDescriptors, reference: referenceDescriptors)
+        
+        print("Finding matches")
+        measure {
+            _ = SIFTDescriptor.match(
+                source: foundDescriptors,
+                target: referenceDescriptors,
+                absoluteThreshold: 300,
+                relativeThreshold: 0.6
+            )
+        }
     }
     
     private func filter<E>(_ input: Array<E>, every step: Int = 10, limit: Int = 10000) -> [E] {

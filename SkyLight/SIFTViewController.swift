@@ -36,31 +36,20 @@ private func makeNames(withPrefix p: String, andExtension e: String, inRange r: 
 }
 
 
-final class MatchView: UIView {
+final class ImageView: UIView {
     
-    let sourceImageView: UIImageView = {
+    let imageView: UIImageView = {
         let view = UIImageView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.contentMode = .scaleAspectFit
         view.clipsToBounds = true
-        view.backgroundColor = .systemPink
-        view.alpha = 0.8
-        return view
-    }()
-    
-    let targetImageView: UIImageView = {
-        let view = UIImageView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.contentMode = .scaleAspectFit
-        view.clipsToBounds = true
-        view.backgroundColor = .systemTeal
-        view.alpha = 0.8
         return view
     }()
 
     let label: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont.preferredFont(forTextStyle: .caption1)
         return label
     }()
     
@@ -72,10 +61,60 @@ final class MatchView: UIView {
             view.translatesAutoresizingMaskIntoConstraints = false
             view.axis = .vertical
             view.alignment = .fill
-            view.spacing = 8
-            view.addArrangedSubview(sourceImageView)
-            view.addArrangedSubview(targetImageView)
+            view.spacing = 4
+            view.addArrangedSubview(imageView)
             view.addArrangedSubview(label)
+            return view
+        }()
+        
+        backgroundColor = .systemGroupedBackground
+        addSubview(layoutView)
+        
+        NSLayoutConstraint.activate([
+            imageView.widthAnchor.constraint(equalToConstant: 120),
+            imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor),
+
+            layoutView.leftAnchor.constraint(equalTo: safeAreaLayoutGuide.leftAnchor),
+            layoutView.rightAnchor.constraint(equalTo: safeAreaLayoutGuide.rightAnchor),
+            layoutView.topAnchor.constraint(equalTo: topAnchor),
+            layoutView.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+final class MatchView: UIView {
+    
+    let sourceImageView: UIImageView = {
+        let view = UIImageView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.contentMode = .scaleAspectFit
+        view.clipsToBounds = true
+        view.backgroundColor = .systemGroupedBackground
+        return view
+    }()
+    
+    let matchedViews: UIStackView = {
+        let view = UIStackView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.axis = .horizontal
+        return view
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        let layoutView: UIStackView = {
+            let view = UIStackView()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.axis = .vertical
+            view.alignment = .fill
+            view.spacing = 4
+            view.addArrangedSubview(sourceImageView)
+            view.addArrangedSubview(matchedViews)
             return view
         }()
         
@@ -83,7 +122,7 @@ final class MatchView: UIView {
         
         NSLayoutConstraint.activate([
             sourceImageView.heightAnchor.constraint(equalTo: sourceImageView.widthAnchor),
-            targetImageView.heightAnchor.constraint(equalTo: targetImageView.widthAnchor),
+            matchedViews.heightAnchor.constraint(equalToConstant: 150),
 
             layoutView.leftAnchor.constraint(equalTo: safeAreaLayoutGuide.leftAnchor),
             layoutView.rightAnchor.constraint(equalTo: safeAreaLayoutGuide.rightAnchor),
@@ -103,9 +142,16 @@ final class SIFTViewController: UIViewController {
     struct ImageDescriptor {
         let name: String
         let image: CGImage
+        let siftFeatures: [SIFTDescriptor]
         let features: [FloatVector]
     }
-    
+
+    struct ImageTrie {
+        let name: String
+        let image: CGImage
+        let trie: Trie
+    }
+
     struct ImageBagOfWords {
         let name: String
         let image: CGImage
@@ -113,9 +159,13 @@ final class SIFTViewController: UIViewController {
     }
     
     struct ImageMatch {
-        let source: ImageBagOfWords
-        let target: ImageBagOfWords
+        let target: CGImage
         let distance: Float
+    }
+    
+    struct ImageMatches {
+        let source: CGImage
+        let matches: [ImageMatch]
     }
     
     private let layoutView: UIStackView = {
@@ -170,7 +220,7 @@ final class SIFTViewController: UIViewController {
     }
     
     private func setupView() {
-        view.backgroundColor = .systemPurple
+        view.backgroundColor = .systemBackground
         
         let scrollView: UIScrollView = {
             let view = UIScrollView()
@@ -202,18 +252,23 @@ final class SIFTViewController: UIViewController {
         }
     }
     
-    private func matchImages() {
+    private func matchImages() async {
         // Load SIFT descriptors
         let referencePlaces = makeNames(
             withPrefix: "reference-01 - ",
             andExtension: "jpeg",
-            inRange: 1...20
+            inRange: 1...48
         )
-        
+//        let trajectories = makeNames(
+//            withPrefix: "trajectory-01 - ",
+//            andExtension: "jpeg",
+//            inRange: 1...53
+//        )
+
         let testImageNames = makeNames(
             withPrefix: "trajectory-01 - ",
             andExtension: "jpeg",
-            inRange: 1...10
+            inRange: 1...53
         )
         
         imageDimensions = IntegralSize(
@@ -222,6 +277,8 @@ final class SIFTViewController: UIViewController {
         )
         
         resizer = ImageResizer(device: device)
+        
+        let renderer = SIFTRenderer()
         
         let configuration = SIFT.Configuration(inputSize: imageDimensions)
         sift = SIFT(device: device, configuration: configuration)
@@ -236,34 +293,46 @@ final class SIFTViewController: UIViewController {
 //            }
 //        }
         
-        let referenceVectors = referenceDescriptors
-            .map { $0.features }
-            .joined()
+//        let referenceVectors = referenceDescriptors
+//            .map { $0.features }
+//            .joined()
 //            .map { $0.rawFeatures().standardized() }
 //            .map { $0.rawFeatures().standardized() }
-
-        kmeans = KMeansCluster(k: 130, d: 16)
-        kmeans.train(
-            vectors: Array(referenceVectors),
-            maximumIterations: 50,
-            maximumError: 0.001
-        )
         
-        var referenceBagOfWords = [ImageBagOfWords]()
-        for reference in referenceDescriptors {
-            let descriptors = reference.features
-            guard let bagOfWords = kmeans.bagOfWords(for: descriptors) else {
-                continue
-            }
-            let imageBagOfWords = ImageBagOfWords(
-                name: reference.name,
-                image: reference.image,
-                bagOfWords: bagOfWords
-            )
-            print("reference:", reference.name, "bag of words:", bagOfWords)
-            referenceBagOfWords.append(imageBagOfWords)
-        }
+//        var targetTries = [ImageTrie]()
+//        for referenceDescriptor in referenceDescriptors {
+//            let trie = Trie(numberOfBins: 4)
+//            for feature in referenceDescriptor.features {
+//                let key = makeKey(for: feature)
+//                trie.insert(key: key, value: feature)
+//            }
+//            trie.link()
+//            targetTries.append(trie)
+//        }
 
+//        kmeans = KMeansCluster(k: 240, d: 128)
+//        kmeans.train(
+//            vectors: Array(referenceVectors),
+//            maximumIterations: 50,
+//            maximumError: 0.01
+//        )
+        
+//        var referenceBagOfWords = [ImageBagOfWords]()
+//        for reference in referenceDescriptors {
+//            let descriptors = reference.features
+//            guard let bagOfWords = kmeans.bagOfWords(for: descriptors) else {
+//                print("❗️ \(reference.name) SKIPPED")
+//                continue
+//            }
+//            let imageBagOfWords = ImageBagOfWords(
+//                name: reference.name,
+//                image: reference.image,
+//                bagOfWords: bagOfWords
+//            )
+//            print("reference:", reference.name, "bag of words:", bagOfWords)
+//            referenceBagOfWords.append(imageBagOfWords)
+//        }
+        
         /*
         bag of words <Vector [10] 0, 0, 0, 14, 10, 3, 21, 0, 1, 0>
         reference: reference-01 - 6.jpeg <Vector [10] 0, 0, 0, 14, 10, 3, 21, 0, 1, 0>
@@ -274,40 +343,63 @@ final class SIFTViewController: UIViewController {
         for sourceImageName in testImageNames {
             
             let sourceImage = try! loadImage(sourceImageName)
-            guard let sourceDescriptor = makeDescriptor(
+            guard let source = makeDescriptor(
                 sift: sift,
                 name: sourceImageName,
                 texture: sourceImage
             ) else {
+                print("❗️ \(sourceImageName) SKIPPED")
                 continue
             }
-            let features = sourceDescriptor.features
-            guard let bagOfWords = kmeans.bagOfWords(for: features) else {
-                continue
-            }
-            let source = ImageBagOfWords(
-                name: sourceImageName,
-                image: imageConverter.makeCGImage(sourceImage),
-                bagOfWords: bagOfWords
-            )
-            print("sample:", source.name, source.bagOfWords)
+            let sourceFeatureDescriptors = source.siftFeatures
+//            let sourceFeatures = sourceDescriptor.features
+//            guard let bagOfWords = kmeans.bagOfWords(for: features) else {
+//                print("❗️ \(sourceImageName) SKIPPED")
+//                continue
+//            }
+//            let source = ImageBagOfWords(
+//                name: sourceImageName,
+//                image: imageConverter.makeCGImage(sourceImage),
+//                bagOfWords: bagOfWords
+//            )
+//            print("sample:", source.name, source.bagOfWords)
 
 //            var minimumDistance: Float = .greatestFiniteMagnitude
-            var maximumSimilarity: Float = -.greatestFiniteMagnitude
-            var match: ImageMatch!
+//            var maximumSimilarity: Float = -.greatestFiniteMagnitude
             
-            for target in referenceBagOfWords {
-
-                let similarity = source.bagOfWords.cosineSimilarity(to: target.bagOfWords)
-                print("matching \(target.name) similarity=\(similarity)")
-                if similarity > maximumSimilarity {
-                    maximumSimilarity = similarity
-                    match = ImageMatch(
-                        source: source,
-                        target: target,
-                        distance: similarity
+            
+            var bestScore: Float = 0
+            var matches: [ImageMatch] = []
+            
+            for target in referenceDescriptors {
+                let targetFeatureDescriptors = target.siftFeatures
+                let matchedFeatures = SIFTDescriptor.match(
+                    source: sourceFeatureDescriptors,
+                    target: targetFeatureDescriptors
+                )
+                let domain = max(sourceFeatureDescriptors.count, targetFeatureDescriptors.count)
+                let score = Float(matchedFeatures.count) / Float(domain)
+                if score > bestScore {
+                    bestScore = score
+                    let match = ImageMatch(
+                        target: target.image,
+                        distance: score
                     )
+                    matches.append(match)
                 }
+            
+//            for target in referenceBagOfWords {
+
+//                let similarity = source.bagOfWords.cosineSimilarity(to: target.bagOfWords)
+//                print("matching \(target.name) similarity=\(similarity)")
+//                if similarity > maximumSimilarity {
+//                    maximumSimilarity = similarity
+//                    match = ImageMatch(
+//                        source: source,
+//                        target: target,
+//                        distance: similarity
+//                    )
+//                }
 
 //                let distance = source.bagOfWords.distance(to: target.bagOfWords)
 //                print("matching \(target.name) distance=\(distance)")
@@ -352,20 +444,38 @@ final class SIFTViewController: UIViewController {
                 
             }
             
-            let outputMatch = match!
+            let keypointsImage = renderer.drawKeypoints(
+                sourceImage: source.image,
+                overlayColor: UIColor(white: 0, alpha: 0.5),
+                referenceKeypoints: [],
+                foundKeypoints: source.siftFeatures.map { $0.keypoint }
+            )
+            let outputMatches = ImageMatches(
+//                source:  source.image,
+                source: keypointsImage.cgImage!,
+                matches: Array(matches.reversed().prefix(3))
+            )
             Task.detached { @MainActor in
-                self.addImageMatch(match: outputMatch)
+                self.addImageMatches(matches: outputMatches)
             }
+            await Task.yield()
         }
     }
     
-    @MainActor private func addImageMatch(match: ImageMatch) {
+    @MainActor private func addImageMatches(matches: ImageMatches) {
         let matchView: MatchView = {
             let view = MatchView()
             view.translatesAutoresizingMaskIntoConstraints = false
-            view.sourceImageView.image = UIImage(cgImage: match.source.image)
-            view.targetImageView.image = UIImage(cgImage: match.target.image)
-            view.label.text = "\(match.distance)"
+            view.sourceImageView.image = UIImage(cgImage: matches.source)
+            
+            for match in matches.matches {
+                let itemView = ImageView()
+                itemView.translatesAutoresizingMaskIntoConstraints = false
+                itemView.imageView.image = UIImage(cgImage: match.target)
+                itemView.label.text = "\(match.distance)"
+                view.matchedViews.addArrangedSubview(itemView)
+            }
+            
             return view
         }()
         layoutView.addArrangedSubview(matchView)
@@ -447,27 +557,59 @@ final class SIFTViewController: UIViewController {
             print("❗️ \(name) SKIPPED")
             return nil
         }
-        let features = descriptors
-            .map {
+        let features = descriptors.map { $0.rawFeatures }
+
+//        let features = descriptors
+//            .map {
+//                var features = [Float]()
+//                let rawFeatures = $0.rawFeatures().components
+//                let chunkSize = 8
+//                for i in stride(from: 0, to: rawFeatures.count, by: chunkSize) {
+//                    let feature = Array(rawFeatures[i ..< i + chunkSize])
+//                    var sum: Float = 0
+//                    for f in feature {
+//                        sum += f
+//                    }
+//                    let a = sum / Float(chunkSize)
+//                    features.append(a)
+//                }
+//                precondition(features.count == 16, "No features in descriptor: \(rawFeatures)")
+//                return FloatVector(features)
+//            }
+
+//        let features = descriptors
+//            .map {
+//                let rawFeatures = $0.rawFeatures().components
+//
 //                var features = [FloatVector]()
-                var features = [Float]()
-                let rawFeatures = $0.rawFeatures().components
-                let chunkSize = 8
-                for i in stride(from: 0, to: rawFeatures.count, by: chunkSize) {
-                    let feature = Array(rawFeatures[i ..< i + chunkSize])
-//                    print(feature)
+//                for j in 0 ..< 8 {
+//                    var f = [Float]()
+//                    for i in 0 ..< 16 {
+//                        let d = (i * 8) + j
+//                        f.append(rawFeatures[d])
+//                    }
+//                    features.append(FloatVector(f))
+//                }
+//                precondition(features.count == 8, "No features in descriptor: \(rawFeatures)")
+//                return features
+//            }
+//            .joined()
+
+        // 16 features of 8 dimensions
+//        let features = descriptors
+//            .map {
+//                var features = [FloatVector]()
+//                let rawFeatures = $0.rawFeatures().components
+//                let chunkSize = 8
+//                for i in stride(from: 0, to: rawFeatures.count, by: chunkSize) {
+//                    let feature = FloatVector(Array(rawFeatures[i ..< i + chunkSize]))
 //                    features.append(feature)
-                    
-                    var sum: Float = 0
-                    for f in feature {
-                        sum += f
-                    }
-                    let a = sum / Float(chunkSize)
-                    features.append(a)
-                }
-                precondition(features.count == 16, "No features in descriptor: \(rawFeatures)")
-                return FloatVector(features)
-            }
+//                }
+//                precondition(features.count == 16, "No features in descriptor: \(rawFeatures)")
+//                return features
+//            }
+//            .joined()
+
         guard !features.isEmpty else {
             print("❗️ \(name) SKIPPED")
             return nil
@@ -476,6 +618,7 @@ final class SIFTViewController: UIViewController {
         return ImageDescriptor(
             name: name,
             image: imageConverter.makeCGImage(texture),
+            siftFeatures: descriptors,
             features: Array(features)
         )
     }

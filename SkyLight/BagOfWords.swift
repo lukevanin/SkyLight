@@ -119,35 +119,42 @@ final class KMeansCluster {
 
         // Solution has converged. Compute covariance matrix for each cluster
         var clusters = [Cluster]()
-        let identity = FloatMatrix.identity(dimensions: d)
+//        let identity = FloatMatrix.identity(dimensions: d)
         for i in 0 ..< k {
             let covarianceMatrix: FloatMatrix
             let localCluster = localClusters[i]
             print("k-means \(i) out of \(k) compute covariance of \(localCluster.count) points")
-            if localCluster.count > 0 {
-                let a = FloatMatrix(localCluster)
-                let b = a.covarianceMatrix()
-                do {
-                    covarianceMatrix = try b.inverse()
-                }
-                catch {
-                    covarianceMatrix = identity
-                }
+            guard localCluster.count > 50 else {
+                print("❗️ SKIPPED: Not enough points: \(localCluster.count)")
+                continue
             }
-            else {
-                covarianceMatrix = identity
-            }
+//            let a = FloatMatrix(localCluster)
+//            let b = a.covarianceMatrix()
+//            do {
+//                covarianceMatrix = try b.inverse()
+//            }
+//            catch {
+//                continue
+//            }
             let cluster = Cluster(
                 centroid: centroids[i],
-                inverseCovarianceMatrix: covarianceMatrix
+                inverseCovarianceMatrix: .identity(dimensions: d)
             )
             clusters.append(cluster)
         }
         self.clusters = clusters
+        print("Found clusters \(clusters.count)  out of \(k)")
     }
     
     func bagOfWords(for vectors: [FloatVector]) -> FloatVector? {
-        precondition(!vectors.isEmpty)
+//        precondition(!vectors.isEmpty)
+//        let sampleSize = 10
+//        guard vectors.count >= sampleSize else {
+//            // Not enough descriptors
+//            print("❗️ SKIPPED: Not enough vectors: \(vectors.count)")
+//            return nil
+//        }
+        
         var output = FloatVector(dimension: k)
         
 //        for vector in vectors {
@@ -155,15 +162,35 @@ final class KMeansCluster {
 //
 //            output[i] += 1
 //        }
+        
+//        let sample = vectors.lazy.shuffled().prefix(upTo: sampleSize)
+        let sample = vectors
 
-        for vector in vectors {
-            let indices = nearestClusters(to: vector)
-            for i in indices {
-                output[i] += 1
+//        let threshold: Float = 0.01
+        for vector in sample {
+            guard let index = nearestCluster(to: vector) else {
+                continue
             }
+            output[index] += 1
+//            var match = [Int]()
+//            for i in 0 ..< clusters.count {
+                
+//                let cluster = clusters[i]
+                //            let distance = cluster.mahanalobisDistance(from: vector)
+//                let distance = vector.distance(to: cluster.centroid)
+//                if distance < threshold {
+//                    match.append(i)
+//                    let t = 1.0 - (distance / threshold)
+//                    output[i] += t
+//                }
+//            }
+//            print("words", match, "for vector", vector)
         }
+        
+        print("bag of words", output)
 
         guard output.sum() > 0 else {
+            print("❗️ SKIPPED: No words: \(output)")
             return nil
         }
         // print("bag of words", output, "for", vectors.count, "vectors")
@@ -173,34 +200,46 @@ final class KMeansCluster {
 //        return output
     }
     
-    func nearestClusters(to vector: FloatVector) -> [Int] {
-        var output = [Int]()
-        for i in 0 ..< k {
-            let cluster = clusters[i]
-//            let distance = cluster.mahanalobisDistance(from: vector)
-            let distance = vector.distance(to: cluster.centroid)
-            if distance < 0.1 {
-                output.append(i)
-            }
-        }
-        print("nearest clusters: \(output)")
-        return output
-    }
+//    func nearestClusters(to vector: FloatVector) -> [Int] {
+//        var output = [Int]()
+//        for i in 0 ..< k {
+//            let cluster = clusters[i]
+////            let distance = cluster.mahanalobisDistance(from: vector)
+//            let distance = vector.distance(to: cluster.centroid)
+//            if distance < 0.1 {
+//                output.append(i)
+//            }
+//        }
+//        print("nearest clusters: \(output)")
+//        return output
+//    }
 
-    func nearestCluster(to vector: FloatVector) -> Int {
-        var minimumDistance: Float = .greatestFiniteMagnitude
+    func nearestCluster(to vector: FloatVector) -> Int? {
+        var bestDistance: Float = .greatestFiniteMagnitude
+        var secondBestDistance: Float?
         var nearestClusterIndex: Int!
-        for i in 0 ..< k {
+        for i in 0 ..< clusters.count {
             let cluster = clusters[i]
 //            let centroid = clusters[i].centroid
 //            let distance = vector.distance(to: centroid)
             let distance = cluster.mahanalobisDistance(from: vector)
-            if distance < minimumDistance {
-                minimumDistance = distance
+            if distance < bestDistance {
+                secondBestDistance = bestDistance
+                bestDistance = distance
                 nearestClusterIndex = i
             }
         }
-        print("nearest cluster distance: \(minimumDistance)")
+//        guard bestDistance < 1 else {
+//            return nil
+//        }
+//        guard let secondBestDistance else {
+//            return nil
+//        }
+//        let r = bestDistance / secondBestDistance
+//        guard r > 0.8 else {
+//            return nil
+//        }
+//        print("nearest cluster distance: \(bestDistance)")
         return nearestClusterIndex
     }
 }

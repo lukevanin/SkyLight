@@ -273,8 +273,8 @@ final class SIFTViewController: UIViewController {
         )
         
         imageDimensions = IntegralSize(
-            width: 192 * 2,
-            height: 256 * 2
+            width: 480,
+            height: 640
         )
         
         resizer = ImageResizer(device: device)
@@ -393,7 +393,8 @@ final class SIFTViewController: UIViewController {
                     )
                     matches.append(match)
                 }
-            
+                await Task.yield()
+
 //            for target in referenceBagOfWords {
 
 //                let similarity = source.bagOfWords.cosineSimilarity(to: target.bagOfWords)
@@ -462,10 +463,10 @@ final class SIFTViewController: UIViewController {
                 source: keypointsImage.cgImage!,
                 matches: Array(matches.reversed().prefix(3))
             )
+            await Task.yield()
             Task.detached { @MainActor in
                 self.addImageMatches(matches: outputMatches)
             }
-            await Task.yield()
         }
     }
     
@@ -542,11 +543,16 @@ final class SIFTViewController: UIViewController {
             ]
         )
         
-        return resizer.resizeTexture(
-            texture: texture,
-            width: imageDimensions.width,
-            height: imageDimensions.height
-        )
+        if texture.width != imageDimensions.width || texture.height != imageDimensions.height {
+            return resizer.resizeTexture(
+                texture: texture,
+                width: imageDimensions.width,
+                height: imageDimensions.height
+            )
+        }
+        else {
+            return texture
+        }
     }
     
     private func makeDescriptor(

@@ -61,13 +61,14 @@ final class ImageView: UIView {
             view.translatesAutoresizingMaskIntoConstraints = false
             view.axis = .vertical
             view.alignment = .fill
+            view.distribution = .equalSpacing
             view.spacing = 4
             view.addArrangedSubview(imageView)
             view.addArrangedSubview(label)
             return view
         }()
         
-        backgroundColor = .systemGroupedBackground
+        backgroundColor = .secondarySystemGroupedBackground
         addSubview(layoutView)
         
         NSLayoutConstraint.activate([
@@ -93,7 +94,7 @@ final class MatchView: UIView {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.contentMode = .scaleAspectFit
         view.clipsToBounds = true
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = .secondarySystemGroupedBackground
         return view
     }()
     
@@ -111,7 +112,7 @@ final class MatchView: UIView {
             let view = UIStackView()
             view.translatesAutoresizingMaskIntoConstraints = false
             view.axis = .vertical
-            view.alignment = .fill
+            view.alignment = .leading
             view.spacing = 4
             view.addArrangedSubview(sourceImageView)
             view.addArrangedSubview(matchedViews)
@@ -122,7 +123,7 @@ final class MatchView: UIView {
         
         NSLayoutConstraint.activate([
             sourceImageView.heightAnchor.constraint(equalTo: sourceImageView.widthAnchor),
-            matchedViews.heightAnchor.constraint(equalToConstant: 150),
+            matchedViews.heightAnchor.constraint(equalToConstant: 200),
 
             layoutView.leftAnchor.constraint(equalTo: safeAreaLayoutGuide.leftAnchor),
             layoutView.rightAnchor.constraint(equalTo: safeAreaLayoutGuide.rightAnchor),
@@ -172,8 +173,8 @@ final class SIFTViewController: UIViewController {
         let view = UIStackView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.axis = .vertical
-        view.alignment = .center
-        view.spacing = 16
+        view.alignment = .fill
+        view.spacing = 32
         return view
     }()
 
@@ -373,12 +374,17 @@ final class SIFTViewController: UIViewController {
             
             for target in referenceDescriptors {
                 let targetFeatureDescriptors = target.siftFeatures
-                let matchedFeatures = SIFTDescriptor.match(
+//                let matchedFeatures = SIFTDescriptor.matchGeometry(
+//                    source: sourceFeatureDescriptors,
+//                    target: targetFeatureDescriptors
+//                )
+//                let domain = max(sourceFeatureDescriptors.count, targetFeatureDescriptors.count)
+//                let score = Float(matchedFeatures.count) / Float(domain)
+                print("match", source.name, "to", target.name)
+                let score = SIFTDescriptor.matchGeometry(
                     source: sourceFeatureDescriptors,
                     target: targetFeatureDescriptors
                 )
-                let domain = max(sourceFeatureDescriptors.count, targetFeatureDescriptors.count)
-                let score = Float(matchedFeatures.count) / Float(domain)
                 if score > bestScore {
                     bestScore = score
                     let match = ImageMatch(
@@ -446,7 +452,8 @@ final class SIFTViewController: UIViewController {
             
             let keypointsImage = renderer.drawKeypoints(
                 sourceImage: source.image,
-                overlayColor: UIColor(white: 0, alpha: 0.5),
+                overlayColor: UIColor.white.withAlphaComponent(0.5),
+                foundColor: UIColor.systemGreen.withAlphaComponent(0.6),
                 referenceKeypoints: [],
                 foundKeypoints: source.siftFeatures.map { $0.keypoint }
             )
